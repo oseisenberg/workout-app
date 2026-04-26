@@ -848,14 +848,24 @@
     if (tab === "analysis") renderAnalysis();
   };
 
+  let pickerQuery = "";
   const renderPicker = () => {
     const list = $("picker-list");
     const empty = $("picker-empty");
     if (!list) return;
-    const items = availableExercises();
+    const q = pickerQuery.trim().toLowerCase();
+    const items = availableExercises().filter((ex) =>
+      !q ||
+      ex.name.toLowerCase().includes(q) ||
+      (ex.muscles || "").toLowerCase().includes(q));
     if (items.length === 0) {
       list.innerHTML = "";
-      if (empty) empty.hidden = false;
+      if (empty) {
+        empty.textContent = q
+          ? `No exercises match "${pickerQuery.trim()}".`
+          : "You've added every exercise in the catalog.";
+        empty.hidden = false;
+      }
       return;
     }
     if (empty) empty.hidden = true;
@@ -883,6 +893,9 @@
   };
 
   const openPicker = () => {
+    pickerQuery = "";
+    const search = $("picker-search");
+    if (search) search.value = "";
     renderPicker();
     $("picker").hidden = false;
     document.body.classList.add("modal-open");
@@ -1118,6 +1131,10 @@
       if (!item) return;
       addExercise(item.dataset.id);
       closePicker();
+    });
+    $("picker-search").addEventListener("input", (event) => {
+      pickerQuery = event.target.value;
+      renderPicker();
     });
     $("details-close").addEventListener("click", closeDetails);
     $("details-backdrop").addEventListener("click", closeDetails);
