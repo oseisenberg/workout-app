@@ -161,6 +161,42 @@
       "levels": 4
     },
     {
+      "id": "pushup",
+      "name": "Pushup",
+      "muscles": "Chest · Triceps · Core",
+      "icon": "pushup",
+      "bodyweight": true,
+      "sets": 3,
+      "repsStart": 5,
+      "repsStep": 5,
+      "pipsPerLevel": 2,
+      "levels": 4
+    },
+    {
+      "id": "pullup",
+      "name": "Pullup",
+      "muscles": "Lats · Biceps · Back",
+      "icon": "pullup",
+      "bodyweight": true,
+      "sets": 3,
+      "repsStart": 1,
+      "repsStep": 2,
+      "pipsPerLevel": 2,
+      "levels": 4
+    },
+    {
+      "id": "situp",
+      "name": "Situp",
+      "muscles": "Core",
+      "icon": "situp",
+      "bodyweight": true,
+      "sets": 3,
+      "repsStart": 10,
+      "repsStep": 5,
+      "pipsPerLevel": 2,
+      "levels": 4
+    },
+    {
       "id": "tricep-pushdown",
       "name": "Tricep Pushdown",
       "muscles": "Triceps",

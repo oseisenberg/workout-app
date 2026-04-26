@@ -143,6 +143,44 @@
         <rect x="48" y="22" width="6" height="20" rx="1.5"
               stroke="var(--accent)" stroke-width="3" />
       </svg>`,
+    "pushup": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="58" x2="58" y2="58" />
+        <line x1="14" y1="36" x2="50" y2="36" />
+        <circle cx="11" cy="36" r="4" fill="currentColor" stroke="none" />
+        <path d="M18 36 L20 50 L28 50"
+              stroke="var(--accent)" stroke-width="3.5" />
+        <path d="M44 36 L46 50 L52 50"
+              stroke="var(--accent)" stroke-width="3.5" />
+      </svg>`,
+    "pullup": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="14" x2="58" y2="14" />
+        <line x1="10" y1="6" x2="10" y2="14" />
+        <line x1="54" y1="6" x2="54" y2="14" />
+        <line x1="22" y1="14" x2="22" y2="28"
+              stroke="var(--accent)" stroke-width="3.5" />
+        <line x1="42" y1="14" x2="42" y2="28"
+              stroke="var(--accent)" stroke-width="3.5" />
+        <circle cx="32" cy="24" r="4" />
+        <line x1="32" y1="28" x2="32" y2="46" />
+        <line x1="32" y1="46" x2="26" y2="56" />
+        <line x1="32" y1="46" x2="38" y2="56" />
+      </svg>`,
+    "situp": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="56" x2="58" y2="56" />
+        <path d="M10 56 L18 40 L30 40 L34 28"
+              stroke="var(--accent)" stroke-width="3.5" />
+        <circle cx="36" cy="22" r="4" />
+        <line x1="30" y1="40" x2="40" y2="34" />
+      </svg>`,
     "dumbbell": `
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
            stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -171,20 +209,27 @@
     const tiersPerLevel = pipsPerLevel + 1;
     const levelCount = t.levels || 0;
     const totalPrescriptive = levelCount * tiersPerLevel;
+    const bw = !!t.bodyweight;
     const out = [{
       sets: 0,
       reps: 0,
-      weight: [t.weightStart, t.weightStart],
+      weight: bw ? null : [t.weightStart, t.weightStart],
+      bodyweight: bw,
       level: 0,
       pip: 0,
       pipsPerLevel: 0,
     }];
     for (let i = 0; i < totalPrescriptive; i++) {
-      const lo = t.weightStart + i * t.weightStep;
+      const reps = bw ? t.repsStart + i * t.repsStep : t.reps;
+      const weight = bw
+        ? null
+        : [t.weightStart + i * t.weightStep,
+           t.weightStart + (i + 1) * t.weightStep];
       out.push({
         sets: t.sets,
-        reps: t.reps,
-        weight: [lo, lo + t.weightStep],
+        reps,
+        weight,
+        bodyweight: bw,
         level: Math.floor(i / tiersPerLevel) + 1,
         pip: i % tiersPerLevel,
         pipsPerLevel,
@@ -437,12 +482,13 @@
       const tier = tierName(lvl);
       const pipsHtml = renderPips(lvl);
       const nextTier = canUp ? tierName(ex.levels[lvlIdx + 1]) : null;
-      const weightText = fmtWeight(lvl.weight);
+      const isBw = !!lvl.bodyweight;
+      const weightText = isBw ? `${lvl.reps}+` : fmtWeight(lvl.weight);
       const weightStatHtml = lvlZero
-        ? `<span class="exercise-row__try" aria-label="No fixed weight">Try it</span>`
+        ? `<span class="exercise-row__try" aria-label="No fixed prescription">Try it</span>`
         : `<span class="exercise-row__stat">
              <span class="exercise-row__stat-value">${weightText}</span>
-             <span class="exercise-row__stat-label">lb</span>
+             <span class="exercise-row__stat-label">${isBw ? "reps" : "lb"}</span>
            </span>`;
 
       const setChipsHtml = `<div class="menu-row menu-row--chips">
@@ -762,6 +808,9 @@
   // Simple inline SVG line chart of weight over time. Returns "" when there
   // aren't enough data points to draw a line.
   const renderProgressChart = (ex, history) => {
+    const metric = (lvl) =>
+      lvl.bodyweight ? lvl.reps : lvl.weight[0];
+    const unit = ex.levels.some((l) => l.bodyweight) ? "reps" : "lb";
     const points = history
       .filter((h) => {
         const l = ex.levels[h.level];
@@ -769,13 +818,13 @@
       })
       .map((h) => ({
         ts: parseDateStr(h.date),
-        weight: ex.levels[h.level].weight[0],
+        v: metric(ex.levels[h.level]),
       }))
       .sort((a, b) => a.ts - b.ts);
     if (points.length < 2) return "";
     const W = 320, H = 140, padX = 12, padY = 16;
     const xs = points.map((p) => p.ts);
-    const ys = points.map((p) => p.weight);
+    const ys = points.map((p) => p.v);
     const xMin = Math.min(...xs);
     const xMax = Math.max(...xs);
     const yMin = Math.min(...ys);
@@ -785,14 +834,14 @@
     const x = (t) => padX + ((t - xMin) / xRange) * (W - 2 * padX);
     const y = (v) => H - padY - ((v - yMin) / yRange) * (H - 2 * padY);
     const linePath = points
-      .map((p, i) => `${i === 0 ? "M" : "L"} ${x(p.ts).toFixed(1)} ${y(p.weight).toFixed(1)}`)
+      .map((p, i) => `${i === 0 ? "M" : "L"} ${x(p.ts).toFixed(1)} ${y(p.v).toFixed(1)}`)
       .join(" ");
     const areaPath = linePath +
       ` L ${x(xMax).toFixed(1)} ${(H - padY).toFixed(1)}` +
       ` L ${x(xMin).toFixed(1)} ${(H - padY).toFixed(1)} Z`;
     const dots = points
       .map((p) =>
-        `<circle cx="${x(p.ts).toFixed(1)}" cy="${y(p.weight).toFixed(1)}"
+        `<circle cx="${x(p.ts).toFixed(1)}" cy="${y(p.v).toFixed(1)}"
                  r="3.5" fill="var(--accent)" stroke="var(--surface-2)"
                  stroke-width="1.5" />`)
       .join("");
@@ -811,8 +860,8 @@
         <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round" />
         ${dots}
-        <text x="${padX}" y="11" font-size="10" fill="var(--muted)">${yMax} lb</text>
-        <text x="${padX}" y="${H - 4}" font-size="10" fill="var(--muted)">${yMin} lb</text>
+        <text x="${padX}" y="11" font-size="10" fill="var(--muted)">${yMax} ${unit}</text>
+        <text x="${padX}" y="${H - 4}" font-size="10" fill="var(--muted)">${yMin} ${unit}</text>
       </svg>`;
   };
 
@@ -842,22 +891,27 @@
               ? `${entry.sets}/${entryLvl.sets} sets`
               : `${entry.sets} sets`;
           const partial = entryLvl && !entryZero && entry.sets < entryLvl.sets;
-          const weight = entryLvl && !entryZero
-            ? fmtWeight(entryLvl.weight)
+          const isBw = entryLvl && entryLvl.bodyweight;
+          const detail = entryLvl && !entryZero
+            ? isBw
+              ? `${entryLvl.reps}+ reps`
+              : `${fmtWeight(entryLvl.weight)} lb`
             : "";
           return `
             <li class="details__entry${partial ? " is-partial" : ""}">
               <span class="details__date">${friendlyDate(entry.date)}</span>
               <span class="details__entry-tier">${entryTier}</span>
               <span class="details__entry-meta">
-                ${setsLabel}${weight ? ` · ${weight} lb` : ""}
+                ${setsLabel}${detail ? ` · ${detail}` : ""}
               </span>
             </li>`;
         }).join("")}</ul>`;
 
     const summary = lvlZero
       ? `${tier} · just trying it out`
-      : `${tier} · ${fmtWeight(lvl.weight)} lb · ${lvl.sets}×${lvl.reps}+`;
+      : lvl.bodyweight
+        ? `${tier} · ${lvl.sets}×${lvl.reps}+ reps`
+        : `${tier} · ${fmtWeight(lvl.weight)} lb · ${lvl.sets}×${lvl.reps}+`;
 
     const archived = isArchived(ex.id);
     const archiveBtnHtml = `
