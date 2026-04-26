@@ -10,7 +10,8 @@
       "weightStart": 90,
       "weightStep": 45,
       "pipsPerLevel": 2,
-      "levels": 4
+      "levels": 4,
+      "snoozeDays": 2
     },
     {
       "id": "lat-pulldown",
@@ -106,7 +107,8 @@
       "weightStart": 95,
       "weightStep": 10,
       "pipsPerLevel": 2,
-      "levels": 4
+      "levels": 4,
+      "snoozeDays": 2
     },
     {
       "id": "bench-press",
@@ -118,7 +120,8 @@
       "weightStart": 65,
       "weightStep": 10,
       "pipsPerLevel": 2,
-      "levels": 4
+      "levels": 4,
+      "snoozeDays": 2
     },
     {
       "id": "deadlift",
@@ -130,7 +133,8 @@
       "weightStart": 135,
       "weightStep": 10,
       "pipsPerLevel": 2,
-      "levels": 4
+      "levels": 4,
+      "snoozeDays": 3
     },
     {
       "id": "bicep-curl",

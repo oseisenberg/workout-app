@@ -199,6 +199,7 @@
     muscles: t.muscles,
     icon: ICONS[t.icon] || ICONS.barbell,
     levels: buildLevels(t),
+    snoozeDays: t.snoozeDays != null ? t.snoozeDays : 1,
   });
 
   let CATALOG = [];
@@ -271,6 +272,34 @@
   const isLevelZero = (lvl) => lvl.sets === 0;
   const todaysCompletion = (exId) => (state.completed[todayKey()] || {})[exId];
   const fmtWeight = (w) => (w[0] === w[1] ? `${w[0]}` : `${w[0]}–${w[1]}`);
+
+  const lastCompletionDate = (exId) => {
+    let max = null;
+    for (const date of Object.keys(state.completed)) {
+      if (state.completed[date] && state.completed[date][exId]) {
+        if (!max || date > max) max = date;
+      }
+    }
+    return max;
+  };
+
+  const daysBetweenTodayAnd = (dateStr) => {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const that = new Date(y, m - 1, d);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Math.round((today - that) / 86400000);
+  };
+
+  // An exercise is snoozed if its most recent completion was less than
+  // `snoozeDays` days ago (inclusive of the completion day). Default is 1,
+  // i.e. a same-day completion snoozes only for the rest of today.
+  const isSnoozed = (ex) => {
+    const last = lastCompletionDate(ex.id);
+    if (!last) return false;
+    const days = ex.snoozeDays != null ? ex.snoozeDays : 1;
+    return daysBetweenTodayAnd(last) < days;
+  };
 
   // Sorted descending by date (newest first).
   const exerciseHistory = (exId) =>
@@ -517,7 +546,7 @@
     const available = [];
     const snoozed = [];
     for (const ex of all) {
-      (todaysCompletion(ex.id) ? snoozed : available).push(ex);
+      (isSnoozed(ex) ? snoozed : available).push(ex);
     }
 
     availableGrid.innerHTML = available.map(exerciseRowHtml).join("");
