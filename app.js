@@ -1186,6 +1186,18 @@
       ` L ${x(xMin).toFixed(1)} ${(H - padY).toFixed(1)} Z`;
     const maxLvl = ex.levels[yMax];
     const maxLabel = maxLvl ? tierName(maxLvl) : "";
+    // One small tick on the left axis at each level boundary that falls
+    // inside the visible y-range. Pip boundaries are skipped — we want a
+    // single mark per level, not per upgrade.
+    const levelTicks = ex.levels
+      .map((lvl, idx) => ({ idx, lvl }))
+      .filter(({ idx, lvl }) =>
+        lvl.pip === 0 && lvl.level > 0 && idx >= yMin && idx <= yMax)
+      .map(({ idx }) =>
+        `<line x1="${(padX - 3).toFixed(1)}" y1="${y(idx).toFixed(1)}"
+               x2="${(padX + 3).toFixed(1)}" y2="${y(idx).toFixed(1)}"
+               stroke="var(--muted)" stroke-width="1" />`)
+      .join("");
     return `
       <svg class="details__chart" viewBox="0 0 ${W} ${H}" role="img"
            aria-label="Level progress over time">
@@ -1200,6 +1212,7 @@
         <path d="${areaPath}" fill="url(#chart-fill)" stroke="none" />
         <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round" />
+        ${levelTicks}
         <text x="${padX}" y="12" font-size="10" fill="var(--muted)">${maxLabel}</text>
         <text x="${padX}" y="${H - 6}" font-size="10" fill="var(--muted)">${
           roundedDuration(Math.round((Date.now() - xMin) / 86400000))
