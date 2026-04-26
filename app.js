@@ -489,29 +489,7 @@
   window.addEventListener("online", setNet);
   window.addEventListener("offline", setNet);
 
-  const standalone =
-    window.matchMedia("(display-mode: standalone)").matches ||
-    window.navigator.standalone === true;
-  $("diag-standalone").textContent = standalone ? "yes" : "no (in browser)";
-
-  $("diag-display").textContent =
-    window.matchMedia("(display-mode: standalone)").matches
-      ? "standalone"
-      : window.matchMedia("(display-mode: fullscreen)").matches
-        ? "fullscreen"
-        : "browser";
-
-  $("diag-viewport").textContent =
-    `${window.innerWidth}×${window.innerHeight}`;
-
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker
-      .register("./service-worker.js")
-      .then(() => { $("diag-sw").textContent = "registered"; })
-      .catch((err) => {
-        $("diag-sw").textContent = "failed: " + err.message;
-      });
-  } else {
-    $("diag-sw").textContent = "unsupported";
+    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
   }
 })();
