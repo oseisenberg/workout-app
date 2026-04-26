@@ -1008,16 +1008,16 @@
                    data-action="undo-test-data">
              <span class="settings__option-title">Undo test data</span>
              <span class="settings__option-desc">
-               Restore the state you had before loading test data.
+               Restore the history you had before loading test data.
              </span>
            </button>`
         : `<button type="button" class="settings__option"
                    data-action="load-test-data">
              <span class="settings__option-title">Load test data</span>
              <span class="settings__option-desc">
-               Generate ~60 days of fake completion history for every added
-               exercise so the chart, streak, and muscle diagrams have
-               something to show. Your real state is backed up locally.
+               Add ~60 days of fake past-day history for every added or
+               archived exercise. Today's completions and your current
+               levels are left alone.
              </span>
            </button>`}
     `;
@@ -1035,12 +1035,14 @@
     }
   };
 
-  // Generate ~60 days of plausible completion history for every active
-  // exercise, walking the tier index up over time so the chart and the
-  // muscle diagrams have something to render. The current state is stashed
-  // under TEST_BACKUP_KEY so it can be restored.
+  // Adds ~60 days of plausible past-day completion history for every
+  // active and archived exercise. Doesn't touch state.levels or today's
+  // completions, so the user's current setup stays untouched and nothing
+  // gets marked done. The previous state is stashed under TEST_BACKUP_KEY
+  // so undoTestData restores it exactly.
   const generateTestData = () => {
-    if (state.addedIds.length === 0) return;
+    const targetIds = [...state.addedIds, ...state.archivedIds];
+    if (targetIds.length === 0) return;
     localStorage.setItem(TEST_BACKUP_KEY, JSON.stringify(state));
 
     const today = new Date();
@@ -1050,16 +1052,16 @@
         String(d.getDate()).padStart(2, "0")
       }`;
     const completed = { ...state.completed };
-    const levels = { ...state.levels };
 
-    for (const exId of state.addedIds) {
+    for (const exId of targetIds) {
       const ex = exerciseById(exId);
       if (!ex) continue;
       const totalTiers = ex.levels.length;
       const snoozeDays = ex.snoozeDays || 1;
       let curTier = 1;
       let lastTs = null;
-      for (let i = 60; i >= 0; i--) {
+      // i = 60..1 only, never i = 0, so today's completions are untouched.
+      for (let i = 60; i >= 1; i--) {
         const d = new Date(today);
         d.setDate(today.getDate() - i);
         if (lastTs && (d - lastTs) / 86400000 < snoozeDays) continue;
@@ -1077,11 +1079,9 @@
         completed[dateKey][exId] = { level: curTier, sets };
         lastTs = d;
       }
-      levels[exId] = curTier;
     }
 
     state.completed = completed;
-    state.levels = levels;
     saveState();
     renderExercises();
   };
