@@ -208,7 +208,8 @@ body {
   white-space: nowrap;
 }
 
-/* Split button: green Done on the left, caret dropdown attached on the right. */
+/* Split control: a green check button on the left, caret on the right.
+   Tapping the check toggles completion; the caret opens the level menu. */
 .exercise-row__action {
   display: inline-flex;
   align-items: stretch;
@@ -229,33 +230,24 @@ body {
   justify-content: center;
   transition: background 0.12s ease, transform 0.08s ease;
 }
-.done-btn:active, .caret-btn:active { transform: scale(0.97); }
+.done-btn:active, .caret-btn:active { transform: scale(0.94); }
 
 .done-btn {
-  gap: 5px;
-  padding: 0 12px;
+  width: 44px;
   height: 40px;
-  font-weight: 700;
-  font-size: 13px;
+  padding: 0;
   border-right: 1px solid rgba(0, 0, 0, 0.25);
   background: var(--ok-strong);
 }
 .done-btn[aria-pressed="false"] {
   background: #1f3a2a;
-  color: #d1fae5;
+  color: rgba(209, 250, 229, 0.55);
 }
-.done-btn[aria-pressed="false"] .done-btn__check { opacity: 0.55; }
 .done-btn[aria-pressed="true"] {
   background: var(--ok-strong);
   color: white;
 }
-
-.done-btn__check {
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 1;
-}
-.done-btn__label { line-height: 1; }
+.done-btn svg { width: 18px; height: 18px; display: block; }
 
 .caret-btn {
   width: 32px;
@@ -296,72 +288,47 @@ body {
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+.menu-level {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 4px;
+}
+.menu-level__caption {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+}
+.menu-level__summary {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 .menu-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
 }
-.menu-row__label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--muted);
-  min-width: 38px;
-}
-.menu-row__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  flex: 1;
-}
-
-.chip {
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  padding: 5px 10px;
-  font: inherit;
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.1s ease, border-color 0.1s ease, color 0.1s ease;
-}
-.chip:active { transform: scale(0.95); }
-.chip--on {
-  background: var(--ok-strong);
-  border-color: var(--ok-strong);
-  color: white;
-  font-weight: 700;
-}
-
 .menu-row--level {
   justify-content: space-between;
-  margin-top: 2px;
   padding-top: 8px;
   border-top: 1px dashed var(--border-strong);
-}
-.menu-row__level-text {
-  font-size: 12px;
-  color: var(--muted);
-  text-align: center;
-  flex: 1;
-  font-variant-numeric: tabular-nums;
 }
 .level-btn {
   background: transparent;
   color: var(--text);
   border: 1px solid var(--border-strong);
   border-radius: 8px;
-  padding: 6px 10px;
+  padding: 8px 12px;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   letter-spacing: 0.3px;
+  flex: 1;
 }
 .level-btn:disabled {
   opacity: 0.35;

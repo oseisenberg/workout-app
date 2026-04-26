@@ -260,52 +260,12 @@
   const todaysCompletion = (exId) => (state.completed[todayKey()] || {})[exId];
   const fmtWeight = (w) => `${w[0]}–${w[1]}`;
 
-  // Default values assumed when the user just taps "Done": the level's
-  // target reps minimum and the upper end of the weight range.
-  const defaultPerformed = (ex) => {
-    const lvl = currentLevel(ex);
-    return {
-      sets: lvl.sets,
-      reps: lvl.reps,
-      weight: lvl.weight[1],
-      level: state.levels[ex.id],
-    };
-  };
-
-  // Build the list of selectable values around the current level's target,
-  // padded a little so the user can record going under or over.
-  const repChoices = (ex) => {
-    const target = currentLevel(ex).reps;
-    const start = Math.max(1, target - 3);
-    const end = target + 5;
-    const out = [];
-    for (let i = start; i <= end; i++) out.push(i);
-    return out;
-  };
-  const setChoices = (ex) => {
-    const target = currentLevel(ex).sets;
-    const start = Math.max(1, target - 2);
-    const end = target + 3;
-    const out = [];
-    for (let i = start; i <= end; i++) out.push(i);
-    return out;
-  };
-  // Weights stepped in 5 lb increments around the level's range.
-  const weightChoices = (ex) => {
-    const step = 5;
-    const [lo, hi] = currentLevel(ex).weight;
-    const start = Math.max(0, Math.floor((lo - step * 2) / step) * step);
-    const end = Math.ceil((hi + step * 3) / step) * step;
-    const out = [];
-    for (let w = start; w <= end; w += step) out.push(w);
-    return out;
-  };
-
-  const markComplete = (exId, override) => {
-    const ex = exerciseById(exId);
+  const markComplete = (exId) => {
     const day = todayKey();
     if (!state.completed[day]) state.completed[day] = {};
-    state.completed[day][exId] = override || defaultPerformed(ex);
+    // Completion is binary; we only record the level the user was on so the
+    // history reflects what range they hit.
+    state.completed[day][exId] = { level: state.levels[exId] };
     saveState();
     renderExercises();
   };
@@ -324,8 +284,8 @@
     const next = state.levels[exId] + delta;
     if (next < 0 || next >= ex.levels.length) return;
     state.levels[exId] = next;
-    // Re-record today's entry against the new level so the completion still
-    // reflects what level they were on.
+    // If today is already marked done, anchor it to the new level so
+    // history matches what the user actually trained at.
     const today = state.completed[todayKey()];
     if (today && today[exId]) today[exId].level = next;
     saveState();
@@ -358,33 +318,6 @@
       const done = todaysCompletion(ex.id);
       const canDown = lvlIdx > 0;
       const canUp = lvlIdx < ex.levels.length - 1;
-      const setOpts = setChoices(ex)
-        .map((n) => {
-          const sel = done ? done.sets === n : lvl.sets === n;
-          return `<button type="button" class="chip${sel ? " chip--on" : ""}"
-                  data-action="set-sets" data-value="${n}">${n}</button>`;
-        })
-        .join("");
-      const repOpts = repChoices(ex)
-        .map((n) => {
-          const sel = done ? done.reps === n : lvl.reps === n;
-          return `<button type="button" class="chip${sel ? " chip--on" : ""}"
-                  data-action="set-reps" data-value="${n}">${n}</button>`;
-        })
-        .join("");
-      const weightOpts = weightChoices(ex)
-        .map((w) => {
-          const sel = done
-            ? done.weight === w
-            : w >= lvl.weight[0] && w <= lvl.weight[1];
-          return `<button type="button" class="chip${sel ? " chip--on" : ""}"
-                  data-action="set-weight" data-value="${w}">${w}</button>`;
-        })
-        .join("");
-      const setsRepsText = done
-        ? `${done.sets} × ${done.reps}`
-        : `${lvl.sets} × ${lvl.reps}+`;
-      const weightText = done ? `${done.weight}` : fmtWeight(lvl.weight);
       return `
       <div class="exercise-row${done ? " is-done" : ""}" data-id="${ex.id}">
         <button type="button" class="exercise-row__main"
@@ -394,11 +327,11 @@
             <span class="exercise-row__name">${ex.name}</span>
             <span class="exercise-row__meta">
               <span class="lvl-pill">Lvl ${lvlIdx + 1}</span>
-              <span class="exercise-row__target">${setsRepsText}</span>
+              <span class="exercise-row__target">${lvl.sets} × ${lvl.reps}+</span>
             </span>
           </span>
           <span class="exercise-row__weight">
-            <span class="exercise-row__weight-value">${weightText}</span>
+            <span class="exercise-row__weight-value">${fmtWeight(lvl.weight)}</span>
             <span class="exercise-row__weight-unit">lb</span>
           </span>
         </button>
@@ -406,13 +339,17 @@
              aria-label="Complete ${ex.name}">
           <button type="button" class="done-btn"
                   data-action="toggle-done"
-                  aria-pressed="${done ? "true" : "false"}">
-            <span class="done-btn__check" aria-hidden="true">✓</span>
-            <span class="done-btn__label">Done</span>
+                  aria-pressed="${done ? "true" : "false"}"
+                  aria-label="${done ? "Mark incomplete" : "Mark complete"}">
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3.5 8.5 L6.8 11.8 L12.8 4.8" fill="none"
+                    stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
           </button>
           <button type="button" class="caret-btn"
                   data-action="toggle-menu"
-                  aria-label="Adjust ${ex.name}"
+                  aria-label="Change level for ${ex.name}"
                   aria-expanded="false">
             <svg viewBox="0 0 12 8" aria-hidden="true">
               <path d="M1 1.5 L6 6.5 L11 1.5" fill="none"
@@ -422,18 +359,12 @@
           </button>
         </div>
         <div class="exercise-row__menu" role="region"
-             aria-label="Adjust ${ex.name}">
-          <div class="menu-row">
-            <span class="menu-row__label">Sets</span>
-            <div class="menu-row__chips">${setOpts}</div>
-          </div>
-          <div class="menu-row">
-            <span class="menu-row__label">Reps</span>
-            <div class="menu-row__chips">${repOpts}</div>
-          </div>
-          <div class="menu-row">
-            <span class="menu-row__label">Weight</span>
-            <div class="menu-row__chips">${weightOpts}</div>
+             aria-label="Change level for ${ex.name}">
+          <div class="menu-level">
+            <span class="menu-level__caption">Current level</span>
+            <span class="menu-level__summary">
+              Lvl ${lvlIdx + 1} of ${ex.levels.length} · ${lvl.sets}×${lvl.reps}+ · ${fmtWeight(lvl.weight)} lb
+            </span>
           </div>
           <div class="menu-row menu-row--level">
             <button type="button" class="level-btn"
@@ -441,11 +372,6 @@
                     ${canDown ? "" : "disabled"}>
               <span aria-hidden="true">▼</span> Downgrade
             </button>
-            <span class="menu-row__level-text">
-              Lvl ${lvlIdx + 1}: ${lvl.sets}×${lvl.reps}+ · ${fmtWeight(
-        lvl.weight
-      )} lb
-            </span>
             <button type="button" class="level-btn level-btn--up"
                     data-action="upgrade"
                     ${canUp ? "" : "disabled"}>
@@ -477,21 +403,6 @@
       const open = row.classList.toggle("is-open");
       closeAllMenus(open ? row : null);
       target.setAttribute("aria-expanded", open ? "true" : "false");
-      return;
-    }
-    if (
-      action === "set-sets" ||
-      action === "set-reps" ||
-      action === "set-weight"
-    ) {
-      const ex = exerciseById(exId);
-      const value = Number(target.dataset.value);
-      const existing = todaysCompletion(exId) || defaultPerformed(ex);
-      const next = { ...existing };
-      if (action === "set-sets") next.sets = value;
-      else if (action === "set-reps") next.reps = value;
-      else next.weight = value;
-      markComplete(exId, next);
       return;
     }
     if (action === "upgrade") {
