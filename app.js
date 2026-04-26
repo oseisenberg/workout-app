@@ -374,9 +374,10 @@
            </div>`;
       const menuBody = lvlZero
         ? `<p class="menu-zero">
-             You're at <strong>Lvl 0</strong> — just mark complete when
-             you've done what you can. Upgrade to <strong>${nextTier}</strong>
-             when you can hit the full prescription.
+             <strong>Lvl 0</strong> is binary — no target sets or reps.
+             Just tap done when you've done what you can. Upgrade to
+             <strong>${nextTier}</strong> once you're ready to start
+             counting sets.
            </p>`
         : setChipsHtml;
 
