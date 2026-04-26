@@ -5,129 +5,105 @@
   // Each icon is drawn as a silhouette of the equipment, not a person.
   // Structural lines use currentColor; the loaded part uses --accent.
   // Templates in exercises.json reference these by name.
+  // All icons share: 64x64 viewBox, fill: none, stroke: currentColor for
+  // structure, stroke: var(--accent) for the loaded / moving part the
+  // exercise targets. Stroke widths are 3 for everything to keep the line
+  // weight consistent across icons.
   const ICONS = {
     "leg-press": `
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
            stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
            aria-hidden="true">
         <line x1="6" y1="56" x2="58" y2="56" />
-        <polyline points="10,56 10,44 24,44" />
-        <line x1="24" y1="44" x2="50" y2="18" />
-        <line x1="44" y1="10" x2="56" y2="22"
-              stroke="var(--accent)" stroke-width="4.5" />
+        <polyline points="10,56 10,42 24,42" />
+        <line x1="24" y1="42" x2="46" y2="20" />
+        <line x1="40" y1="14" x2="54" y2="28"
+              stroke="var(--accent)" />
       </svg>`,
     "lat-pulldown": `
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
            stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
            aria-hidden="true">
-        <line x1="52" y1="8" x2="52" y2="56" />
-        <line x1="52" y1="10" x2="20" y2="10" />
-        <line x1="20" y1="10" x2="20" y2="22" />
-        <line x1="8" y1="24" x2="32" y2="24"
-              stroke="var(--accent)" stroke-width="4.5" />
-        <line x1="8" y1="20" x2="8" y2="28"
-              stroke="var(--accent)" stroke-width="4" />
-        <line x1="32" y1="20" x2="32" y2="28"
-              stroke="var(--accent)" stroke-width="4" />
-        <polyline points="14,50 14,42 30,42" />
+        <line x1="6" y1="56" x2="58" y2="56" />
+        <line x1="50" y1="56" x2="50" y2="12" />
+        <line x1="50" y1="14" x2="22" y2="14" />
+        <line x1="22" y1="14" x2="22" y2="22" />
+        <line x1="10" y1="22" x2="34" y2="22"
+              stroke="var(--accent)" />
+        <polyline points="14,50 14,40 30,40" />
       </svg>`,
     "chest-press": `
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
            stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
            aria-hidden="true">
         <line x1="6" y1="56" x2="58" y2="56" />
-        <line x1="14" y1="56" x2="14" y2="16" />
-        <line x1="14" y1="42" x2="28" y2="42" />
-        <line x1="14" y1="24" x2="48" y2="24"
-              stroke="var(--accent)" stroke-width="3.5" />
-        <line x1="48" y1="20" x2="48" y2="28"
-              stroke="var(--accent)" stroke-width="4" />
-        <line x1="14" y1="34" x2="48" y2="34"
-              stroke="var(--accent)" stroke-width="3.5" />
-        <line x1="48" y1="30" x2="48" y2="38"
-              stroke="var(--accent)" stroke-width="4" />
+        <line x1="14" y1="56" x2="14" y2="20" />
+        <line x1="14" y1="46" x2="26" y2="46" />
+        <line x1="14" y1="30" x2="46" y2="30"
+              stroke="var(--accent)" />
+        <line x1="46" y1="24" x2="46" y2="36"
+              stroke="var(--accent)" />
       </svg>`,
     "seated-row": `
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
            stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
            aria-hidden="true">
         <line x1="6" y1="56" x2="58" y2="56" />
-        <polyline points="10,42 10,32 22,32 22,42" />
-        <line x1="10" y1="42" x2="22" y2="42" />
-        <line x1="48" y1="50" x2="56" y2="42" />
-        <line x1="52" y1="46" x2="34" y2="38"
-              stroke="var(--accent)" stroke-width="3" />
-        <polyline points="28,34 34,38 28,42"
-                  stroke="var(--accent)" stroke-width="4" />
+        <polyline points="10,46 10,32 22,32 22,46" />
+        <line x1="56" y1="40" x2="36" y2="34"
+              stroke="var(--accent)" />
+        <line x1="32" y1="30" x2="36" y2="38"
+              stroke="var(--accent)" />
       </svg>`,
     "leg-extension": `
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
            stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
            aria-hidden="true">
         <line x1="6" y1="56" x2="58" y2="56" />
-        <line x1="10" y1="56" x2="10" y2="18" />
+        <line x1="10" y1="56" x2="10" y2="22" />
         <line x1="10" y1="38" x2="28" y2="38" />
-        <circle cx="28" cy="38" r="2.5" fill="currentColor" stroke="none" />
-        <path d="M28 50 A12 12 0 0 1 40 38"
-              stroke="currentColor" stroke-width="1.5"
-              stroke-dasharray="2 3" />
         <line x1="28" y1="38" x2="50" y2="22"
-              stroke="var(--accent)" stroke-width="3.5" />
-        <circle cx="51" cy="21" r="4"
-                stroke="var(--accent)" stroke-width="3.5" />
+              stroke="var(--accent)" />
+        <circle cx="50" cy="22" r="4"
+                stroke="var(--accent)" />
       </svg>`,
     "leg-curl": `
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
            stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
            aria-hidden="true">
         <line x1="6" y1="56" x2="58" y2="56" />
-        <line x1="8" y1="36" x2="42" y2="36" />
-        <line x1="14" y1="36" x2="14" y2="48" />
-        <line x1="36" y1="36" x2="36" y2="48" />
-        <circle cx="42" cy="36" r="2.5" fill="currentColor" stroke="none" />
-        <path d="M58 36 A16 16 0 0 0 50 18"
-              stroke="currentColor" stroke-width="1.5"
-              stroke-dasharray="2 3" />
-        <line x1="42" y1="36" x2="50" y2="18"
-              stroke="var(--accent)" stroke-width="3.5" />
-        <circle cx="50" cy="17" r="4"
-                stroke="var(--accent)" stroke-width="3.5" />
+        <line x1="8" y1="38" x2="42" y2="38" />
+        <line x1="14" y1="38" x2="14" y2="50" />
+        <line x1="36" y1="38" x2="36" y2="50" />
+        <line x1="42" y1="38" x2="50" y2="20"
+              stroke="var(--accent)" />
+        <circle cx="50" cy="20" r="4"
+                stroke="var(--accent)" />
       </svg>`,
     "cable-crossover": `
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
            stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
            aria-hidden="true">
         <line x1="6" y1="56" x2="58" y2="56" />
-        <line x1="12" y1="56" x2="12" y2="10" />
-        <line x1="52" y1="56" x2="52" y2="10" />
-        <line x1="12" y1="10" x2="52" y2="10" />
-        <circle cx="12" cy="14" r="2.5" />
-        <circle cx="52" cy="14" r="2.5" />
-        <line x1="12" y1="16" x2="44" y2="42"
-              stroke="var(--accent)" stroke-width="2.5" />
-        <line x1="52" y1="16" x2="20" y2="42"
-              stroke="var(--accent)" stroke-width="2.5" />
-        <circle cx="44" cy="42" r="2.5"
-                fill="var(--accent)" stroke="none" />
-        <circle cx="20" cy="42" r="2.5"
-                fill="var(--accent)" stroke="none" />
+        <line x1="12" y1="56" x2="12" y2="14" />
+        <line x1="52" y1="56" x2="52" y2="14" />
+        <line x1="12" y1="14" x2="52" y2="14" />
+        <line x1="14" y1="18" x2="42" y2="42"
+              stroke="var(--accent)" />
+        <line x1="50" y1="18" x2="22" y2="42"
+              stroke="var(--accent)" />
       </svg>`,
     "pec-deck": `
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
            stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
            aria-hidden="true">
         <line x1="6" y1="56" x2="58" y2="56" />
-        <line x1="32" y1="56" x2="32" y2="14" />
+        <line x1="32" y1="56" x2="32" y2="20" />
         <line x1="22" y1="44" x2="42" y2="44" />
-        <circle cx="32" cy="18" r="2.5" fill="currentColor" stroke="none" />
-        <line x1="32" y1="18" x2="14" y2="34"
-              stroke="var(--accent)" stroke-width="3" />
-        <line x1="32" y1="18" x2="50" y2="34"
-              stroke="var(--accent)" stroke-width="3" />
-        <line x1="11" y1="30" x2="17" y2="38"
-              stroke="var(--accent)" stroke-width="4.5" />
-        <line x1="47" y1="30" x2="53" y2="38"
-              stroke="var(--accent)" stroke-width="4.5" />
+        <line x1="32" y1="20" x2="14" y2="36"
+              stroke="var(--accent)" />
+        <line x1="32" y1="20" x2="50" y2="36"
+              stroke="var(--accent)" />
       </svg>`,
     "barbell": `
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
@@ -135,25 +111,35 @@
            aria-hidden="true">
         <line x1="6" y1="32" x2="58" y2="32" />
         <rect x="10" y="22" width="6" height="20" rx="1.5"
-              stroke="var(--accent)" stroke-width="3" />
-        <rect x="20" y="25" width="4" height="14" rx="1"
-              stroke="var(--accent)" stroke-width="3" />
-        <rect x="40" y="25" width="4" height="14" rx="1"
-              stroke="var(--accent)" stroke-width="3" />
+              stroke="var(--accent)" />
+        <rect x="20" y="26" width="4" height="12" rx="1"
+              stroke="var(--accent)" />
+        <rect x="40" y="26" width="4" height="12" rx="1"
+              stroke="var(--accent)" />
         <rect x="48" y="22" width="6" height="20" rx="1.5"
-              stroke="var(--accent)" stroke-width="3" />
+              stroke="var(--accent)" />
+      </svg>`,
+    "dumbbell": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="22" y1="32" x2="42" y2="32" />
+        <rect x="14" y="22" width="8" height="20" rx="1.5"
+              stroke="var(--accent)" />
+        <rect x="42" y="22" width="8" height="20" rx="1.5"
+              stroke="var(--accent)" />
       </svg>`,
     "pushup": `
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
            stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
            aria-hidden="true">
         <line x1="6" y1="58" x2="58" y2="58" />
-        <line x1="14" y1="36" x2="50" y2="36" />
-        <circle cx="11" cy="36" r="4" fill="currentColor" stroke="none" />
-        <path d="M18 36 L20 50 L28 50"
-              stroke="var(--accent)" stroke-width="3.5" />
-        <path d="M44 36 L46 50 L52 50"
-              stroke="var(--accent)" stroke-width="3.5" />
+        <line x1="16" y1="36" x2="52" y2="36" />
+        <circle cx="13" cy="36" r="4" />
+        <polyline points="20,36 24,50 32,50"
+                  stroke="var(--accent)" />
+        <polyline points="44,36 48,50 56,50"
+                  stroke="var(--accent)" />
       </svg>`,
     "pullup": `
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
@@ -163,11 +149,11 @@
         <line x1="10" y1="6" x2="10" y2="14" />
         <line x1="54" y1="6" x2="54" y2="14" />
         <line x1="22" y1="14" x2="22" y2="28"
-              stroke="var(--accent)" stroke-width="3.5" />
+              stroke="var(--accent)" />
         <line x1="42" y1="14" x2="42" y2="28"
-              stroke="var(--accent)" stroke-width="3.5" />
-        <circle cx="32" cy="24" r="4" />
-        <line x1="32" y1="28" x2="32" y2="46" />
+              stroke="var(--accent)" />
+        <circle cx="32" cy="26" r="4" />
+        <line x1="32" y1="30" x2="32" y2="46" />
         <line x1="32" y1="46" x2="26" y2="56" />
         <line x1="32" y1="46" x2="38" y2="56" />
       </svg>`,
@@ -176,35 +162,23 @@
            stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
            aria-hidden="true">
         <line x1="6" y1="56" x2="58" y2="56" />
-        <path d="M10 56 L18 40 L30 40 L34 28"
-              stroke="var(--accent)" stroke-width="3.5" />
-        <circle cx="36" cy="22" r="4" />
-        <line x1="30" y1="40" x2="40" y2="34" />
+        <polyline points="12,56 24,38 38,38" />
+        <line x1="38" y1="38" x2="44" y2="26"
+              stroke="var(--accent)" />
+        <circle cx="46" cy="22" r="4"
+                stroke="var(--accent)" />
       </svg>`,
     "lunge": `
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
            stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
            aria-hidden="true">
-        <line x1="6" y1="56" x2="58" y2="56" />
-        <circle cx="30" cy="14" r="4" />
-        <line x1="30" y1="18" x2="30" y2="36" />
-        <path d="M30 36 L42 48 L42 56" stroke="var(--accent)" stroke-width="3.5" />
-        <line x1="30" y1="36" x2="14" y2="56"
-              stroke="var(--accent)" stroke-width="3.5" />
-      </svg>`,
-    "dumbbell": `
-      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
-           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-           aria-hidden="true">
-        <line x1="20" y1="32" x2="44" y2="32" />
-        <rect x="12" y="22" width="8" height="20" rx="1.5"
-              stroke="var(--accent)" stroke-width="3" />
-        <rect x="44" y="22" width="8" height="20" rx="1.5"
-              stroke="var(--accent)" stroke-width="3" />
-        <line x1="8" y1="24" x2="8" y2="40"
-              stroke="var(--accent)" stroke-width="4" />
-        <line x1="56" y1="24" x2="56" y2="40"
-              stroke="var(--accent)" stroke-width="4" />
+        <line x1="6" y1="58" x2="58" y2="58" />
+        <circle cx="32" cy="14" r="4" />
+        <line x1="32" y1="18" x2="32" y2="36" />
+        <polyline points="32,36 44,48 44,58"
+                  stroke="var(--accent)" />
+        <line x1="32" y1="36" x2="16" y2="58"
+              stroke="var(--accent)" />
       </svg>`,
   };
 
