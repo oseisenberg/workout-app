@@ -938,27 +938,17 @@
       return;
     }
     if (empty) empty.hidden = true;
-    const itemHtml = items.map((ex) => {
-      const archived = isArchived(ex.id);
-      const label = archived ? "Restore" : "Add";
-      return `
-      <button type="button"
-              class="picker-item${archived ? " picker-item--archived" : ""}"
-              data-id="${ex.id}">
+    const itemHtml = items.map((ex) => `
+      <button type="button" class="picker-item" data-id="${ex.id}">
         <span class="picker-item__icon">${ex.icon}</span>
-        <span class="picker-item__name">
-          ${ex.name}${archived
-            ? ' <span class="picker-item__badge">Archived</span>'
-            : ""}
-        </span>
-        <span class="picker-item__add" aria-label="${label} ${ex.name}">
+        <span class="picker-item__name">${ex.name}</span>
+        <span class="picker-item__add" aria-label="Add ${ex.name}">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 5 V19 M5 12 H19" fill="none" stroke="currentColor"
                   stroke-width="2.4" stroke-linecap="round" />
           </svg>
         </span>
-      </button>`;
-    }).join("");
+      </button>`).join("");
     const moreHtml = hiddenCount > 0
       ? `<button type="button" class="picker__more" data-action="show-more">
            Show all (${hiddenCount} more)

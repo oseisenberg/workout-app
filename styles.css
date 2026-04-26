@@ -812,27 +812,6 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.picker-item__badge {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 1px 7px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--muted);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  vertical-align: middle;
-}
-.picker-item--archived .picker-item__icon { opacity: 0.7; }
-.picker-item--archived .picker-item__add {
-  background: var(--surface);
-  color: var(--muted);
-  border: 1px solid var(--border-strong);
-  box-shadow: none;
-}
 .picker-item__add {
   width: 44px;
   height: 44px;
