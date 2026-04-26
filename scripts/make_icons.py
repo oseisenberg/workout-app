@@ -38,14 +38,12 @@ def rounded_square_mask(size, radius):
     return mask
 
 
-def stamp_disc(pixels, size, cx, cy, radius, color):
-    r2 = radius * radius
+def stamp_square(pixels, size, cx, cy, radius, color):
     for dy in range(-radius, radius + 1):
         for dx in range(-radius, radius + 1):
-            if dx * dx + dy * dy <= r2:
-                x, y = int(cx + dx), int(cy + dy)
-                if 0 <= x < size and 0 <= y < size:
-                    pixels[y][x] = color
+            x, y = int(cx + dx), int(cy + dy)
+            if 0 <= x < size and 0 <= y < size:
+                pixels[y][x] = color
 
 
 def draw_thick_line(pixels, size, p1, p2, color, thickness):
@@ -58,7 +56,7 @@ def draw_thick_line(pixels, size, p1, p2, color, thickness):
         t = i / steps
         cx = x1 + (x2 - x1) * t
         cy = y1 + (y2 - y1) * t
-        stamp_disc(pixels, size, cx, cy, radius, color)
+        stamp_square(pixels, size, cx, cy, radius, color)
 
 
 def draw_w(pixels, size):
