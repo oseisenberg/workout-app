@@ -218,7 +218,7 @@
     },
   ];
 
-  const STORAGE_KEY = "workout-app:state:v2";
+  const STORAGE_KEY = "workout-app:state:v3";
   const todayKey = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${
@@ -260,12 +260,28 @@
   const todaysCompletion = (exId) => (state.completed[todayKey()] || {})[exId];
   const fmtWeight = (w) => `${w[0]}–${w[1]}`;
 
-  const markComplete = (exId) => {
+  // Sets the user can record for today: 1..target+2 so they can mark partial
+  // progress through a workout or note that they did extra sets.
+  const setChoices = (ex) => {
+    const target = currentLevel(ex).sets;
+    const out = [];
+    for (let i = 1; i <= target + 2; i++) out.push(i);
+    return out;
+  };
+
+  // Set `setsDone` to a positive number to mark progress, or omit to mark
+  // the full target. Pass 0 (or call clearComplete) to remove the entry.
+  const markComplete = (exId, setsDone) => {
+    const ex = exerciseById(exId);
+    const target = currentLevel(ex).sets;
+    const sets = setsDone == null ? target : setsDone;
+    if (sets <= 0) {
+      clearComplete(exId);
+      return;
+    }
     const day = todayKey();
     if (!state.completed[day]) state.completed[day] = {};
-    // Completion is binary; we only record the level the user was on so the
-    // history reflects what range they hit.
-    state.completed[day][exId] = { level: state.levels[exId] };
+    state.completed[day][exId] = { level: state.levels[exId], sets };
     saveState();
     renderExercises();
   };
@@ -318,8 +334,19 @@
       const done = todaysCompletion(ex.id);
       const canDown = lvlIdx > 0;
       const canUp = lvlIdx < ex.levels.length - 1;
+      const setsDone = done ? done.sets : 0;
+      const isPartial = done && setsDone < lvl.sets;
+      const setOpts = setChoices(ex)
+        .map((n) => {
+          const sel = setsDone === n;
+          return `<button type="button" class="chip${sel ? " chip--on" : ""}"
+                  data-action="set-sets" data-value="${n}">${n}</button>`;
+        })
+        .join("");
       return `
-      <div class="exercise-row${done ? " is-done" : ""}" data-id="${ex.id}">
+      <div class="exercise-row${done ? " is-done" : ""}${
+        isPartial ? " is-partial" : ""
+      }" data-id="${ex.id}">
         <button type="button" class="exercise-row__main"
                 data-action="open-details">
           <span class="exercise-row__icon">${ex.icon}</span>
@@ -327,7 +354,9 @@
             <span class="exercise-row__name">${ex.name}</span>
             <span class="exercise-row__meta">
               <span class="lvl-pill">Lvl ${lvlIdx + 1}</span>
-              <span class="exercise-row__target">${lvl.sets} × ${lvl.reps}+</span>
+              <span class="exercise-row__target">${
+                done ? `${setsDone}/${lvl.sets}` : lvl.sets
+              } × ${lvl.reps}+</span>
             </span>
           </span>
           <span class="exercise-row__weight">
@@ -349,7 +378,7 @@
           </button>
           <button type="button" class="caret-btn"
                   data-action="toggle-menu"
-                  aria-label="Change level for ${ex.name}"
+                  aria-label="Adjust ${ex.name}"
                   aria-expanded="false">
             <svg viewBox="0 0 12 8" aria-hidden="true">
               <path d="M1 1.5 L6 6.5 L11 1.5" fill="none"
@@ -359,7 +388,11 @@
           </button>
         </div>
         <div class="exercise-row__menu" role="region"
-             aria-label="Change level for ${ex.name}">
+             aria-label="Adjust ${ex.name}">
+          <div class="menu-row menu-row--chips">
+            <span class="menu-row__label">Sets done</span>
+            <div class="menu-row__chips">${setOpts}</div>
+          </div>
           <div class="menu-level">
             <span class="menu-level__caption">Current level</span>
             <span class="menu-level__summary">
@@ -403,6 +436,10 @@
       const open = row.classList.toggle("is-open");
       closeAllMenus(open ? row : null);
       target.setAttribute("aria-expanded", open ? "true" : "false");
+      return;
+    }
+    if (action === "set-sets") {
+      markComplete(exId, Number(target.dataset.value));
       return;
     }
     if (action === "upgrade") {
