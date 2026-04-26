@@ -942,7 +942,48 @@
     }
   };
 
+  const TEST_BACKUP_KEY = "workout-app:test-backup:v7";
+
+  const renderSettings = () => {
+    const body = $("settings-body");
+    if (!body) return;
+    const hasBackup = !!localStorage.getItem(TEST_BACKUP_KEY);
+    body.innerHTML = `
+      <button type="button" class="settings__option" data-action="export-all">
+        <span class="settings__option-title">Export all data</span>
+        <span class="settings__option-desc">
+          Includes every exercise, level, and completion history.
+        </span>
+      </button>
+      <button type="button" class="settings__option"
+              data-action="export-no-history">
+        <span class="settings__option-title">Export without history</span>
+        <span class="settings__option-desc">
+          Just the active exercises and their current levels.
+        </span>
+      </button>
+      ${hasBackup
+        ? `<button type="button" class="settings__option settings__option--danger"
+                   data-action="undo-test-data">
+             <span class="settings__option-title">Undo test data</span>
+             <span class="settings__option-desc">
+               Restore the state you had before loading test data.
+             </span>
+           </button>`
+        : `<button type="button" class="settings__option"
+                   data-action="load-test-data">
+             <span class="settings__option-title">Load test data</span>
+             <span class="settings__option-desc">
+               Generate ~60 days of fake completion history for every added
+               exercise so the chart, streak, and muscle diagrams have
+               something to show. Your real state is backed up locally.
+             </span>
+           </button>`}
+    `;
+  };
+
   const openSettings = () => {
+    renderSettings();
     $("settings").hidden = false;
     document.body.classList.add("modal-open");
   };
@@ -951,6 +992,70 @@
     if ($("picker").hidden && $("details").hidden) {
       document.body.classList.remove("modal-open");
     }
+  };
+
+  // Generate ~60 days of plausible completion history for every active
+  // exercise, walking the tier index up over time so the chart and the
+  // muscle diagrams have something to render. The current state is stashed
+  // under TEST_BACKUP_KEY so it can be restored.
+  const generateTestData = () => {
+    if (state.addedIds.length === 0) return;
+    localStorage.setItem(TEST_BACKUP_KEY, JSON.stringify(state));
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const fmt = (d) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${
+        String(d.getDate()).padStart(2, "0")
+      }`;
+    const completed = { ...state.completed };
+    const levels = { ...state.levels };
+
+    for (const exId of state.addedIds) {
+      const ex = exerciseById(exId);
+      if (!ex) continue;
+      const totalTiers = ex.levels.length;
+      const snoozeDays = ex.snoozeDays || 1;
+      let curTier = 1;
+      let lastTs = null;
+      for (let i = 60; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        if (lastTs && (d - lastTs) / 86400000 < snoozeDays) continue;
+        if (Math.random() > 0.65) continue;
+        if (Math.random() < 0.12 && curTier < totalTiers - 1) curTier++;
+        const lvl = ex.levels[curTier];
+        const targetSets = lvl.sets || 1;
+        const sets = isLevelZero(lvl)
+          ? 1
+          : Math.random() < 0.12
+            ? Math.max(1, targetSets - 1)
+            : targetSets;
+        const dateKey = fmt(d);
+        if (!completed[dateKey]) completed[dateKey] = {};
+        completed[dateKey][exId] = { level: curTier, sets };
+        lastTs = d;
+      }
+      levels[exId] = curTier;
+    }
+
+    state.completed = completed;
+    state.levels = levels;
+    saveState();
+    renderExercises();
+  };
+
+  const undoTestData = () => {
+    const raw = localStorage.getItem(TEST_BACKUP_KEY);
+    if (!raw) return;
+    try {
+      state = { ...blankState(), ...JSON.parse(raw) };
+    } catch {
+      return;
+    }
+    localStorage.removeItem(TEST_BACKUP_KEY);
+    saveState();
+    renderExercises();
   };
 
   // Triggers a JSON file download with the given object.
@@ -1176,6 +1281,13 @@
       const action = target.dataset.action;
       if (action === "export-all") exportData(true);
       else if (action === "export-no-history") exportData(false);
+      else if (action === "load-test-data") {
+        generateTestData();
+        closeSettings();
+      } else if (action === "undo-test-data") {
+        undoTestData();
+        closeSettings();
+      }
     });
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.addEventListener("click", () => switchTab(tab.dataset.tab));

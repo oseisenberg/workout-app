@@ -111,6 +111,8 @@ body {
   color: var(--muted);
   line-height: 1.4;
 }
+.settings__option--danger { border-color: rgba(234, 179, 8, 0.4); }
+.settings__option--danger .settings__option-title { color: #fde68a; }
 
 .content {
   padding-top: 12px;
