@@ -563,36 +563,28 @@ body {
   border-color: var(--accent);
 }
 
-/* Briefly play a green flash + slight scale on the row at its current
-   spot before the state mutation moves it into the (possibly collapsed)
-   Snoozed grid. Pairs with snoozed-toggle--flash so the destination
-   pulses too. */
+/* Row leaving Available: a quick scale-up then collapse-and-fade so the
+   motion does the talking. The Snoozed header gives a small bump as the
+   destination cue. */
 @keyframes complete-out {
-  0%   { transform: scale(1); opacity: 1;
-         box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-  35%  { transform: scale(1.02); opacity: 1;
-         box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.3); }
-  100% { transform: scale(0.96); opacity: 0;
-         box-shadow: 0 0 0 14px rgba(34, 197, 94, 0); }
+  0%   { transform: scale(1); opacity: 1; }
+  20%  { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(0.7); opacity: 0; }
 }
 .exercise-row--completing {
-  animation: complete-out 0.32s ease-out forwards;
+  animation: complete-out 0.34s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform-origin: center;
   pointer-events: none;
 }
 
 @keyframes snoozed-pulse {
-  0%   { background: rgba(34, 197, 94, 0); }
-  35%  { background: rgba(34, 197, 94, 0.18); }
-  100% { background: rgba(34, 197, 94, 0); }
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
 }
 .snoozed-toggle--flash {
-  animation: snoozed-pulse 0.7s ease-out;
-  border-radius: 8px;
-}
-.snoozed-toggle--flash .card-toggle__count {
-  background: var(--ok-strong);
-  color: white;
-  transition: background 0.15s ease, color 0.15s ease;
+  animation: snoozed-pulse 0.45s ease-out;
+  transform-origin: left center;
 }
 
 .empty-state {
