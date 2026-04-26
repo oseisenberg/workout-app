@@ -356,6 +356,9 @@
                   data-action="set-reps" data-value="${n}">${n}</button>`;
         })
         .join("");
+      const performed = done
+        ? `${done.sets} × ${done.reps}`
+        : `${lvl.sets} × ${fmtRange(lvl.reps)}`;
       return `
       <div class="exercise-row${done ? " is-done" : ""}" data-id="${ex.id}">
         <button type="button" class="exercise-row__main"
@@ -363,17 +366,10 @@
           <span class="exercise-row__icon">${ex.icon}</span>
           <span class="exercise-row__title">
             <span class="exercise-row__name">${ex.name}</span>
-            <span class="exercise-row__level">Level ${lvlIdx + 1} / ${
-        ex.levels.length
-      }</span>
-          </span>
-          <span class="exercise-row__stat">
-            <span class="exercise-row__stat-label">Sets</span>
-            <span class="exercise-row__stat-value">${lvl.sets}</span>
-          </span>
-          <span class="exercise-row__stat">
-            <span class="exercise-row__stat-label">Reps</span>
-            <span class="exercise-row__stat-value">${fmtRange(lvl.reps)}</span>
+            <span class="exercise-row__meta">
+              <span class="lvl-pill">Lvl ${lvlIdx + 1}</span>
+              <span class="exercise-row__target">${performed}</span>
+            </span>
           </span>
         </button>
         <div class="exercise-row__action" role="group"
@@ -382,12 +378,7 @@
                   data-action="toggle-done"
                   aria-pressed="${done ? "true" : "false"}">
             <span class="done-btn__check" aria-hidden="true">✓</span>
-            <span class="done-btn__label">${done ? "Done" : "Mark done"}</span>
-            ${
-              done
-                ? `<span class="done-btn__detail">${done.sets}×${done.reps}</span>`
-                : ""
-            }
+            <span class="done-btn__label">Done</span>
           </button>
           <button type="button" class="caret-btn"
                   data-action="toggle-menu"
