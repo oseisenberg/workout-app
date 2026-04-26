@@ -1137,6 +1137,7 @@
       const item = event.target.closest(".picker-item");
       if (!item) return;
       addExercise(item.dataset.id);
+      closePicker();
     });
     $("details-close").addEventListener("click", closeDetails);
     $("details-backdrop").addEventListener("click", closeDetails);
