@@ -27,23 +27,48 @@
   </header>
 
   <main class="content">
-    <section id="available-card" class="card">
-      <h2>Available</h2>
-      <div id="available-grid" class="exercise-grid"></div>
-      <p id="all-done-state" class="empty-state" hidden>
-        Nice — every exercise is done. They'll come back tomorrow.
-      </p>
-      <p id="empty-state" class="empty-state" hidden>
-        No exercises yet. Tap <span aria-hidden="true">+</span>
-        to add one from the catalog.
-      </p>
-    </section>
+    <div id="home-view">
+      <section id="available-card" class="card">
+        <h2>Available</h2>
+        <div id="available-grid" class="exercise-grid"></div>
+        <p id="all-done-state" class="empty-state" hidden>
+          Nice — every exercise is done. They'll come back tomorrow.
+        </p>
+        <p id="empty-state" class="empty-state" hidden>
+          No exercises yet. Tap <span aria-hidden="true">+</span>
+          to add one from the catalog.
+        </p>
+      </section>
 
-    <section id="snoozed-card" class="card card--snoozed" hidden>
-      <h2>Snoozed</h2>
-      <div id="snoozed-grid" class="exercise-grid"></div>
-    </section>
+      <section id="snoozed-card" class="card card--snoozed" hidden>
+        <h2>Snoozed</h2>
+        <div id="snoozed-grid" class="exercise-grid"></div>
+      </section>
+    </div>
+
+    <div id="analysis-view" hidden></div>
   </main>
+
+  <nav class="tabs" role="tablist">
+    <button id="tab-home" type="button" class="tab tab--active"
+            data-tab="home" role="tab" aria-selected="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 6 H20 M4 12 H20 M4 18 H20" fill="none"
+              stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" />
+      </svg>
+      <span>Home</span>
+    </button>
+    <button id="tab-analysis" type="button" class="tab"
+            data-tab="analysis" role="tab" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 19 V5 M4 19 H20 M8 14 V19 M13 9 V19 M18 12 V19"
+              fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <span>Analysis</span>
+    </button>
+  </nav>
 
   <button id="add-exercise-btn" class="fab" type="button"
           aria-label="Add exercise">

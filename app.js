@@ -557,6 +557,154 @@
       allDoneState.hidden = !(available.length === 0 && snoozed.length > 0);
     }
     if (openDetailsId != null) renderDetails();
+    if (activeTab === "analysis") renderAnalysis();
+  };
+
+  // === Analysis tab =====================================================
+  const sessionsCount = (exId) => {
+    let count = 0;
+    for (const date in state.completed) {
+      if (state.completed[date] && state.completed[date][exId]) count++;
+    }
+    return count;
+  };
+
+  const computeActivity = () => {
+    const dates = Object.keys(state.completed).filter(
+      (d) =>
+        state.completed[d] && Object.keys(state.completed[d]).length > 0
+    );
+    let totalSets = 0;
+    for (const d of dates) {
+      for (const exId in state.completed[d]) {
+        totalSets += state.completed[d][exId].sets || 0;
+      }
+    }
+    // Streak: walk back from today (or yesterday if today empty) until a gap.
+    const dateSet = new Set(dates);
+    const cur = new Date();
+    cur.setHours(0, 0, 0, 0);
+    const fmt = (d) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${
+        String(d.getDate()).padStart(2, "0")
+      }`;
+    let streak = 0;
+    if (!dateSet.has(fmt(cur))) cur.setDate(cur.getDate() - 1);
+    while (dateSet.has(fmt(cur))) {
+      streak++;
+      cur.setDate(cur.getDate() - 1);
+    }
+    return { workouts: dates.length, totalSets, streak };
+  };
+
+  const computeMuscleStats = () => {
+    const counts = {};
+    for (const date in state.completed) {
+      const day = state.completed[date];
+      if (!day) continue;
+      for (const exId in day) {
+        const ex = exerciseById(exId);
+        if (!ex || !ex.muscles) continue;
+        for (const m of ex.muscles.split("·").map((s) => s.trim())) {
+          if (!m) continue;
+          counts[m] = (counts[m] || 0) + 1;
+        }
+      }
+    }
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  };
+
+  const renderAnalysis = () => {
+    const view = $("analysis-view");
+    if (!view) return;
+    const activity = computeActivity();
+    const muscles = computeMuscleStats();
+    const exercises = state.addedIds.map(exerciseById).filter(Boolean);
+    const maxMuscleCount = muscles.length ? muscles[0][1] : 1;
+
+    const activityCard = `
+      <section class="card">
+        <h2>Activity</h2>
+        <div class="stat-grid">
+          <div class="stat">
+            <span class="stat__value">${activity.workouts}</span>
+            <span class="stat__label">Workout days</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">${activity.streak}</span>
+            <span class="stat__label">Day streak</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">${activity.totalSets}</span>
+            <span class="stat__label">Total sets</span>
+          </div>
+        </div>
+      </section>`;
+
+    const musclesCard = muscles.length === 0 ? "" : `
+      <section class="card">
+        <h2>Muscles worked</h2>
+        <ul class="muscle-list">
+          ${muscles.map(([name, count]) => `
+            <li class="muscle-list__item">
+              <span class="muscle-list__name">${name}</span>
+              <span class="muscle-list__bar">
+                <span class="muscle-list__bar-fill"
+                      style="width: ${(count / maxMuscleCount) * 100}%">
+                </span>
+              </span>
+              <span class="muscle-list__count">${count}</span>
+            </li>`).join("")}
+        </ul>
+      </section>`;
+
+    const progressCard = exercises.length === 0 ? "" : `
+      <section class="card">
+        <h2>Progress</h2>
+        <ul class="progress-list">
+          ${exercises.map((ex) => {
+            const lvlIdx = state.levels[ex.id];
+            const lvl = ex.levels[lvlIdx];
+            const sessions = sessionsCount(ex.id);
+            const lvlZero = isLevelZero(lvl);
+            return `
+              <li>
+                <button type="button" class="progress-row" data-id="${ex.id}">
+                  <span class="progress-row__icon">${ex.icon}</span>
+                  <span class="progress-row__name">${ex.name}</span>
+                  <span class="lvl-pill${lvlZero ? " lvl-pill--zero" : ""}">${
+                    tierName(lvl)
+                  }${renderPips(lvl)}</span>
+                  <span class="progress-row__sessions">${sessions}×</span>
+                </button>
+              </li>`;
+          }).join("")}
+        </ul>
+      </section>`;
+
+    const empty = activity.workouts === 0 && exercises.length === 0
+      ? `<p class="empty-state">
+           No data yet — add an exercise from the Home tab and complete it
+           to start seeing stats here.
+         </p>`
+      : "";
+
+    view.innerHTML = activityCard + musclesCard + progressCard + empty;
+  };
+
+  // === Tab switching =====================================================
+  let activeTab = "home";
+  const switchTab = (tab) => {
+    activeTab = tab;
+    $("home-view").hidden = tab !== "home";
+    $("analysis-view").hidden = tab !== "analysis";
+    $("add-exercise-btn").hidden = tab !== "home";
+    for (const btn of document.querySelectorAll(".tab")) {
+      const on = btn.dataset.tab === tab;
+      btn.classList.toggle("tab--active", on);
+      btn.setAttribute("aria-selected", on ? "true" : "false");
+    }
+    if (tab === "analysis") renderAnalysis();
   };
 
   const renderPicker = () => {
@@ -797,6 +945,14 @@
     });
     $("details-close").addEventListener("click", closeDetails);
     $("details-backdrop").addEventListener("click", closeDetails);
+    $("analysis-view").addEventListener("click", (event) => {
+      const btn = event.target.closest(".progress-row");
+      if (!btn) return;
+      openDetails(btn.dataset.id);
+    });
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => switchTab(tab.dataset.tab));
+    });
     document.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;
       if (!$("details").hidden) closeDetails();
