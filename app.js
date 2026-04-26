@@ -460,19 +460,37 @@
     row.classList.add("exercise-row--upgraded");
   };
 
-  // Small ripple + check bounce when an exercise transitions from "not
-  // started today" to "done". Re-renders happen before this runs so we
-  // look up the row in whichever card it ended up in.
-  const flashComplete = (exId) => {
+  // Animate the row at its current spot before letting it be re-rendered
+  // into Snoozed (which may be collapsed and therefore invisible). After
+  // the animation finishes, run the state mutation and pulse the Snoozed
+  // header so the user can see where the exercise went.
+  const animateThenComplete = (exId, setsValue) => {
+    const wasDone = !!todaysCompletion(exId);
+    const apply = () => {
+      if (setsValue != null) markComplete(exId, setsValue);
+      else markComplete(exId);
+      flashSnoozedHeader();
+    };
+    if (wasDone) {
+      apply();
+      return;
+    }
     const row = document.querySelector(`.exercise-row[data-id="${exId}"]`);
-    if (!row) return;
-    row.classList.remove("exercise-row--just-completed");
-    void row.offsetWidth;
-    row.classList.add("exercise-row--just-completed");
-    setTimeout(
-      () => row.classList.remove("exercise-row--just-completed"),
-      600,
-    );
+    if (!row) {
+      apply();
+      return;
+    }
+    row.classList.add("exercise-row--completing");
+    setTimeout(apply, 320);
+  };
+
+  const flashSnoozedHeader = () => {
+    const toggle = $("snoozed-toggle");
+    if (!toggle) return;
+    toggle.classList.remove("snoozed-toggle--flash");
+    void toggle.offsetWidth;
+    toggle.classList.add("snoozed-toggle--flash");
+    setTimeout(() => toggle.classList.remove("snoozed-toggle--flash"), 700);
   };
 
   const closeAllMenus = (except) => {
@@ -1098,12 +1116,8 @@
       const action = target.dataset.action;
 
       if (action === "toggle-done") {
-        if (todaysCompletion(exId)) {
-          clearComplete(exId);
-        } else {
-          markComplete(exId);
-          flashComplete(exId);
-        }
+        if (todaysCompletion(exId)) clearComplete(exId);
+        else animateThenComplete(exId);
         return;
       }
       if (action === "toggle-menu") {
@@ -1113,9 +1127,7 @@
         return;
       }
       if (action === "set-sets") {
-        const wasDone = !!todaysCompletion(exId);
-        markComplete(exId, Number(target.dataset.value));
-        if (!wasDone) flashComplete(exId);
+        animateThenComplete(exId, Number(target.dataset.value));
         return;
       }
       if (action === "upgrade") return changeLevel(exId, +1);
