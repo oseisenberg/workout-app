@@ -405,3 +405,190 @@ body {
   animation: upgrade-flash 0.7s ease-out 1;
   border-color: var(--accent);
 }
+
+.empty-state {
+  margin: 8px 0 4px;
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  border: 1px dashed var(--border-strong);
+  border-radius: 12px;
+}
+
+.load-error {
+  color: var(--err);
+  font-size: 13px;
+  margin: 8px 0 0;
+}
+
+/* Floating action button — adds an exercise from the catalog. */
+.fab {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(24px, calc(env(safe-area-inset-bottom) + 20px));
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--accent);
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45),
+              0 2px 6px rgba(0, 0, 0, 0.35);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease, background 0.12s ease;
+  z-index: 30;
+}
+.fab:active { transform: scale(0.94); }
+.fab:hover { background: var(--accent-strong); }
+.fab svg { width: 26px; height: 26px; display: block; }
+
+/* Picker modal. */
+.picker {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.picker[hidden] { display: none; }
+.picker__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+.picker__sheet {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: 82vh;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
+  animation: picker-in 0.18s ease-out;
+}
+@keyframes picker-in {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@media (min-width: 540px) {
+  .picker { align-items: center; }
+  .picker__sheet { border-radius: 16px; max-height: 70vh; }
+}
+
+.picker__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 10px;
+}
+.picker__title {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.picker__close {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.picker__close:hover { color: var(--text); background: var(--surface-2); }
+.picker__close svg { width: 16px; height: 16px; }
+
+.picker__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  padding: 4px 2px;
+  -webkit-overflow-scrolling: touch;
+}
+.picker__empty {
+  margin: 24px 8px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.picker-item {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.picker-item:hover {
+  background: #2a2a2f;
+  border-color: var(--border-strong);
+}
+.picker-item:active { transform: scale(0.99); }
+.picker-item__icon { width: 40px; height: 40px; }
+.picker-item__icon svg { width: 100%; height: 100%; display: block; }
+.picker-item__title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.picker-item__name {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.picker-item__muscles {
+  font-size: 12px;
+  color: var(--muted);
+}
+.picker-item__starts {
+  grid-column: 2 / 4;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.picker-item__add {
+  grid-row: 1;
+  grid-column: 3;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.modal-open { overflow: hidden; }

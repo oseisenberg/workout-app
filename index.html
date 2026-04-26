@@ -30,8 +30,42 @@
     <section class="card">
       <h2>Exercises</h2>
       <div id="exercise-grid" class="exercise-grid"></div>
+      <p id="empty-state" class="empty-state" hidden>
+        No exercises yet. Tap <span aria-hidden="true">+</span>
+        to add one from the catalog.
+      </p>
     </section>
   </main>
+
+  <button id="add-exercise-btn" class="fab" type="button"
+          aria-label="Add exercise">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 5 V19 M5 12 H19" fill="none" stroke="currentColor"
+            stroke-width="2.4" stroke-linecap="round" />
+    </svg>
+  </button>
+
+  <div id="picker" class="picker" hidden role="dialog" aria-modal="true"
+       aria-labelledby="picker-title">
+    <div id="picker-backdrop" class="picker__backdrop"></div>
+    <div class="picker__sheet" role="document">
+      <div class="picker__header">
+        <h2 id="picker-title" class="picker__title">Add exercise</h2>
+        <button id="picker-close" type="button" class="picker__close"
+                aria-label="Close">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4 4 L12 12 M12 4 L4 12" fill="none"
+                  stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+      <div id="picker-list" class="picker__list"></div>
+      <p id="picker-empty" class="picker__empty" hidden>
+        You've added every exercise in the catalog.
+      </p>
+    </div>
+  </div>
 
   <script src="./app.js" defer></script>
 </body>

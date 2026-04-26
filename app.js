@@ -1,224 +1,194 @@
 (() => {
   const $ = (id) => document.getElementById(id);
 
-  // Each icon is drawn as a silhouette of the machine itself, not a person.
-  // Structural lines use currentColor; the moving/loaded part uses --accent.
-  //
-  // `levels` go from easier to harder. Upgrading moves to the next level and
-  // is meant to feel like a milestone — bigger jump than just adding a couple
-  // of pounds. The middle level is the default starting point.
-  //
-  // Each level has `sets`, a target minimum `reps` (no upper bound — more is
-  // always fine), and a `weight` range [min, max] in pounds.
-  const EXERCISES = [
-    {
-      id: "leg-press",
-      name: "Leg Press",
-      muscles: "Quads · Glutes",
-      levels: [
-        { sets: 2, reps: 8,  weight: [90, 135] },
-        { sets: 3, reps: 10, weight: [135, 180] },
-        { sets: 4, reps: 12, weight: [180, 230] },
-        { sets: 5, reps: 15, weight: [230, 290] },
-      ],
-      icon: `
-        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
-             stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
-          <line x1="6" y1="56" x2="58" y2="56" />
-          <polyline points="10,56 10,44 24,44" />
-          <line x1="24" y1="44" x2="50" y2="18" />
-          <line x1="44" y1="10" x2="56" y2="22"
-                stroke="var(--accent)" stroke-width="4.5" />
-        </svg>`,
-    },
-    {
-      id: "lat-pulldown",
-      name: "Lat Pulldown",
-      muscles: "Lats · Biceps",
-      levels: [
-        { sets: 2, reps: 8,  weight: [60, 80] },
-        { sets: 3, reps: 10, weight: [80, 100] },
-        { sets: 4, reps: 12, weight: [100, 125] },
-      ],
-      icon: `
-        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
-             stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
-          <line x1="52" y1="8" x2="52" y2="56" />
-          <line x1="52" y1="10" x2="20" y2="10" />
-          <line x1="20" y1="10" x2="20" y2="22" />
-          <line x1="8" y1="24" x2="32" y2="24"
-                stroke="var(--accent)" stroke-width="4.5" />
-          <line x1="8" y1="20" x2="8" y2="28"
-                stroke="var(--accent)" stroke-width="4" />
-          <line x1="32" y1="20" x2="32" y2="28"
-                stroke="var(--accent)" stroke-width="4" />
-          <polyline points="14,50 14,42 30,42" />
-        </svg>`,
-    },
-    {
-      id: "chest-press",
-      name: "Chest Press",
-      muscles: "Chest · Triceps",
-      levels: [
-        { sets: 2, reps: 8,  weight: [50, 70] },
-        { sets: 3, reps: 10, weight: [70, 90] },
-        { sets: 4, reps: 12, weight: [90, 115] },
-        { sets: 5, reps: 15, weight: [115, 140] },
-      ],
-      icon: `
-        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
-             stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
-          <line x1="6" y1="56" x2="58" y2="56" />
-          <line x1="14" y1="56" x2="14" y2="16" />
-          <line x1="14" y1="42" x2="28" y2="42" />
-          <line x1="14" y1="24" x2="48" y2="24"
+  // === Icon registry =====================================================
+  // Each icon is drawn as a silhouette of the equipment, not a person.
+  // Structural lines use currentColor; the loaded part uses --accent.
+  // Templates in exercises.json reference these by name.
+  const ICONS = {
+    "leg-press": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="56" x2="58" y2="56" />
+        <polyline points="10,56 10,44 24,44" />
+        <line x1="24" y1="44" x2="50" y2="18" />
+        <line x1="44" y1="10" x2="56" y2="22"
+              stroke="var(--accent)" stroke-width="4.5" />
+      </svg>`,
+    "lat-pulldown": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="52" y1="8" x2="52" y2="56" />
+        <line x1="52" y1="10" x2="20" y2="10" />
+        <line x1="20" y1="10" x2="20" y2="22" />
+        <line x1="8" y1="24" x2="32" y2="24"
+              stroke="var(--accent)" stroke-width="4.5" />
+        <line x1="8" y1="20" x2="8" y2="28"
+              stroke="var(--accent)" stroke-width="4" />
+        <line x1="32" y1="20" x2="32" y2="28"
+              stroke="var(--accent)" stroke-width="4" />
+        <polyline points="14,50 14,42 30,42" />
+      </svg>`,
+    "chest-press": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="56" x2="58" y2="56" />
+        <line x1="14" y1="56" x2="14" y2="16" />
+        <line x1="14" y1="42" x2="28" y2="42" />
+        <line x1="14" y1="24" x2="48" y2="24"
+              stroke="var(--accent)" stroke-width="3.5" />
+        <line x1="48" y1="20" x2="48" y2="28"
+              stroke="var(--accent)" stroke-width="4" />
+        <line x1="14" y1="34" x2="48" y2="34"
+              stroke="var(--accent)" stroke-width="3.5" />
+        <line x1="48" y1="30" x2="48" y2="38"
+              stroke="var(--accent)" stroke-width="4" />
+      </svg>`,
+    "seated-row": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="56" x2="58" y2="56" />
+        <polyline points="10,42 10,32 22,32 22,42" />
+        <line x1="10" y1="42" x2="22" y2="42" />
+        <line x1="48" y1="50" x2="56" y2="42" />
+        <line x1="52" y1="46" x2="34" y2="38"
+              stroke="var(--accent)" stroke-width="3" />
+        <polyline points="28,34 34,38 28,42"
+                  stroke="var(--accent)" stroke-width="4" />
+      </svg>`,
+    "leg-extension": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="56" x2="58" y2="56" />
+        <line x1="10" y1="56" x2="10" y2="18" />
+        <line x1="10" y1="38" x2="28" y2="38" />
+        <circle cx="28" cy="38" r="2.5" fill="currentColor" stroke="none" />
+        <path d="M28 50 A12 12 0 0 1 40 38"
+              stroke="currentColor" stroke-width="1.5"
+              stroke-dasharray="2 3" />
+        <line x1="28" y1="38" x2="50" y2="22"
+              stroke="var(--accent)" stroke-width="3.5" />
+        <circle cx="51" cy="21" r="4"
                 stroke="var(--accent)" stroke-width="3.5" />
-          <line x1="48" y1="20" x2="48" y2="28"
-                stroke="var(--accent)" stroke-width="4" />
-          <line x1="14" y1="34" x2="48" y2="34"
+      </svg>`,
+    "leg-curl": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="56" x2="58" y2="56" />
+        <line x1="8" y1="36" x2="42" y2="36" />
+        <line x1="14" y1="36" x2="14" y2="48" />
+        <line x1="36" y1="36" x2="36" y2="48" />
+        <circle cx="42" cy="36" r="2.5" fill="currentColor" stroke="none" />
+        <path d="M58 36 A16 16 0 0 0 50 18"
+              stroke="currentColor" stroke-width="1.5"
+              stroke-dasharray="2 3" />
+        <line x1="42" y1="36" x2="50" y2="18"
+              stroke="var(--accent)" stroke-width="3.5" />
+        <circle cx="50" cy="17" r="4"
                 stroke="var(--accent)" stroke-width="3.5" />
-          <line x1="48" y1="30" x2="48" y2="38"
-                stroke="var(--accent)" stroke-width="4" />
-        </svg>`,
-    },
-    {
-      id: "seated-row",
-      name: "Seated Row",
-      muscles: "Back · Biceps",
-      levels: [
-        { sets: 2, reps: 8,  weight: [60, 80] },
-        { sets: 3, reps: 10, weight: [80, 100] },
-        { sets: 4, reps: 12, weight: [100, 125] },
-      ],
-      icon: `
-        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
-             stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
-          <line x1="6" y1="56" x2="58" y2="56" />
-          <polyline points="10,42 10,32 22,32 22,42" />
-          <line x1="10" y1="42" x2="22" y2="42" />
-          <line x1="48" y1="50" x2="56" y2="42" />
-          <line x1="52" y1="46" x2="34" y2="38"
-                stroke="var(--accent)" stroke-width="3" />
-          <polyline points="28,34 34,38 28,42"
-                    stroke="var(--accent)" stroke-width="4" />
-        </svg>`,
-    },
-    {
-      id: "leg-extension",
-      name: "Leg Extension",
-      muscles: "Quads",
-      levels: [
-        { sets: 2, reps: 10, weight: [50, 70] },
-        { sets: 3, reps: 12, weight: [70, 90] },
-        { sets: 4, reps: 15, weight: [90, 115] },
-      ],
-      icon: `
-        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
-             stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
-          <line x1="6" y1="56" x2="58" y2="56" />
-          <line x1="10" y1="56" x2="10" y2="18" />
-          <line x1="10" y1="38" x2="28" y2="38" />
-          <circle cx="28" cy="38" r="2.5" fill="currentColor" stroke="none" />
-          <path d="M28 50 A12 12 0 0 1 40 38"
-                stroke="currentColor" stroke-width="1.5"
-                stroke-dasharray="2 3" />
-          <line x1="28" y1="38" x2="50" y2="22"
-                stroke="var(--accent)" stroke-width="3.5" />
-          <circle cx="51" cy="21" r="4"
-                  stroke="var(--accent)" stroke-width="3.5" />
-        </svg>`,
-    },
-    {
-      id: "leg-curl",
-      name: "Leg Curl",
-      muscles: "Hamstrings",
-      levels: [
-        { sets: 2, reps: 10, weight: [40, 60] },
-        { sets: 3, reps: 12, weight: [60, 80] },
-        { sets: 4, reps: 15, weight: [80, 100] },
-      ],
-      icon: `
-        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
-             stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
-          <line x1="6" y1="56" x2="58" y2="56" />
-          <line x1="8" y1="36" x2="42" y2="36" />
-          <line x1="14" y1="36" x2="14" y2="48" />
-          <line x1="36" y1="36" x2="36" y2="48" />
-          <circle cx="42" cy="36" r="2.5" fill="currentColor" stroke="none" />
-          <path d="M58 36 A16 16 0 0 0 50 18"
-                stroke="currentColor" stroke-width="1.5"
-                stroke-dasharray="2 3" />
-          <line x1="42" y1="36" x2="50" y2="18"
-                stroke="var(--accent)" stroke-width="3.5" />
-          <circle cx="50" cy="17" r="4"
-                  stroke="var(--accent)" stroke-width="3.5" />
-        </svg>`,
-    },
-    {
-      id: "cable-crossover",
-      name: "Cable Crossover",
-      muscles: "Chest · Shoulders",
-      levels: [
-        { sets: 2, reps: 10, weight: [20, 30] },
-        { sets: 3, reps: 12, weight: [30, 40] },
-        { sets: 4, reps: 15, weight: [40, 55] },
-      ],
-      icon: `
-        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
-             stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
-          <line x1="6" y1="56" x2="58" y2="56" />
-          <line x1="12" y1="56" x2="12" y2="10" />
-          <line x1="52" y1="56" x2="52" y2="10" />
-          <line x1="12" y1="10" x2="52" y2="10" />
-          <circle cx="12" cy="14" r="2.5" />
-          <circle cx="52" cy="14" r="2.5" />
-          <line x1="12" y1="16" x2="44" y2="42"
-                stroke="var(--accent)" stroke-width="2.5" />
-          <line x1="52" y1="16" x2="20" y2="42"
-                stroke="var(--accent)" stroke-width="2.5" />
-          <circle cx="44" cy="42" r="2.5"
-                  fill="var(--accent)" stroke="none" />
-          <circle cx="20" cy="42" r="2.5"
-                  fill="var(--accent)" stroke="none" />
-        </svg>`,
-    },
-    {
-      id: "pec-deck",
-      name: "Pec Deck",
-      muscles: "Chest",
-      levels: [
-        { sets: 2, reps: 10, weight: [50, 70] },
-        { sets: 3, reps: 12, weight: [70, 90] },
-        { sets: 4, reps: 15, weight: [90, 115] },
-      ],
-      icon: `
-        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
-             stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
-          <line x1="6" y1="56" x2="58" y2="56" />
-          <line x1="32" y1="56" x2="32" y2="14" />
-          <line x1="22" y1="44" x2="42" y2="44" />
-          <circle cx="32" cy="18" r="2.5" fill="currentColor" stroke="none" />
-          <line x1="32" y1="18" x2="14" y2="34"
-                stroke="var(--accent)" stroke-width="3" />
-          <line x1="32" y1="18" x2="50" y2="34"
-                stroke="var(--accent)" stroke-width="3" />
-          <line x1="11" y1="30" x2="17" y2="38"
-                stroke="var(--accent)" stroke-width="4.5" />
-          <line x1="47" y1="30" x2="53" y2="38"
-                stroke="var(--accent)" stroke-width="4.5" />
-        </svg>`,
-    },
-  ];
+      </svg>`,
+    "cable-crossover": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="56" x2="58" y2="56" />
+        <line x1="12" y1="56" x2="12" y2="10" />
+        <line x1="52" y1="56" x2="52" y2="10" />
+        <line x1="12" y1="10" x2="52" y2="10" />
+        <circle cx="12" cy="14" r="2.5" />
+        <circle cx="52" cy="14" r="2.5" />
+        <line x1="12" y1="16" x2="44" y2="42"
+              stroke="var(--accent)" stroke-width="2.5" />
+        <line x1="52" y1="16" x2="20" y2="42"
+              stroke="var(--accent)" stroke-width="2.5" />
+        <circle cx="44" cy="42" r="2.5"
+                fill="var(--accent)" stroke="none" />
+        <circle cx="20" cy="42" r="2.5"
+                fill="var(--accent)" stroke="none" />
+      </svg>`,
+    "pec-deck": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="56" x2="58" y2="56" />
+        <line x1="32" y1="56" x2="32" y2="14" />
+        <line x1="22" y1="44" x2="42" y2="44" />
+        <circle cx="32" cy="18" r="2.5" fill="currentColor" stroke="none" />
+        <line x1="32" y1="18" x2="14" y2="34"
+              stroke="var(--accent)" stroke-width="3" />
+        <line x1="32" y1="18" x2="50" y2="34"
+              stroke="var(--accent)" stroke-width="3" />
+        <line x1="11" y1="30" x2="17" y2="38"
+              stroke="var(--accent)" stroke-width="4.5" />
+        <line x1="47" y1="30" x2="53" y2="38"
+              stroke="var(--accent)" stroke-width="4.5" />
+      </svg>`,
+    "barbell": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="32" x2="58" y2="32" />
+        <rect x="10" y="22" width="6" height="20" rx="1.5"
+              stroke="var(--accent)" stroke-width="3" />
+        <rect x="20" y="25" width="4" height="14" rx="1"
+              stroke="var(--accent)" stroke-width="3" />
+        <rect x="40" y="25" width="4" height="14" rx="1"
+              stroke="var(--accent)" stroke-width="3" />
+        <rect x="48" y="22" width="6" height="20" rx="1.5"
+              stroke="var(--accent)" stroke-width="3" />
+      </svg>`,
+    "dumbbell": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="20" y1="32" x2="44" y2="32" />
+        <rect x="12" y="22" width="8" height="20" rx="1.5"
+              stroke="var(--accent)" stroke-width="3" />
+        <rect x="44" y="22" width="8" height="20" rx="1.5"
+              stroke="var(--accent)" stroke-width="3" />
+        <line x1="8" y1="24" x2="8" y2="40"
+              stroke="var(--accent)" stroke-width="4" />
+        <line x1="56" y1="24" x2="56" y2="40"
+              stroke="var(--accent)" stroke-width="4" />
+      </svg>`,
+  };
 
-  const STORAGE_KEY = "workout-app:state:v3";
+  // === Catalog ===========================================================
+  // Levels are derived from the template's baseline + per-level steps so
+  // weight, reps and sets each scale at a rate appropriate to the lift.
+  const buildLevels = (t) => {
+    const out = [];
+    for (let i = 0; i < t.levels; i++) {
+      out.push({
+        sets: t.setsStart + i * t.setsStep,
+        reps: t.repsStart + i * t.repsStep,
+        weight: [
+          t.weightStart + i * t.weightStep,
+          t.weightStart + (i + 1) * t.weightStep,
+        ],
+      });
+    }
+    return out;
+  };
+
+  const templateToExercise = (t) => ({
+    id: t.id,
+    name: t.name,
+    muscles: t.muscles,
+    icon: ICONS[t.icon] || ICONS.barbell,
+    levels: buildLevels(t),
+  });
+
+  let CATALOG = [];
+
+  // === State =============================================================
+  const STORAGE_KEY = "workout-app:state:v4";
   const todayKey = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${
@@ -226,26 +196,22 @@
     }`;
   };
 
-  // Default to the middle level so there's always room to upgrade or
-  // downgrade right out of the gate.
-  const defaultLevel = (ex) => Math.floor((ex.levels.length - 1) / 2);
-
   const blankState = () => ({
-    levels: Object.fromEntries(EXERCISES.map((ex) => [ex.id, defaultLevel(ex)])),
-    completed: {}, // { [date]: { [exId]: { sets, reps, level } } }
+    addedIds: [],
+    levels: {},
+    completed: {},
   });
 
-  let state;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    state = raw ? { ...blankState(), ...JSON.parse(raw) } : blankState();
-    // Backfill any new exercises added after first load.
-    for (const ex of EXERCISES) {
-      if (state.levels[ex.id] == null) state.levels[ex.id] = defaultLevel(ex);
+  let state = blankState();
+
+  const loadState = () => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) state = { ...blankState(), ...JSON.parse(raw) };
+    } catch {
+      state = blankState();
     }
-  } catch {
-    state = blankState();
-  }
+  };
 
   const saveState = () => {
     try {
@@ -255,13 +221,20 @@
     }
   };
 
-  const exerciseById = (id) => EXERCISES.find((ex) => ex.id === id);
+  // === Helpers ===========================================================
+  const exerciseById = (id) => CATALOG.find((ex) => ex.id === id);
+  const addedExercises = () =>
+    state.addedIds.map(exerciseById).filter(Boolean);
+  const availableExercises = () =>
+    CATALOG.filter((ex) => !state.addedIds.includes(ex.id));
+
+  // Default to the middle level so there's room to upgrade or downgrade
+  // right out of the gate.
+  const defaultLevel = (ex) => Math.floor((ex.levels.length - 1) / 2);
   const currentLevel = (ex) => ex.levels[state.levels[ex.id]];
   const todaysCompletion = (exId) => (state.completed[todayKey()] || {})[exId];
   const fmtWeight = (w) => `${w[0]}–${w[1]}`;
 
-  // Sets the user can record for today: 1..target+2 so they can mark partial
-  // progress through a workout or note that they did extra sets.
   const setChoices = (ex) => {
     const target = currentLevel(ex).sets;
     const out = [];
@@ -269,10 +242,21 @@
     return out;
   };
 
-  // Set `setsDone` to a positive number to mark progress, or omit to mark
-  // the full target. Pass 0 (or call clearComplete) to remove the entry.
+  // === Mutations =========================================================
+  const addExercise = (id) => {
+    if (state.addedIds.includes(id)) return;
+    const ex = exerciseById(id);
+    if (!ex) return;
+    state.addedIds.push(id);
+    if (state.levels[id] == null) state.levels[id] = defaultLevel(ex);
+    saveState();
+    renderExercises();
+    renderPicker();
+  };
+
   const markComplete = (exId, setsDone) => {
     const ex = exerciseById(exId);
+    if (!ex) return;
     const target = currentLevel(ex).sets;
     const sets = setsDone == null ? target : setsDone;
     if (sets <= 0) {
@@ -297,11 +281,10 @@
 
   const changeLevel = (exId, delta) => {
     const ex = exerciseById(exId);
+    if (!ex) return;
     const next = state.levels[exId] + delta;
     if (next < 0 || next >= ex.levels.length) return;
     state.levels[exId] = next;
-    // If today is already marked done, anchor it to the new level so
-    // history matches what the user actually trained at.
     const today = state.completed[todayKey()];
     if (today && today[exId]) today[exId].level = next;
     saveState();
@@ -309,12 +292,11 @@
     if (delta > 0) flashUpgrade(exId);
   };
 
-  // Brief celebration when leveling up — small but noticeable.
+  // Brief celebration when leveling up.
   const flashUpgrade = (exId) => {
     const row = document.querySelector(`.exercise-row[data-id="${exId}"]`);
     if (!row) return;
     row.classList.remove("exercise-row--upgraded");
-    // Force reflow so the animation restarts on repeat upgrades.
     void row.offsetWidth;
     row.classList.add("exercise-row--upgraded");
   };
@@ -325,10 +307,19 @@
     });
   };
 
+  // === Rendering =========================================================
   const renderExercises = () => {
     const grid = $("exercise-grid");
+    const empty = $("empty-state");
     if (!grid) return;
-    grid.innerHTML = EXERCISES.map((ex) => {
+    const list = addedExercises();
+    if (list.length === 0) {
+      grid.innerHTML = "";
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
+    grid.innerHTML = list.map((ex) => {
       const lvl = currentLevel(ex);
       const lvlIdx = state.levels[ex.id];
       const done = todaysCompletion(ex.id);
@@ -416,51 +407,91 @@
     }).join("");
   };
 
-  renderExercises();
+  const renderPicker = () => {
+    const list = $("picker-list");
+    const empty = $("picker-empty");
+    if (!list) return;
+    const items = availableExercises();
+    if (items.length === 0) {
+      list.innerHTML = "";
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
+    list.innerHTML = items.map((ex) => {
+      const lvl = ex.levels[defaultLevel(ex)];
+      return `
+      <button type="button" class="picker-item" data-id="${ex.id}">
+        <span class="picker-item__icon">${ex.icon}</span>
+        <span class="picker-item__title">
+          <span class="picker-item__name">${ex.name}</span>
+          <span class="picker-item__muscles">${ex.muscles}</span>
+        </span>
+        <span class="picker-item__starts">
+          starts at ${lvl.sets}×${lvl.reps}+ · ${fmtWeight(lvl.weight)} lb
+        </span>
+        <span class="picker-item__add" aria-hidden="true">+</span>
+      </button>`;
+    }).join("");
+  };
 
-  // Single delegated handler for all row interactions.
-  $("exercise-grid").addEventListener("click", (event) => {
-    const target = event.target.closest("[data-action]");
-    if (!target) return;
-    const row = target.closest(".exercise-row");
-    if (!row) return;
-    const exId = row.dataset.id;
-    const action = target.dataset.action;
+  const openPicker = () => {
+    renderPicker();
+    $("picker").hidden = false;
+    document.body.classList.add("modal-open");
+  };
+  const closePicker = () => {
+    $("picker").hidden = true;
+    document.body.classList.remove("modal-open");
+  };
 
-    if (action === "toggle-done") {
-      if (todaysCompletion(exId)) clearComplete(exId);
-      else markComplete(exId);
-      return;
-    }
-    if (action === "toggle-menu") {
-      const open = row.classList.toggle("is-open");
-      closeAllMenus(open ? row : null);
-      target.setAttribute("aria-expanded", open ? "true" : "false");
-      return;
-    }
-    if (action === "set-sets") {
-      markComplete(exId, Number(target.dataset.value));
-      return;
-    }
-    if (action === "upgrade") {
-      changeLevel(exId, +1);
-      return;
-    }
-    if (action === "downgrade") {
-      changeLevel(exId, -1);
-      return;
-    }
-    if (action === "open-details") {
-      // Details page is a future addition; ignore for now.
-      return;
-    }
-  });
+  // === Wiring ============================================================
+  const setupListeners = () => {
+    $("exercise-grid").addEventListener("click", (event) => {
+      const target = event.target.closest("[data-action]");
+      if (!target) return;
+      const row = target.closest(".exercise-row");
+      if (!row) return;
+      const exId = row.dataset.id;
+      const action = target.dataset.action;
 
-  // Tap outside any open menu to close it.
-  document.addEventListener("click", (event) => {
-    if (!event.target.closest(".exercise-row")) closeAllMenus(null);
-  });
+      if (action === "toggle-done") {
+        if (todaysCompletion(exId)) clearComplete(exId);
+        else markComplete(exId);
+        return;
+      }
+      if (action === "toggle-menu") {
+        const open = row.classList.toggle("is-open");
+        closeAllMenus(open ? row : null);
+        target.setAttribute("aria-expanded", open ? "true" : "false");
+        return;
+      }
+      if (action === "set-sets") {
+        markComplete(exId, Number(target.dataset.value));
+        return;
+      }
+      if (action === "upgrade") return changeLevel(exId, +1);
+      if (action === "downgrade") return changeLevel(exId, -1);
+    });
 
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest(".exercise-row")) closeAllMenus(null);
+    });
+
+    $("add-exercise-btn").addEventListener("click", openPicker);
+    $("picker-close").addEventListener("click", closePicker);
+    $("picker-backdrop").addEventListener("click", closePicker);
+    $("picker-list").addEventListener("click", (event) => {
+      const item = event.target.closest(".picker-item");
+      if (!item) return;
+      addExercise(item.dataset.id);
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !$("picker").hidden) closePicker();
+    });
+  };
+
+  // === Network status ====================================================
   const setNet = () => {
     const el = $("net-status");
     if (!el) return;
@@ -474,11 +505,40 @@
       el.classList.remove("online");
     }
   };
-  setNet();
-  window.addEventListener("online", setNet);
-  window.addEventListener("offline", setNet);
 
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
-  }
+  // === Init ==============================================================
+  const init = async () => {
+    const res = await fetch("./exercises.json");
+    if (!res.ok) throw new Error("failed to load exercises.json");
+    const data = await res.json();
+    CATALOG = data.templates.map(templateToExercise);
+
+    loadState();
+    // Drop any addedIds whose template was removed from the catalog.
+    state.addedIds = state.addedIds.filter((id) => exerciseById(id));
+    // Backfill levels for added exercises that don't have one yet.
+    for (const id of state.addedIds) {
+      if (state.levels[id] == null) {
+        state.levels[id] = defaultLevel(exerciseById(id));
+      }
+    }
+
+    renderExercises();
+    setupListeners();
+    setNet();
+    window.addEventListener("online", setNet);
+    window.addEventListener("offline", setNet);
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+    }
+  };
+  init().catch((err) => {
+    const grid = $("exercise-grid");
+    if (grid) {
+      grid.innerHTML = `<p class="load-error">Couldn't load exercise catalog: ${
+        err.message
+      }</p>`;
+    }
+  });
 })();

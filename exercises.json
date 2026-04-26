@@ -1,0 +1,144 @@
+{
+  "templates": [
+    {
+      "id": "leg-press",
+      "name": "Leg Press",
+      "muscles": "Quads · Glutes",
+      "icon": "leg-press",
+      "levels": 4,
+      "setsStart": 2, "setsStep": 1,
+      "repsStart": 8, "repsStep": 2,
+      "weightStart": 90, "weightStep": 45
+    },
+    {
+      "id": "lat-pulldown",
+      "name": "Lat Pulldown",
+      "muscles": "Lats · Biceps",
+      "icon": "lat-pulldown",
+      "levels": 4,
+      "setsStart": 2, "setsStep": 1,
+      "repsStart": 8, "repsStep": 2,
+      "weightStart": 60, "weightStep": 20
+    },
+    {
+      "id": "chest-press",
+      "name": "Chest Press",
+      "muscles": "Chest · Triceps",
+      "icon": "chest-press",
+      "levels": 4,
+      "setsStart": 2, "setsStep": 1,
+      "repsStart": 8, "repsStep": 2,
+      "weightStart": 50, "weightStep": 20
+    },
+    {
+      "id": "seated-row",
+      "name": "Seated Row",
+      "muscles": "Back · Biceps",
+      "icon": "seated-row",
+      "levels": 4,
+      "setsStart": 2, "setsStep": 1,
+      "repsStart": 8, "repsStep": 2,
+      "weightStart": 60, "weightStep": 20
+    },
+    {
+      "id": "leg-extension",
+      "name": "Leg Extension",
+      "muscles": "Quads",
+      "icon": "leg-extension",
+      "levels": 4,
+      "setsStart": 2, "setsStep": 1,
+      "repsStart": 10, "repsStep": 2,
+      "weightStart": 50, "weightStep": 20
+    },
+    {
+      "id": "leg-curl",
+      "name": "Leg Curl",
+      "muscles": "Hamstrings",
+      "icon": "leg-curl",
+      "levels": 4,
+      "setsStart": 2, "setsStep": 1,
+      "repsStart": 10, "repsStep": 2,
+      "weightStart": 40, "weightStep": 20
+    },
+    {
+      "id": "cable-crossover",
+      "name": "Cable Crossover",
+      "muscles": "Chest · Shoulders",
+      "icon": "cable-crossover",
+      "levels": 4,
+      "setsStart": 2, "setsStep": 1,
+      "repsStart": 10, "repsStep": 2,
+      "weightStart": 20, "weightStep": 10
+    },
+    {
+      "id": "pec-deck",
+      "name": "Pec Deck",
+      "muscles": "Chest",
+      "icon": "pec-deck",
+      "levels": 4,
+      "setsStart": 2, "setsStep": 1,
+      "repsStart": 10, "repsStep": 2,
+      "weightStart": 50, "weightStep": 20
+    },
+    {
+      "id": "back-squat",
+      "name": "Back Squat",
+      "muscles": "Quads · Glutes · Core",
+      "icon": "barbell",
+      "levels": 5,
+      "setsStart": 3, "setsStep": 1,
+      "repsStart": 5, "repsStep": 1,
+      "weightStart": 95, "weightStep": 45
+    },
+    {
+      "id": "bench-press",
+      "name": "Bench Press",
+      "muscles": "Chest · Triceps · Shoulders",
+      "icon": "barbell",
+      "levels": 5,
+      "setsStart": 3, "setsStep": 1,
+      "repsStart": 5, "repsStep": 1,
+      "weightStart": 65, "weightStep": 25
+    },
+    {
+      "id": "deadlift",
+      "name": "Deadlift",
+      "muscles": "Posterior chain",
+      "icon": "barbell",
+      "levels": 5,
+      "setsStart": 2, "setsStep": 1,
+      "repsStart": 3, "repsStep": 1,
+      "weightStart": 135, "weightStep": 45
+    },
+    {
+      "id": "bicep-curl",
+      "name": "Bicep Curl",
+      "muscles": "Biceps",
+      "icon": "dumbbell",
+      "levels": 4,
+      "setsStart": 2, "setsStep": 1,
+      "repsStart": 8, "repsStep": 2,
+      "weightStart": 10, "weightStep": 5
+    },
+    {
+      "id": "overhead-press",
+      "name": "Overhead Press",
+      "muscles": "Shoulders · Triceps",
+      "icon": "dumbbell",
+      "levels": 4,
+      "setsStart": 2, "setsStep": 1,
+      "repsStart": 6, "repsStep": 2,
+      "weightStart": 15, "weightStep": 5
+    },
+    {
+      "id": "tricep-pushdown",
+      "name": "Tricep Pushdown",
+      "muscles": "Triceps",
+      "icon": "lat-pulldown",
+      "levels": 4,
+      "setsStart": 2, "setsStep": 1,
+      "repsStart": 10, "repsStep": 2,
+      "weightStart": 30, "weightStep": 15
+    }
+  ]
+}
