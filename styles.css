@@ -76,6 +76,9 @@ body {
   gap: 12px;
   align-content: start;
 }
+#home-view[hidden], #analysis-view[hidden] {
+  display: none;
+}
 
 .card {
   background: var(--surface);
