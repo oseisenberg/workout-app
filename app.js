@@ -1507,15 +1507,23 @@
       .filter((h) => h.level > 0 && (h.kind || "full") !== "skipped")
       .map((h) => ({ ts: parseDateStr(h.date), tier: h.level }))
       .sort((a, b) => a.ts - b.ts);
-    if (points.length < 2) return "";
+    if (points.length === 0) return "";
     const W = 320, H = 140, padX = 12, padY = 22;
     const xs = points.map((p) => p.ts);
     const ys = points.map((p) => p.tier);
+    // With a single completion the axis runs from that day to today so the
+    // dot sits at the left and the right label still reads "today". The
+    // y-range is padded by a level on each side so the level mark and dot
+    // both have room to breathe.
+    const single = points.length === 1;
+    const today = Date.now();
     const xMin = Math.min(...xs);
-    const xMax = Math.max(...xs);
-    const yMin = Math.min(...ys);
-    const yMax = Math.max(...ys);
-    const xRange = xMax - xMin || 1;
+    const xMax = single ? Math.max(xMin, today) : Math.max(...xs);
+    const rawYMin = Math.min(...ys);
+    const rawYMax = Math.max(...ys);
+    const yMin = single ? Math.max(0, rawYMin - 1) : rawYMin;
+    const yMax = single ? rawYMax + 1 : rawYMax;
+    const xRange = xMax - xMin || 86400000;
     const yRange = yMax - yMin || 1;
     const x = (t) => padX + ((t - xMin) / xRange) * (W - 2 * padX);
     const y = (v) => H - padY - ((v - yMin) / yRange) * (H - 2 * padY);
@@ -1523,9 +1531,16 @@
       .map((p, i) =>
         `${i === 0 ? "M" : "L"} ${x(p.ts).toFixed(1)} ${y(p.tier).toFixed(1)}`)
       .join(" ");
-    const areaPath = linePath +
-      ` L ${x(xMax).toFixed(1)} ${(H - padY).toFixed(1)}` +
-      ` L ${x(xMin).toFixed(1)} ${(H - padY).toFixed(1)} Z`;
+    const areaPath = single
+      ? ""
+      : linePath +
+        ` L ${x(xMax).toFixed(1)} ${(H - padY).toFixed(1)}` +
+        ` L ${x(xMin).toFixed(1)} ${(H - padY).toFixed(1)} Z`;
+    const dotsHtml = single
+      ? `<circle cx="${x(points[0].ts).toFixed(1)}"
+                 cy="${y(points[0].tier).toFixed(1)}"
+                 r="3.5" fill="var(--accent)" />`
+      : "";
     // The y-axis only marks full level boundaries (pips are reflected in
     // the line plot, not labeled on the axis). At each visible level, draw
     // a short tick crossing the left edge plus a tiny "Lvl N" label inside
@@ -1556,9 +1571,11 @@
         </defs>
         <line x1="${padX}" y1="${H - padY}" x2="${W - padX}" y2="${H - padY}"
               stroke="var(--border)" stroke-width="1" />
-        <path d="${areaPath}" fill="url(#chart-fill)" stroke="none" />
-        <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round" />
+        ${single ? "" : `
+          <path d="${areaPath}" fill="url(#chart-fill)" stroke="none" />
+          <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" />`}
+        ${dotsHtml}
         ${levelMarks}
         <text x="${padX}" y="${H - 6}" font-size="10" fill="var(--muted)">${
           roundedDuration(Math.round((Date.now() - xMin) / 86400000))
