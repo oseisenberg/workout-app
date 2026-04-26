@@ -952,42 +952,6 @@ body.modal-open { overflow: hidden; }
   padding: 6px;
 }
 
-.details__history {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.details__entry {
-  display: grid;
-  grid-template-columns: 90px minmax(0, 1fr) auto;
-  gap: 10px;
-  align-items: center;
-  padding: 8px 10px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-}
-.details__entry.is-partial { border-color: rgba(234, 179, 8, 0.4); }
-.details__date {
-  color: var(--muted);
-  font-size: 12px;
-}
-.details__entry-tier {
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--accent);
-}
-.details__entry.is-partial .details__entry-tier { color: #fde68a; }
-.details__entry-meta {
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  color: var(--muted);
-  text-align: right;
-}
-
 .details__empty {
   margin: 0;
   padding: 16px;

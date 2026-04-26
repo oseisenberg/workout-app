@@ -366,20 +366,6 @@
       .map(([date, day]) => ({ date, ...day[exId] }))
       .sort((a, b) => (a.date < b.date ? 1 : -1));
 
-  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const friendlyDate = (dateStr) => {
-    const [y, m, d] = dateStr.split("-").map(Number);
-    const that = new Date(y, m - 1, d);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const diff = Math.round((today - that) / 86400000);
-    if (diff === 0) return "Today";
-    if (diff === 1) return "Yesterday";
-    if (diff < 7) return `${diff} days ago`;
-    return `${MONTHS[m - 1]} ${d}`;
-  };
-
   const setChoices = (ex) => {
     const target = currentLevel(ex).sets;
     const out = [];
@@ -956,26 +942,18 @@
     return new Date(y, m - 1, d).getTime();
   };
 
-  // Simple inline SVG line chart of weight over time. Returns "" when there
-  // aren't enough data points to draw a line.
+  // Inline SVG line chart of tier index (pip granularity) over time. Each
+  // upgrade is a step of +1; level boundaries become flat plateaus on the
+  // line. Returns "" when there aren't enough data points to draw a line.
   const renderProgressChart = (ex, history) => {
-    const metric = (lvl) =>
-      lvl.bodyweight ? repsLow(lvl.reps) : lvl.weight[0];
-    const unit = ex.levels.some((l) => l.bodyweight) ? "reps" : "lb";
     const points = history
-      .filter((h) => {
-        const l = ex.levels[h.level];
-        return l && !isLevelZero(l);
-      })
-      .map((h) => ({
-        ts: parseDateStr(h.date),
-        v: metric(ex.levels[h.level]),
-      }))
+      .filter((h) => h.level > 0)
+      .map((h) => ({ ts: parseDateStr(h.date), tier: h.level }))
       .sort((a, b) => a.ts - b.ts);
     if (points.length < 2) return "";
-    const W = 320, H = 140, padX = 12, padY = 16;
+    const W = 320, H = 140, padX = 12, padY = 18;
     const xs = points.map((p) => p.ts);
-    const ys = points.map((p) => p.v);
+    const ys = points.map((p) => p.tier);
     const xMin = Math.min(...xs);
     const xMax = Math.max(...xs);
     const yMin = Math.min(...ys);
@@ -985,20 +963,25 @@
     const x = (t) => padX + ((t - xMin) / xRange) * (W - 2 * padX);
     const y = (v) => H - padY - ((v - yMin) / yRange) * (H - 2 * padY);
     const linePath = points
-      .map((p, i) => `${i === 0 ? "M" : "L"} ${x(p.ts).toFixed(1)} ${y(p.v).toFixed(1)}`)
+      .map((p, i) =>
+        `${i === 0 ? "M" : "L"} ${x(p.ts).toFixed(1)} ${y(p.tier).toFixed(1)}`)
       .join(" ");
     const areaPath = linePath +
       ` L ${x(xMax).toFixed(1)} ${(H - padY).toFixed(1)}` +
       ` L ${x(xMin).toFixed(1)} ${(H - padY).toFixed(1)} Z`;
     const dots = points
       .map((p) =>
-        `<circle cx="${x(p.ts).toFixed(1)}" cy="${y(p.v).toFixed(1)}"
+        `<circle cx="${x(p.ts).toFixed(1)}" cy="${y(p.tier).toFixed(1)}"
                  r="3.5" fill="var(--accent)" stroke="var(--surface-2)"
                  stroke-width="1.5" />`)
       .join("");
+    const minLvl = ex.levels[yMin];
+    const maxLvl = ex.levels[yMax];
+    const minLabel = minLvl ? tierName(minLvl) : "";
+    const maxLabel = maxLvl ? tierName(maxLvl) : "";
     return `
       <svg class="details__chart" viewBox="0 0 ${W} ${H}" role="img"
-           aria-label="Weight progress over time">
+           aria-label="Level progress over time">
         <defs>
           <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.35" />
@@ -1011,8 +994,8 @@
         <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round" />
         ${dots}
-        <text x="${padX}" y="11" font-size="10" fill="var(--muted)">${yMax} ${unit}</text>
-        <text x="${padX}" y="${H - 4}" font-size="10" fill="var(--muted)">${yMin} ${unit}</text>
+        <text x="${padX}" y="12" font-size="10" fill="var(--muted)">${maxLabel}</text>
+        <text x="${padX}" y="${H - 6}" font-size="10" fill="var(--muted)">${minLabel}</text>
       </svg>`;
   };
 
@@ -1029,34 +1012,12 @@
 
     const history = exerciseHistory(ex.id);
     const chartHtml = renderProgressChart(ex, history);
-    const historyHtml = history.length === 0
-      ? `<p class="details__empty">No history yet — complete this exercise
-           to start tracking.</p>`
-      : `<ul class="details__history">${history.map((entry) => {
-          const entryLvl = ex.levels[entry.level];
-          const entryTier = tierName(entryLvl);
-          const entryZero = entryLvl ? isLevelZero(entryLvl) : false;
-          const setsLabel = entryZero
-            ? "completed"
-            : entryLvl
-              ? `${entry.sets}/${entryLvl.sets} sets`
-              : `${entry.sets} sets`;
-          const partial = entryLvl && !entryZero && entry.sets < entryLvl.sets;
-          const isBw = entryLvl && entryLvl.bodyweight;
-          const detail = entryLvl && !entryZero
-            ? isBw
-              ? `${fmtReps(entryLvl.reps)} reps`
-              : `${fmtWeight(entryLvl.weight)} lb`
-            : "";
-          return `
-            <li class="details__entry${partial ? " is-partial" : ""}">
-              <span class="details__date">${friendlyDate(entry.date)}</span>
-              <span class="details__entry-tier">${entryTier}</span>
-              <span class="details__entry-meta">
-                ${setsLabel}${detail ? ` · ${detail}` : ""}
-              </span>
-            </li>`;
-        }).join("")}</ul>`;
+    const progressHtml = chartHtml
+      ? chartHtml
+      : `<p class="details__empty">
+           Complete this exercise on a few different days to start seeing
+           your progress here.
+         </p>`;
 
     const summary = lvlZero
       ? `${tier} · just trying it out`
@@ -1079,9 +1040,8 @@
           <span class="details__hero-muscles">${ex.muscles}</span>
         </span>
       </div>
-      ${chartHtml ? `<h3 class="details__section">Progress</h3>${chartHtml}` : ""}
-      <h3 class="details__section">History</h3>
-      ${historyHtml}
+      <h3 class="details__section">Progress</h3>
+      ${progressHtml}
       ${archiveBtnHtml}
     `;
   };
