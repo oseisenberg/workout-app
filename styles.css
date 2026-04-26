@@ -1183,7 +1183,8 @@ body.modal-open { overflow: hidden; }
   gap: 12px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 4px 2px 2px;
+  padding: 4px 10px 2px 2px;
+  scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
 }
 
