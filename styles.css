@@ -451,6 +451,13 @@ body {
   background: var(--surface);
   color: var(--muted);
 }
+.purpose-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--muted);
+  vertical-align: middle;
+  flex-shrink: 0;
+}
 .exercise-row.is-zero .exercise-row__stat-value {
   color: var(--muted);
 }

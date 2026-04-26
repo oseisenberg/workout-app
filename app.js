@@ -194,6 +194,53 @@
       </svg>`,
   };
 
+  // Purpose icons sit beside the level pill on a row when an exercise's
+  // primary adaptation isn't muscle hypertrophy — a small visual cue to
+  // remember "don't grind for max weight here". Default purpose "muscle"
+  // renders no icon at all.
+  const PURPOSE_ICONS = {
+    tendon: `<svg class="purpose-icon" viewBox="0 0 16 16"
+                  role="img" aria-label="Tendon focus">
+      <title>Tendon / connective tissue — slow and controlled</title>
+      <circle cx="5.5" cy="8" r="3" fill="none"
+              stroke="currentColor" stroke-width="1.6" />
+      <circle cx="10.5" cy="8" r="3" fill="none"
+              stroke="currentColor" stroke-width="1.6" />
+    </svg>`,
+    mobility: `<svg class="purpose-icon" viewBox="0 0 16 16"
+                    role="img" aria-label="Mobility focus">
+      <title>Mobility / range of motion</title>
+      <path d="M 3 10 Q 8 2 13 10" fill="none" stroke="currentColor"
+            stroke-width="1.6" stroke-linecap="round" />
+      <path d="M 11 8 L 13 10 L 11 12" fill="none" stroke="currentColor"
+            stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>`,
+    cardio: `<svg class="purpose-icon" viewBox="0 0 16 16"
+                  role="img" aria-label="Cardio focus">
+      <title>Cardio — duration and intensity, not load</title>
+      <path d="M 8 13 C 2 9 2.5 4 5 4 C 6.5 4 7.5 5 8 6 C 8.5 5 9.5 4 11 4
+               C 13.5 4 14 9 8 13 Z"
+            fill="none" stroke="currentColor" stroke-width="1.4"
+            stroke-linejoin="round" />
+    </svg>`,
+    skill: `<svg class="purpose-icon" viewBox="0 0 16 16"
+                 role="img" aria-label="Skill focus">
+      <title>Skill / technique — form first, load second</title>
+      <circle cx="8" cy="8" r="5" fill="none" stroke="currentColor"
+              stroke-width="1.4" />
+      <circle cx="8" cy="8" r="1.8" fill="currentColor" />
+    </svg>`,
+    balance: `<svg class="purpose-icon" viewBox="0 0 16 16"
+                   role="img" aria-label="Balance focus">
+      <title>Balance / proprioception</title>
+      <line x1="8" y1="3" x2="8" y2="13" stroke="currentColor"
+            stroke-width="1.4" stroke-linecap="round" />
+      <line x1="3" y1="6" x2="13" y2="6" stroke="currentColor"
+            stroke-width="1.4" stroke-linecap="round" />
+      <circle cx="8" cy="3" r="1.4" fill="currentColor" />
+    </svg>`,
+  };
+
   // === Catalog ===========================================================
   // Sets and reps are constant across an exercise — only the weight changes
   // between tiers. Each upgrade fills one pip; once all pips for a level are
@@ -248,6 +295,9 @@
     common: !!t.common,
     description: t.description || "",
     mistakes: Array.isArray(t.mistakes) ? t.mistakes : [],
+    // "muscle" (default, no icon shown) | "tendon" | "mobility"
+    // | "cardio" | "skill" | "balance"
+    purpose: t.purpose || "muscle",
   });
 
   let CATALOG = [];
@@ -600,6 +650,7 @@
               <span class="lvl-pill${
                 lvlZero ? " lvl-pill--zero" : ""
               }">${tier}${pipsHtml}</span>
+              ${PURPOSE_ICONS[ex.purpose] || ""}
             </span>
           </span>
           ${weightStatHtml}
