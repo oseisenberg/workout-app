@@ -538,7 +538,7 @@ body {
   top: calc(100% + 6px);
   right: 8px;
   left: auto;
-  width: min(260px, calc(100vw - 28px));
+  width: min(220px, calc(100vw - 28px));
   display: none;
   flex-direction: column;
   gap: 4px;
@@ -627,21 +627,21 @@ body {
   gap: 6px;
 }
 .menu-row--level {
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: 6px;
 }
 .level-btn {
   background: var(--surface-2);
   color: var(--text);
   border: 0;
   border-radius: 8px;
-  padding: 6px 12px;
+  padding: 4px 10px;
   font: inherit;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   letter-spacing: 0.3px;
-  flex: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1248,7 +1248,10 @@ body.modal-open { overflow: hidden; }
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 6px;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 }
+.chart-hover[hidden] { display: none; }
 
 .details__about {
   margin: 0;

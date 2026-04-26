@@ -1580,12 +1580,18 @@
     return years === 1 ? "1 year" : `${years} years`;
   };
 
+  // Snapshot of the currently rendered chart's geometry so the press-and-
+  // hold scrubber (wired in setupListeners) can hit-test pointer events
+  // against it without re-deriving the layout. Reset to null when no
+  // chart is on screen.
+  let chartCtx = null;
+
   const renderProgressChart = (ex, history) => {
     const points = history
       .filter((h) => h.level > 0 && (h.kind || "full") !== "skipped")
       .map((h) => ({ ts: parseDateStr(h.date), tier: h.level }))
       .sort((a, b) => a.ts - b.ts);
-    if (points.length === 0) return "";
+    if (points.length === 0) { chartCtx = null; return ""; }
     const W = 320, H = 140, padX = 12, padY = 22;
     const xs = points.map((p) => p.ts);
     const ys = points.map((p) => p.tier);
@@ -1645,6 +1651,10 @@
                 dominant-baseline="middle">Lvl ${lvl.level}</text>`;
       })
       .join("");
+    chartCtx = {
+      points: points.slice(),
+      ex, padX, padY, W, H, xMin, xMax, yMin, yMax, xRange, yRange,
+    };
     return `
       <svg class="details__chart" viewBox="0 0 ${W} ${H}" role="img"
            aria-label="Level progress over time">
@@ -1674,6 +1684,20 @@
           roundedDuration(Math.round((Date.now() - xMin) / 86400000))
         }</text>
         <text x="${W - padX}" y="${H - 6}" font-size="10" fill="var(--muted)" text-anchor="end">${dateBadge(xMax)}</text>
+        <g class="chart-hover" hidden>
+          <line class="chart-hover__line" x1="0" x2="0"
+                y1="${padY}" y2="${H - padY}"
+                stroke="var(--accent)" stroke-opacity="0.55"
+                stroke-width="1" stroke-dasharray="2 2" />
+          <circle class="chart-hover__dot" r="3" fill="var(--accent)" />
+          <g class="chart-hover__tip">
+            <rect class="chart-hover__bg" x="-50" y="2" width="100" height="20"
+                  rx="4" fill="var(--surface)"
+                  stroke="var(--border-strong)" stroke-width="0.8" />
+            <text class="chart-hover__text" x="0" y="13"
+                  font-size="9" fill="var(--text)" text-anchor="middle"></text>
+          </g>
+        </g>
       </svg>`;
   };
 
@@ -2014,6 +2038,89 @@
       const input = event.target.closest("input[data-edit]");
       if (!input || openDetailsId == null) return;
       setCustomization(openDetailsId, input.dataset.edit, input.value);
+    });
+
+    // Press-and-hold scrubber on the progress chart. Touching the chart
+    // pins a vertical line + tooltip to the nearest data point; dragging
+    // moves the marker; release hides everything. The chart sets
+    // touch-action: none so vertical drags don't fight the body scroll.
+    const updateChartHover = (svg, clientX) => {
+      if (!chartCtx) return;
+      const ctx = chartCtx;
+      const rect = svg.getBoundingClientRect();
+      if (rect.width === 0) return;
+      const vbX = ((clientX - rect.left) / rect.width) * ctx.W;
+      const xOf = (t) => ctx.padX +
+        ((t - ctx.xMin) / ctx.xRange) * (ctx.W - 2 * ctx.padX);
+      const yOf = (v) => ctx.H - ctx.padY -
+        ((v - ctx.yMin) / ctx.yRange) * (ctx.H - 2 * ctx.padY);
+      let nearest = ctx.points[0];
+      let minD = Infinity;
+      for (const p of ctx.points) {
+        const d = Math.abs(xOf(p.ts) - vbX);
+        if (d < minD) { minD = d; nearest = p; }
+      }
+      const px = xOf(nearest.ts);
+      const py = yOf(nearest.tier);
+      const lvl = ctx.ex.levels[nearest.tier];
+      const value = lvl
+        ? (lvl.bodyweight ? `${fmtReps(lvl.reps)} reps`
+                          : `${fmtWeight(lvl.weight)} lb`)
+        : "";
+      const label = `${dateBadge(nearest.ts)} · Lvl ${lvl ? lvl.level : "?"}${
+        value ? ` · ${value}` : ""}`;
+      const hover = svg.querySelector(".chart-hover");
+      if (!hover) return;
+      hover.removeAttribute("hidden");
+      const line = hover.querySelector(".chart-hover__line");
+      line.setAttribute("x1", px);
+      line.setAttribute("x2", px);
+      const dot = hover.querySelector(".chart-hover__dot");
+      dot.setAttribute("cx", px);
+      dot.setAttribute("cy", py);
+      const text = hover.querySelector(".chart-hover__text");
+      text.textContent = label;
+      const bg = hover.querySelector(".chart-hover__bg");
+      const tip = hover.querySelector(".chart-hover__tip");
+      // Size the tooltip background to text width with 6px padding;
+      // clamp horizontally so the box stays inside the chart area.
+      const textW = text.getComputedTextLength
+        ? text.getComputedTextLength()
+        : label.length * 5;
+      const tipW = Math.max(60, Math.ceil(textW) + 12);
+      bg.setAttribute("x", -tipW / 2);
+      bg.setAttribute("width", tipW);
+      const half = tipW / 2;
+      const tipX = Math.max(ctx.padX + half + 2,
+        Math.min(ctx.W - ctx.padX - half - 2, px));
+      tip.setAttribute("transform", `translate(${tipX},0)`);
+    };
+    const hideChartHover = () => {
+      const hover = document.querySelector(".details__chart .chart-hover");
+      if (hover) hover.setAttribute("hidden", "");
+    };
+    let chartHoverActive = false;
+    const onChartMove = (e) => {
+      if (!chartHoverActive) return;
+      const svg = document.querySelector(".details__chart");
+      if (svg) updateChartHover(svg, e.clientX);
+    };
+    const onChartEnd = () => {
+      if (!chartHoverActive) return;
+      chartHoverActive = false;
+      hideChartHover();
+      document.removeEventListener("pointermove", onChartMove);
+      document.removeEventListener("pointerup", onChartEnd);
+      document.removeEventListener("pointercancel", onChartEnd);
+    };
+    $("details-body").addEventListener("pointerdown", (event) => {
+      const svg = event.target.closest(".details__chart");
+      if (!svg) return;
+      chartHoverActive = true;
+      updateChartHover(svg, event.clientX);
+      document.addEventListener("pointermove", onChartMove);
+      document.addEventListener("pointerup", onChartEnd);
+      document.addEventListener("pointercancel", onChartEnd);
     });
 
     document.addEventListener("click", (event) => {
