@@ -1,7 +1,22 @@
-# Workout PWA — shell
+# Workout PWA
 
-Minimal installable PWA shell for iOS. Open in Safari on your iPhone, then
-**Share → Add to Home Screen**.
+An installable iOS PWA for tracking strength training around **ranges**, not
+fixed prescriptions.
+
+## The idea
+
+Most apps tell you to do *3 x 8 at 135 lb*. In practice you walk up to the bar
+and feel like 145 today, or you knock out 10 instead of 8. The number on the
+plan stops matching reality, so you stop following it.
+
+This app instead lets you set, per exercise:
+
+- a **rep range** (e.g. 6–10)
+- a **weight range** (e.g. 135–185 lb)
+
+You log whatever you actually did. The app only nudges you to **upgrade the
+range** once you're consistently working at the top of it — push the floor and
+ceiling up together and keep moving.
 
 ## Run locally
 
@@ -32,8 +47,7 @@ npx --yes localtunnel --port 8000
 ```
 
 Open the HTTPS URL in Safari on the iPhone, then **Share → Add to Home
-Screen**. Launch from the home screen — `Standalone: yes` should show in the
-diagnostics card.
+Screen**. Launch from the home screen and the app should run standalone.
 
 ## Layout
 
