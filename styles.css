@@ -164,9 +164,29 @@ body {
 
 .card--snoozed { background: var(--surface); }
 .card--snoozed h2 { color: var(--muted); }
-.card--snoozed .exercise-row { opacity: 0.78; }
+/* Inside the Snoozed card, the row is already labeled "snoozed" by being
+   in this section, so the bright is-done green styling is redundant noise.
+   Mute the row, drop the green border + background tint, and grey out
+   the done button + stat colors. The initial completion animation still
+   plays in Available before the row moves here. */
+.card--snoozed .exercise-row { opacity: 0.7; }
+.card--snoozed .exercise-row.is-done {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
 .card--snoozed .exercise-row.is-done .done-btn[aria-pressed="true"] {
-  background: #166534;
+  background: #2c3a32;
+  color: var(--muted);
+}
+.card--snoozed .exercise-row.is-done .caret-btn {
+  background: #2a3a30;
+}
+.card--snoozed .exercise-row.is-done .exercise-row__stat-value {
+  color: var(--text);
+}
+.card--snoozed .lvl-pill {
+  background: var(--surface);
+  color: var(--muted);
 }
 
 /* Collapsible-card header. The Snoozed card uses this in place of an h2. */
