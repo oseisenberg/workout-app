@@ -312,7 +312,10 @@
 
   // Default to the middle level so there's room to upgrade or downgrade
   // right out of the gate.
-  const defaultLevel = (ex) => Math.floor((ex.levels.length - 1) / 2);
+  // Newly added exercises start at Lvl 1 pip 0 — the lowest prescriptive
+  // tier (the minimum weight). Users can downgrade to Lvl 0 (Starter) or
+  // upgrade as they go.
+  const defaultLevel = (ex) => (ex.levels.length > 1 ? 1 : 0);
   const currentLevel = (ex) => ex.levels[state.levels[ex.id]];
   const isLevelZero = (lvl) => lvl.sets === 0;
   const todaysCompletion = (exId) => (state.completed[todayKey()] || {})[exId];
