@@ -160,32 +160,24 @@
   };
 
   // === Catalog ===========================================================
-  // Levels are derived from the template's baseline + per-level steps so
-  // weight, reps and sets each scale at a rate appropriate to the lift.
-  // A Level 0 is prepended for everyone — it represents "not yet able to do
-  // the full Lvl 1 prescription". Sets and reps are 0 (a sentinel for "no
-  // prescription"); weight stays at the baseline so they have a starting
-  // point. Completion at Lvl 0 is binary, so the user is never pushed to do
-  // more than they can.
+  // Each template defines its own tiers explicitly so weight, reps and sets
+  // can move nonlinearly. A Starter (Lvl 0) entry is prepended automatically
+  // and represents "not yet able to do the full Beginner prescription":
+  // sets and reps are 0 (sentinel for "no prescription") and weight pins to
+  // the first tier's lower bound so the user has a starting point.
+  // Completion at Starter is binary, so the user is never pushed to do more
+  // than they can.
   const buildLevels = (t) => {
-    const out = [
-      {
-        sets: 0,
-        reps: 0,
-        weight: [t.weightStart, t.weightStart],
-      },
+    const tiers = t.tiers || [];
+    const baseWeight = tiers[0] ? tiers[0].weight[0] : 0;
+    return [
+      { sets: 0, reps: 0, weight: [baseWeight, baseWeight] },
+      ...tiers.map((tier) => ({
+        sets: tier.sets,
+        reps: tier.reps,
+        weight: [tier.weight[0], tier.weight[1]],
+      })),
     ];
-    for (let i = 0; i < t.levels; i++) {
-      out.push({
-        sets: t.setsStart + i * t.setsStep,
-        reps: t.repsStart + i * t.repsStep,
-        weight: [
-          t.weightStart + i * t.weightStep,
-          t.weightStart + (i + 1) * t.weightStep,
-        ],
-      });
-    }
-    return out;
   };
 
   const templateToExercise = (t) => ({
@@ -238,6 +230,21 @@
     state.addedIds.map(exerciseById).filter(Boolean);
   const availableExercises = () =>
     CATALOG.filter((ex) => !state.addedIds.includes(ex.id));
+
+  // Tier names map onto level indices. They make progression feel like a
+  // milestone (Beginner -> Novice) rather than an arbitrary number that
+  // pretends to be comparable across exercises.
+  const TIERS = [
+    "Starter",
+    "Beginner",
+    "Novice",
+    "Intermediate",
+    "Advanced",
+    "Expert",
+    "Elite",
+  ];
+  const tierName = (idx) =>
+    TIERS[idx] || `Elite +${idx - (TIERS.length - 1)}`;
 
   // Default to the middle level so there's room to upgrade or downgrade
   // right out of the gate.
@@ -338,7 +345,6 @@
       return;
     }
     if (empty) empty.hidden = true;
-    const maxLvl = (ex) => ex.levels.length - 1;
     grid.innerHTML = list.map((ex) => {
       const lvl = currentLevel(ex);
       const lvlIdx = state.levels[ex.id];
@@ -354,11 +360,14 @@
           ? `${setsDone}/${lvl.sets}`
           : `${lvl.sets}`;
       const repsText = lvlZero ? "—" : `${lvl.reps}+`;
+      const tier = tierName(lvlIdx);
+      const nextTier = canUp ? tierName(lvlIdx + 1) : null;
 
       const menuBody = lvlZero
         ? `<p class="menu-zero">
-             You're at Level 0 — just mark complete when you've done what
-             you can. Upgrade when you can hit the full Level 1 sets.
+             You're at <strong>Starter</strong> — just mark complete when
+             you've done what you can. Upgrade to <strong>${nextTier}</strong>
+             when you can hit the full prescription.
            </p>`
         : `<div class="menu-row menu-row--chips">
              <span class="menu-row__label">Sets done</span>
@@ -373,8 +382,8 @@
            </div>`;
 
       const summary = lvlZero
-        ? `Lvl 0 of ${maxLvl(ex)} · sub-baseline · ${fmtWeight(lvl.weight)} lb`
-        : `Lvl ${lvlIdx} of ${maxLvl(ex)} · ${lvl.sets}×${lvl.reps}+ · ${fmtWeight(lvl.weight)} lb`;
+        ? `${tier} · sub-baseline · ${fmtWeight(lvl.weight)} lb`
+        : `${tier} · ${lvl.sets}×${lvl.reps}+ · ${fmtWeight(lvl.weight)} lb`;
 
       return `
       <div class="exercise-row${done ? " is-done" : ""}${
@@ -388,7 +397,7 @@
             <span class="exercise-row__meta">
               <span class="lvl-pill${
                 lvlZero ? " lvl-pill--zero" : ""
-              }">Lvl ${lvlIdx}</span>
+              }">${tier}</span>
             </span>
           </span>
           <span class="exercise-row__stat exercise-row__stat--sets">
@@ -473,7 +482,7 @@
           <span class="picker-item__muscles">${ex.muscles}</span>
         </span>
         <span class="picker-item__starts">
-          starts at Lvl ${startIdx} · ${lvl.sets}×${lvl.reps}+ · ${fmtWeight(lvl.weight)} lb
+          starts as ${tierName(startIdx)} · ${lvl.sets}×${lvl.reps}+ · ${fmtWeight(lvl.weight)} lb
         </span>
         <span class="picker-item__add" aria-hidden="true">+</span>
       </button>`;
