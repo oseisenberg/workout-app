@@ -22,32 +22,14 @@
 </head>
 <body>
   <header class="topbar">
-    <h1>Workout</h1>
-    <span id="net-status" class="badge" aria-live="polite">online</span>
+    <button id="back" class="back-btn" type="button" aria-label="Back" hidden>‹</button>
+    <h1 id="app-title">Workout</h1>
+    <div class="topbar-spacer" aria-hidden="true"></div>
   </header>
 
-  <main class="content">
-    <section class="card">
-      <h2>PWA shell</h2>
-      <p>If you're seeing this on your iPhone home screen, install worked.</p>
-      <dl class="diag">
-        <dt>Standalone</dt><dd id="diag-standalone">…</dd>
-        <dt>Service worker</dt><dd id="diag-sw">…</dd>
-        <dt>Display mode</dt><dd id="diag-display">…</dd>
-        <dt>Viewport</dt><dd id="diag-viewport">…</dd>
-      </dl>
-    </section>
+  <main id="view" class="content"></main>
 
-    <section class="card">
-      <h2>Install on iPhone</h2>
-      <ol>
-        <li>Open this page in Safari.</li>
-        <li>Tap the Share button.</li>
-        <li>Choose <em>Add to Home Screen</em>.</li>
-      </ol>
-    </section>
-  </main>
-
+  <script src="./exercises.js" defer></script>
   <script src="./app.js" defer></script>
 </body>
 </html>
