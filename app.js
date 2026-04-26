@@ -1097,13 +1097,26 @@
   // Inline SVG line chart of tier index (pip granularity) over time. Each
   // upgrade is a step of +1; level boundaries become flat plateaus on the
   // line. Returns "" when there aren't enough data points to draw a line.
+  const dateBadge = (ts) => {
+    const d = new Date(ts);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diff = Math.round((today - d) / 86400000);
+    if (diff <= 0) return "today";
+    if (diff === 1) return "yesterday";
+    if (diff < 14) return `${diff}d ago`;
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${months[d.getMonth()]} ${d.getDate()}`;
+  };
+
   const renderProgressChart = (ex, history) => {
     const points = history
       .filter((h) => h.level > 0)
       .map((h) => ({ ts: parseDateStr(h.date), tier: h.level }))
       .sort((a, b) => a.ts - b.ts);
     if (points.length < 2) return "";
-    const W = 320, H = 140, padX = 12, padY = 18;
+    const W = 320, H = 140, padX = 12, padY = 22;
     const xs = points.map((p) => p.ts);
     const ys = points.map((p) => p.tier);
     const xMin = Math.min(...xs);
@@ -1121,15 +1134,7 @@
     const areaPath = linePath +
       ` L ${x(xMax).toFixed(1)} ${(H - padY).toFixed(1)}` +
       ` L ${x(xMin).toFixed(1)} ${(H - padY).toFixed(1)} Z`;
-    const dots = points
-      .map((p) =>
-        `<circle cx="${x(p.ts).toFixed(1)}" cy="${y(p.tier).toFixed(1)}"
-                 r="3.5" fill="var(--accent)" stroke="var(--surface-2)"
-                 stroke-width="1.5" />`)
-      .join("");
-    const minLvl = ex.levels[yMin];
     const maxLvl = ex.levels[yMax];
-    const minLabel = minLvl ? tierName(minLvl) : "";
     const maxLabel = maxLvl ? tierName(maxLvl) : "";
     return `
       <svg class="details__chart" viewBox="0 0 ${W} ${H}" role="img"
@@ -1145,9 +1150,9 @@
         <path d="${areaPath}" fill="url(#chart-fill)" stroke="none" />
         <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round" />
-        ${dots}
         <text x="${padX}" y="12" font-size="10" fill="var(--muted)">${maxLabel}</text>
-        <text x="${padX}" y="${H - 6}" font-size="10" fill="var(--muted)">${minLabel}</text>
+        <text x="${padX}" y="${H - 6}" font-size="10" fill="var(--muted)">${dateBadge(xMin)}</text>
+        <text x="${W - padX}" y="${H - 6}" font-size="10" fill="var(--muted)" text-anchor="end">${dateBadge(xMax)}</text>
       </svg>`;
   };
 
