@@ -24,13 +24,18 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
                "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
-  min-height: 100dvh;
 }
 
+html { height: 100%; }
 body {
   display: flex;
   flex-direction: column;
+  height: 100dvh;
+  height: 100vh;
+  overflow: hidden;
+}
+@supports (height: 100dvh) {
+  body { height: 100dvh; }
 }
 
 .topbar {
@@ -115,9 +120,12 @@ body {
 .settings__option--danger .settings__option-title { color: #fde68a; }
 
 .content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding-top: 12px;
   padding-right: max(16px, env(safe-area-inset-right));
-  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  padding-bottom: 24px;
   padding-left: max(16px, env(safe-area-inset-left));
   display: grid;
   gap: 12px;
@@ -827,17 +835,15 @@ body {
 
 body.modal-open { overflow: hidden; }
 
-/* Bottom tab bar */
+/* Bottom tab bar — a flex item at the end of the body column so it sits
+   reliably at the visual viewport bottom on iOS without depending on
+   position:fixed quirks. */
 .tabs {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  flex-shrink: 0;
   display: flex;
   background: var(--surface);
   border-top: 1px solid var(--border);
   padding-bottom: env(safe-area-inset-bottom);
-  z-index: 35;
 }
 .tab {
   flex: 1;
