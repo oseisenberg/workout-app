@@ -615,6 +615,8 @@
     snoozedGrid.innerHTML = snoozed.map(exerciseRowHtml).join("");
 
     if (snoozedCard) snoozedCard.hidden = snoozed.length === 0;
+    const snoozedCount = $("snoozed-count");
+    if (snoozedCount) snoozedCount.textContent = String(snoozed.length);
     if (allDoneState) {
       allDoneState.hidden = !(available.length === 0 && snoozed.length > 0);
     }
@@ -1096,6 +1098,13 @@
     $("details-backdrop").addEventListener("click", closeDetails);
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.addEventListener("click", () => switchTab(tab.dataset.tab));
+    });
+    $("snoozed-toggle").addEventListener("click", () => {
+      const card = $("snoozed-card");
+      const collapsed = card.classList.toggle("card--collapsed");
+      $("snoozed-toggle").setAttribute(
+        "aria-expanded", collapsed ? "false" : "true",
+      );
     });
     document.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;

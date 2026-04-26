@@ -40,8 +40,18 @@
         </p>
       </section>
 
-      <section id="snoozed-card" class="card card--snoozed" hidden>
-        <h2>Snoozed</h2>
+      <section id="snoozed-card" class="card card--snoozed card--collapsed" hidden>
+        <button id="snoozed-toggle" type="button" class="card-toggle"
+                aria-expanded="false" aria-controls="snoozed-grid">
+          <span class="card-toggle__title">Snoozed</span>
+          <span id="snoozed-count" class="card-toggle__count">0</span>
+          <svg class="card-toggle__chevron" viewBox="0 0 12 12"
+               aria-hidden="true">
+            <path d="M3 5 L6 8 L9 5" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round" />
+          </svg>
+        </button>
         <div id="snoozed-grid" class="exercise-grid"></div>
       </section>
     </div>
