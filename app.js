@@ -542,20 +542,31 @@
     const yRange = yMax - yMin || 1;
     const x = (t) => padX + ((t - xMin) / xRange) * (W - 2 * padX);
     const y = (v) => H - padY - ((v - yMin) / yRange) * (H - 2 * padY);
-    const path = points
+    const linePath = points
       .map((p, i) => `${i === 0 ? "M" : "L"} ${x(p.ts).toFixed(1)} ${y(p.weight).toFixed(1)}`)
       .join(" ");
+    const areaPath = linePath +
+      ` L ${x(xMax).toFixed(1)} ${(H - padY).toFixed(1)}` +
+      ` L ${x(xMin).toFixed(1)} ${(H - padY).toFixed(1)} Z`;
     const dots = points
       .map((p) =>
         `<circle cx="${x(p.ts).toFixed(1)}" cy="${y(p.weight).toFixed(1)}"
-                 r="3" fill="var(--accent)" />`)
+                 r="3.5" fill="var(--accent)" stroke="var(--surface-2)"
+                 stroke-width="1.5" />`)
       .join("");
     return `
       <svg class="details__chart" viewBox="0 0 ${W} ${H}" role="img"
            aria-label="Weight progress over time">
+        <defs>
+          <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.35" />
+            <stop offset="100%" stop-color="var(--accent)" stop-opacity="0" />
+          </linearGradient>
+        </defs>
         <line x1="${padX}" y1="${H - padY}" x2="${W - padX}" y2="${H - padY}"
               stroke="var(--border)" stroke-width="1" />
-        <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2"
+        <path d="${areaPath}" fill="url(#chart-fill)" stroke="none" />
+        <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round" />
         ${dots}
         <text x="${padX}" y="11" font-size="10" fill="var(--muted)">${yMax} lb</text>
