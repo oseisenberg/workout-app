@@ -233,20 +233,9 @@
   const availableExercises = () =>
     CATALOG.filter((ex) => !state.addedIds.includes(ex.id));
 
-  // Tier names map onto level indices. They make progression feel like a
-  // milestone (Beginner -> Novice) rather than an arbitrary number that
-  // pretends to be comparable across exercises.
-  const TIERS = [
-    "Starter",
-    "Beginner",
-    "Novice",
-    "Intermediate",
-    "Advanced",
-    "Expert",
-    "Elite",
-  ];
-  const tierName = (idx) =>
-    TIERS[idx] || `Elite +${idx - (TIERS.length - 1)}`;
+  // Tier label is just the level index — numeric so progression reads as
+  // a clear count, regardless of how a particular exercise is configured.
+  const tierName = (idx) => `Lvl ${idx}`;
 
   // Default to the middle level so there's room to upgrade or downgrade
   // right out of the gate.
@@ -385,7 +374,7 @@
            </div>`;
       const menuBody = lvlZero
         ? `<p class="menu-zero">
-             You're at <strong>Starter</strong> — just mark complete when
+             You're at <strong>Lvl 0</strong> — just mark complete when
              you've done what you can. Upgrade to <strong>${nextTier}</strong>
              when you can hit the full prescription.
            </p>`
