@@ -160,22 +160,21 @@
   };
 
   // === Catalog ===========================================================
-  // Each template defines its own tiers explicitly so weight, reps and sets
-  // can move nonlinearly. A Starter (Lvl 0) entry is prepended automatically
-  // and represents "not yet able to do the full Beginner prescription":
-  // sets and reps are 0 (sentinel for "no prescription") and weight pins to
-  // the first tier's lower bound so the user has a starting point.
-  // Completion at Starter is binary, so the user is never pushed to do more
-  // than they can.
+  // Sets and reps are constant across an exercise — only the weight changes
+  // between tiers, so upgrading just means going up in weight. A Starter
+  // (Lvl 0) entry is prepended automatically and represents "not yet able
+  // to do the full Beginner prescription": sets and reps are 0 (sentinel
+  // for "no prescription") and weight pins to the first tier's lower bound
+  // so the user has a starting point. Completion at Starter is binary.
   const buildLevels = (t) => {
     const tiers = t.tiers || [];
-    const baseWeight = tiers[0] ? tiers[0].weight[0] : 0;
+    const baseWeight = tiers[0] ? tiers[0][0] : 0;
     return [
       { sets: 0, reps: 0, weight: [baseWeight, baseWeight] },
-      ...tiers.map((tier) => ({
-        sets: tier.sets,
-        reps: tier.reps,
-        weight: [tier.weight[0], tier.weight[1]],
+      ...tiers.map(([lo, hi]) => ({
+        sets: t.sets,
+        reps: t.reps,
+        weight: [lo, hi],
       })),
     ];
   };
