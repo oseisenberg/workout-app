@@ -623,14 +623,6 @@
   };
 
   // === Analysis tab =====================================================
-  const sessionsCount = (exId) => {
-    let count = 0;
-    for (const date in state.completed) {
-      if (state.completed[date] && state.completed[date][exId]) count++;
-    }
-    return count;
-  };
-
   const computeActivity = () => {
     const dates = Object.keys(state.completed).filter(
       (d) =>
@@ -829,30 +821,6 @@
           : `<p class="empty-state">Nothing in the past month yet.</p>`}
       </section>`;
 
-    const progressCard = exercises.length === 0 ? "" : `
-      <section class="card">
-        <h2>Progress</h2>
-        <ul class="progress-list">
-          ${exercises.map((ex) => {
-            const lvlIdx = state.levels[ex.id];
-            const lvl = ex.levels[lvlIdx];
-            const sessions = sessionsCount(ex.id);
-            const lvlZero = isLevelZero(lvl);
-            return `
-              <li>
-                <button type="button" class="progress-row" data-id="${ex.id}">
-                  <span class="progress-row__icon">${ex.icon}</span>
-                  <span class="progress-row__name">${ex.name}</span>
-                  <span class="lvl-pill${lvlZero ? " lvl-pill--zero" : ""}">${
-                    tierName(lvl)
-                  }${renderPips(lvl)}</span>
-                  <span class="progress-row__sessions">${sessions}×</span>
-                </button>
-              </li>`;
-          }).join("")}
-        </ul>
-      </section>`;
-
     const empty = activity.workouts === 0 && exercises.length === 0
       ? `<p class="empty-state">
            No data yet — add an exercise from the Home tab and complete it
@@ -860,7 +828,7 @@
          </p>`
       : "";
 
-    view.innerHTML = activityCard + todayCard + monthCard + progressCard + empty;
+    view.innerHTML = activityCard + todayCard + monthCard + empty;
   };
 
   // === Tab switching =====================================================
@@ -1126,11 +1094,6 @@
     });
     $("details-close").addEventListener("click", closeDetails);
     $("details-backdrop").addEventListener("click", closeDetails);
-    $("analysis-view").addEventListener("click", (event) => {
-      const btn = event.target.closest(".progress-row");
-      if (!btn) return;
-      openDetails(btn.dataset.id);
-    });
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.addEventListener("click", () => switchTab(tab.dataset.tab));
     });
