@@ -678,6 +678,7 @@ body {
   flex-direction: column;
   padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
   animation: picker-in 0.18s ease-out;
+  overscroll-behavior: contain;
 }
 @keyframes picker-in {
   from { transform: translateY(16px); opacity: 0; }
@@ -746,6 +747,7 @@ body {
   flex-direction: column;
   gap: 8px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 4px 2px;
   -webkit-overflow-scrolling: touch;
 }
@@ -997,6 +999,7 @@ body.modal-open { overflow: hidden; }
   flex-direction: column;
   gap: 12px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 4px 2px 2px;
   -webkit-overflow-scrolling: touch;
 }
