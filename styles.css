@@ -561,48 +561,55 @@ body {
   to   { transform: translateY(0) scale(1); }
 }
 
-/* Alternate completion actions — partial / skipped — stacked under the
-   green check button. The check itself stays the primary action; these
-   are quieter "this didn't go to plan" outs. */
+/* Alternate completion actions — partial / skipped — share a row above
+   the level buttons. Each carries its own tint so the difference between
+   "I did some" and "I'm skipping it" reads at a glance. */
 .menu-row--actions {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 2px;
+  gap: 6px;
 }
 .menu-action {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 6px;
   padding: 8px 10px;
-  background: transparent;
+  background: var(--surface-2);
   color: var(--text);
   border: 0;
   border-radius: 8px;
   font: inherit;
   font-size: 13px;
   font-weight: 600;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.menu-action:active { background: var(--surface-2); }
+.menu-action[data-action="mark-partial"] {
+  background: rgba(234, 179, 8, 0.14);
+  color: #fde68a;
+}
+.menu-action[data-action="mark-skipped"] {
+  background: rgba(148, 163, 184, 0.14);
+  color: var(--muted);
+}
+.menu-action:active { filter: brightness(1.2); }
 .menu-action__icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
   flex-shrink: 0;
 }
 .menu-action__icon svg { width: 14px; height: 14px; display: block; }
-.menu-action--on { background: rgba(234, 179, 8, 0.14); }
-.menu-action--on .menu-action__icon { color: #ca8a04; }
-.menu-action[data-action="mark-skipped"].menu-action--on {
-  background: rgba(148, 163, 184, 0.16);
+.menu-action--on[data-action="mark-partial"] {
+  background: #ca8a04;
+  color: white;
 }
-.menu-action[data-action="mark-skipped"].menu-action--on .menu-action__icon {
-  color: var(--muted);
+.menu-action--on[data-action="mark-skipped"] {
+  background: #475569;
+  color: white;
 }
 
 .menu-zero {
