@@ -16,6 +16,13 @@
 
 * { box-sizing: border-box; }
 
+/* Tell the browser these are tap targets — kills the ~300ms double-tap
+   delay iOS otherwise leaves on every press. */
+button, [role="button"], a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 html, body {
   margin: 0;
   padding: 0;
