@@ -161,22 +161,22 @@
 
   // === Catalog ===========================================================
   // Sets and reps are constant across an exercise — only the weight changes
-  // between tiers, so upgrading just means going up in weight. A Starter
-  // (Lvl 0) entry is prepended automatically and represents "not yet able
-  // to do the full Beginner prescription": sets and reps are 0 (sentinel
-  // for "no prescription") and weight pins to the first tier's lower bound
-  // so the user has a starting point. Completion at Starter is binary.
+  // between tiers. Upgrading bumps the weight by `weightStep`, which is
+  // hard-coded per exercise (e.g. 10 lb for a leg curl stack, 45 lb for a
+  // plate-loaded leg press). A Starter (Lvl 0) entry is prepended for
+  // everyone with sets/reps of 0 (sentinel for "no prescription") and the
+  // baseline weight as a reference. Completion at Starter is binary.
   const buildLevels = (t) => {
-    const tiers = t.tiers || [];
-    const baseWeight = tiers[0] ? tiers[0][0] : 0;
-    return [
-      { sets: 0, reps: 0, weight: [baseWeight, baseWeight] },
-      ...tiers.map(([lo, hi]) => ({
+    const tierCount = t.tiers || 0;
+    const out = [{ sets: 0, reps: 0, weight: t.weightStart }];
+    for (let i = 0; i < tierCount; i++) {
+      out.push({
         sets: t.sets,
         reps: t.reps,
-        weight: [lo, hi],
-      })),
-    ];
+        weight: t.weightStart + i * t.weightStep,
+      });
+    }
+    return out;
   };
 
   const templateToExercise = (t) => ({
@@ -251,7 +251,6 @@
   const currentLevel = (ex) => ex.levels[state.levels[ex.id]];
   const isLevelZero = (lvl) => lvl.sets === 0;
   const todaysCompletion = (exId) => (state.completed[todayKey()] || {})[exId];
-  const fmtWeight = (w) => (w[0] === w[1] ? `${w[0]}` : `${w[0]}–${w[1]}`);
 
   const setChoices = (ex) => {
     const target = currentLevel(ex).sets;
@@ -350,7 +349,7 @@
       const volumeText = lvlZero ? "—" : `${setsText}×${lvl.reps}+`;
       const tier = tierName(lvlIdx);
       const nextTier = canUp ? tierName(lvlIdx + 1) : null;
-      const weightText = fmtWeight(lvl.weight);
+      const weightText = `${lvl.weight}`;
 
       const setChipsHtml = `<div class="menu-row menu-row--chips">
              <span class="menu-row__label">Sets done</span>

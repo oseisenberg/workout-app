@@ -7,13 +7,9 @@
       "icon": "leg-press",
       "sets": 3,
       "reps": 10,
-      "tiers": [
-        [90,  135],
-        [135, 180],
-        [180, 225],
-        [225, 270],
-        [270, 320]
-      ]
+      "weightStart": 90,
+      "weightStep": 45,
+      "tiers": 5
     },
     {
       "id": "lat-pulldown",
@@ -22,13 +18,9 @@
       "icon": "lat-pulldown",
       "sets": 3,
       "reps": 10,
-      "tiers": [
-        [60,  80],
-        [80,  100],
-        [100, 120],
-        [120, 140],
-        [140, 170]
-      ]
+      "weightStart": 60,
+      "weightStep": 20,
+      "tiers": 5
     },
     {
       "id": "chest-press",
@@ -37,13 +29,9 @@
       "icon": "chest-press",
       "sets": 3,
       "reps": 10,
-      "tiers": [
-        [50,  70],
-        [70,  90],
-        [90,  110],
-        [110, 130],
-        [130, 160]
-      ]
+      "weightStart": 50,
+      "weightStep": 20,
+      "tiers": 5
     },
     {
       "id": "seated-row",
@@ -52,13 +40,9 @@
       "icon": "seated-row",
       "sets": 3,
       "reps": 10,
-      "tiers": [
-        [60,  80],
-        [80,  100],
-        [100, 120],
-        [120, 140],
-        [140, 170]
-      ]
+      "weightStart": 60,
+      "weightStep": 20,
+      "tiers": 5
     },
     {
       "id": "leg-extension",
@@ -67,13 +51,9 @@
       "icon": "leg-extension",
       "sets": 3,
       "reps": 12,
-      "tiers": [
-        [40,  50],
-        [50,  70],
-        [70,  90],
-        [90,  110],
-        [110, 130]
-      ]
+      "weightStart": 40,
+      "weightStep": 15,
+      "tiers": 5
     },
     {
       "id": "leg-curl",
@@ -82,13 +62,9 @@
       "icon": "leg-curl",
       "sets": 3,
       "reps": 12,
-      "tiers": [
-        [30, 40],
-        [40, 50],
-        [50, 60],
-        [60, 75],
-        [75, 95]
-      ]
+      "weightStart": 30,
+      "weightStep": 10,
+      "tiers": 5
     },
     {
       "id": "cable-crossover",
@@ -97,13 +73,9 @@
       "icon": "cable-crossover",
       "sets": 3,
       "reps": 12,
-      "tiers": [
-        [15, 25],
-        [25, 35],
-        [35, 45],
-        [45, 60],
-        [60, 80]
-      ]
+      "weightStart": 15,
+      "weightStep": 10,
+      "tiers": 5
     },
     {
       "id": "pec-deck",
@@ -112,13 +84,9 @@
       "icon": "pec-deck",
       "sets": 3,
       "reps": 12,
-      "tiers": [
-        [40,  55],
-        [55,  70],
-        [70,  90],
-        [90,  110],
-        [110, 135]
-      ]
+      "weightStart": 40,
+      "weightStep": 15,
+      "tiers": 5
     },
     {
       "id": "back-squat",
@@ -127,13 +95,9 @@
       "icon": "barbell",
       "sets": 3,
       "reps": 5,
-      "tiers": [
-        [95,  135],
-        [135, 185],
-        [185, 225],
-        [225, 275],
-        [275, 335]
-      ]
+      "weightStart": 95,
+      "weightStep": 40,
+      "tiers": 5
     },
     {
       "id": "bench-press",
@@ -142,13 +106,9 @@
       "icon": "barbell",
       "sets": 3,
       "reps": 5,
-      "tiers": [
-        [65,  95],
-        [95,  135],
-        [135, 165],
-        [165, 195],
-        [195, 225]
-      ]
+      "weightStart": 65,
+      "weightStep": 30,
+      "tiers": 5
     },
     {
       "id": "deadlift",
@@ -157,13 +117,9 @@
       "icon": "barbell",
       "sets": 3,
       "reps": 5,
-      "tiers": [
-        [135, 185],
-        [185, 245],
-        [245, 305],
-        [305, 365],
-        [365, 455]
-      ]
+      "weightStart": 135,
+      "weightStep": 50,
+      "tiers": 5
     },
     {
       "id": "bicep-curl",
@@ -172,13 +128,9 @@
       "icon": "dumbbell",
       "sets": 3,
       "reps": 10,
-      "tiers": [
-        [10, 15],
-        [15, 20],
-        [20, 25],
-        [25, 35],
-        [35, 45]
-      ]
+      "weightStart": 10,
+      "weightStep": 5,
+      "tiers": 5
     },
     {
       "id": "overhead-press",
@@ -187,13 +139,9 @@
       "icon": "dumbbell",
       "sets": 3,
       "reps": 8,
-      "tiers": [
-        [15, 20],
-        [20, 25],
-        [25, 35],
-        [35, 45],
-        [45, 55]
-      ]
+      "weightStart": 15,
+      "weightStep": 5,
+      "tiers": 5
     },
     {
       "id": "tricep-pushdown",
@@ -202,13 +150,9 @@
       "icon": "lat-pulldown",
       "sets": 3,
       "reps": 12,
-      "tiers": [
-        [25, 35],
-        [35, 45],
-        [45, 60],
-        [60, 80],
-        [80, 100]
-      ]
+      "weightStart": 25,
+      "weightStep": 15,
+      "tiers": 5
     }
   ]
 }
