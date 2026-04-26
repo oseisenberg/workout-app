@@ -603,6 +603,7 @@ body {
   padding: 28px 0 22px;
   color: var(--ok);
 }
+.all-done[hidden] { display: none; }
 .all-done__icon { width: 72px; height: 72px; display: block; }
 .all-done__label {
   font-size: 13px;
