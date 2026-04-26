@@ -617,7 +617,7 @@
 
       const setChipsHtml = `<div class="menu-row menu-row--chips">
              <span class="menu-row__label">
-               Sets done <span class="menu-row__hint">target ${lvl.sets}×${fmtReps(lvl.reps)}</span>
+               Sets done <span class="menu-row__hint">suggested ${lvl.sets}×${fmtReps(lvl.reps)}</span>
              </span>
              <div class="menu-row__chips">${setChoices(ex)
                .map((n) => {
@@ -1491,11 +1491,23 @@
            your progress here.
          </p>`;
 
-    const summary = lvlZero
-      ? `${tier} · just trying it out`
+    // Each exercise has one tracked metric (the one progression is built
+    // from): weight for weighted exercises, reps for bodyweight. Sets are
+    // always just a suggestion. Surface that distinction explicitly.
+    const trackedMetric = lvlZero
+      ? null
       : lvl.bodyweight
-        ? `${tier} · ${lvl.sets}×${fmtReps(lvl.reps)} reps`
-        : `${tier} · ${fmtWeight(lvl.weight)} lb · ${lvl.sets}×${fmtReps(lvl.reps)}`;
+        ? `${fmtReps(lvl.reps)} reps`
+        : `${fmtWeight(lvl.weight)} lb`;
+    const suggested = lvlZero
+      ? null
+      : lvl.bodyweight
+        ? `${lvl.sets} sets`
+        : `${lvl.sets} sets · ${fmtReps(lvl.reps)} reps`;
+    const summaryHtml = lvlZero
+      ? `<span class="details__hero-summary">${tier} · just trying it out</span>`
+      : `<span class="details__hero-summary">${tier} · ${trackedMetric}</span>
+         <span class="details__hero-suggested">Suggested: ${suggested}</span>`;
 
     const archived = isArchived(ex.id);
     const archiveBtnHtml = `
@@ -1538,7 +1550,7 @@
       <div class="details__hero">
         <span class="details__icon">${ex.icon}</span>
         <span class="details__hero-text">
-          <span class="details__hero-summary">${summary}</span>
+          ${summaryHtml}
           <span class="details__hero-muscles">${ex.muscles}</span>
         </span>
       </div>
