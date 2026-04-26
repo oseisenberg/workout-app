@@ -37,12 +37,11 @@ html { height: 100%; }
 body {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  /* 100vh is the fallback; 100dvh wins on browsers that support it so the
+     body shrinks/grows with the URL bar and keyboard instead of overflowing. */
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
-}
-@supports (height: 100dvh) {
-  body { height: 100dvh; }
 }
 
 .topbar {
@@ -951,9 +950,12 @@ body.modal-open { overflow: hidden; }
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 3px;
-  padding: 10px 0 8px;
+  /* More top padding, almost no bottom padding — pushes the icon/label
+     down to sit just above the home-indicator safe area instead of
+     floating in the middle of the tab bar. */
+  padding: 14px 0 2px;
   background: transparent;
   border: 0;
   color: var(--muted);
