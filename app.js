@@ -1662,6 +1662,35 @@
       </svg>`;
   };
 
+  // Compresses progression to two numbers that aren't "current weight" or
+  // "streak": tier change in the last 30 days (recent momentum) and tier
+  // change since the very first completion (cumulative climb). Each tier-
+  // index step counts as one — pip fills and level-ups weigh equally so
+  // the number stays meaningful as the user moves up.
+  const computeProgressSummary = (ex, history) => {
+    const cur = state.levels[ex.id];
+    if (!history || history.length === 0) return null;
+    // history is sorted newest-first.
+    const oldest = history[history.length - 1];
+    const cutoff = dateNDaysAgo(30);
+    let baseline30 = null;
+    for (const h of history) {
+      if (h.date <= cutoff) { baseline30 = h; break; }
+    }
+    const daysSinceStart = Math.max(1, Math.round(
+      (Date.now() - parseDateStr(oldest.date)) / 86400000));
+    return {
+      delta30: baseline30 ? cur - baseline30.level : null,
+      deltaLife: cur - oldest.level,
+      daysSinceStart,
+      isFirstMonth: !baseline30,
+    };
+  };
+
+  // Persists across re-renders for the same open exercise so the chart
+  // doesn't snap closed when the user touches a tier control.
+  let chartExpanded = false;
+
   let openDetailsId = null;
   const renderDetails = () => {
     if (openDetailsId == null) return;
@@ -1674,9 +1703,50 @@
     $("details-title").textContent = ex.name;
 
     const history = exerciseHistory(ex.id);
+    const summary = computeProgressSummary(ex, history);
     const chartHtml = renderProgressChart(ex, history);
+    const fmtDelta = (d) =>
+      d > 0 ? `↑ +${d}` : d < 0 ? `↓ ${d}` : "—";
+    const progressSummaryHtml = summary
+      ? `<div class="progress-summary">
+           <div class="progress-summary__stat">
+             <span class="progress-summary__value progress-summary__value--${
+               summary.delta30 == null ? "muted"
+                 : summary.delta30 > 0 ? "up"
+                 : summary.delta30 < 0 ? "down" : "flat"
+             }">${
+               summary.isFirstMonth ? "—" : fmtDelta(summary.delta30)
+             }</span>
+             <span class="progress-summary__label">${
+               summary.isFirstMonth ? "First month" : "Last 30 days"
+             }</span>
+           </div>
+           <div class="progress-summary__stat">
+             <span class="progress-summary__value progress-summary__value--${
+               summary.deltaLife > 0 ? "up"
+                 : summary.deltaLife < 0 ? "down" : "flat"
+             }">${fmtDelta(summary.deltaLife)}</span>
+             <span class="progress-summary__label">Since start · ${
+               roundedDuration(summary.daysSinceStart)
+             }</span>
+           </div>
+         </div>`
+      : "";
     const progressHtml = chartHtml
-      ? chartHtml
+      ? `${progressSummaryHtml}
+         <button type="button" class="details__chart-toggle"
+                 data-action="toggle-chart"
+                 aria-expanded="${chartExpanded ? "true" : "false"}">
+           ${chartExpanded ? "Hide chart" : "Show chart"}
+           <svg viewBox="0 0 12 8" aria-hidden="true">
+             <path d="M1 1.5 L6 6.5 L11 1.5" fill="none"
+                   stroke="currentColor" stroke-width="1.8"
+                   stroke-linecap="round" stroke-linejoin="round" />
+           </svg>
+         </button>
+         <div class="details__chart-wrap"${chartExpanded ? "" : " hidden"}>
+           ${chartHtml}
+         </div>`
       : `<p class="details__empty">No completions yet — your progression chart will start filling in as you log this exercise.</p>`;
 
     // Each exercise has one tracked metric (the one progression is built
@@ -1799,6 +1869,7 @@
 
   const openDetails = (exId) => {
     openDetailsId = exId;
+    chartExpanded = false;
     renderDetails();
     $("details").hidden = false;
     document.body.classList.add("modal-open");
@@ -1913,6 +1984,9 @@
         }
       } else if (action === "reset-customization") {
         resetCustomization(openDetailsId);
+      } else if (action === "toggle-chart") {
+        chartExpanded = !chartExpanded;
+        renderDetails();
       }
     });
 
