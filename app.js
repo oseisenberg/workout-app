@@ -256,6 +256,27 @@
   const todaysCompletion = (exId) => (state.completed[todayKey()] || {})[exId];
   const fmtWeight = (w) => (w[0] === w[1] ? `${w[0]}` : `${w[0]}–${w[1]}`);
 
+  // Sorted descending by date (newest first).
+  const exerciseHistory = (exId) =>
+    Object.entries(state.completed)
+      .filter(([, day]) => day && day[exId])
+      .map(([date, day]) => ({ date, ...day[exId] }))
+      .sort((a, b) => (a.date < b.date ? 1 : -1));
+
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const friendlyDate = (dateStr) => {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const that = new Date(y, m - 1, d);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diff = Math.round((today - that) / 86400000);
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Yesterday";
+    if (diff < 7) return `${diff} days ago`;
+    return `${MONTHS[m - 1]} ${d}`;
+  };
+
   const setChoices = (ex) => {
     const target = currentLevel(ex).sets;
     const out = [];
@@ -464,6 +485,7 @@
     if (allDoneState) {
       allDoneState.hidden = !(available.length === 0 && snoozed.length > 0);
     }
+    if (openDetailsId != null) renderDetails();
   };
 
   const renderPicker = () => {
@@ -500,6 +522,124 @@
     document.body.classList.remove("modal-open");
   };
 
+  const parseDateStr = (s) => {
+    const [y, m, d] = s.split("-").map(Number);
+    return new Date(y, m - 1, d).getTime();
+  };
+
+  // Simple inline SVG line chart of weight over time. Returns "" when there
+  // aren't enough data points to draw a line.
+  const renderProgressChart = (ex, history) => {
+    const points = history
+      .filter((h) => {
+        const l = ex.levels[h.level];
+        return l && !isLevelZero(l);
+      })
+      .map((h) => ({
+        ts: parseDateStr(h.date),
+        weight: ex.levels[h.level].weight[0],
+      }))
+      .sort((a, b) => a.ts - b.ts);
+    if (points.length < 2) return "";
+    const W = 320, H = 140, padX = 12, padY = 16;
+    const xs = points.map((p) => p.ts);
+    const ys = points.map((p) => p.weight);
+    const xMin = Math.min(...xs);
+    const xMax = Math.max(...xs);
+    const yMin = Math.min(...ys);
+    const yMax = Math.max(...ys);
+    const xRange = xMax - xMin || 1;
+    const yRange = yMax - yMin || 1;
+    const x = (t) => padX + ((t - xMin) / xRange) * (W - 2 * padX);
+    const y = (v) => H - padY - ((v - yMin) / yRange) * (H - 2 * padY);
+    const path = points
+      .map((p, i) => `${i === 0 ? "M" : "L"} ${x(p.ts).toFixed(1)} ${y(p.weight).toFixed(1)}`)
+      .join(" ");
+    const dots = points
+      .map((p) =>
+        `<circle cx="${x(p.ts).toFixed(1)}" cy="${y(p.weight).toFixed(1)}"
+                 r="3" fill="var(--accent)" />`)
+      .join("");
+    return `
+      <svg class="details__chart" viewBox="0 0 ${W} ${H}" role="img"
+           aria-label="Weight progress over time">
+        <line x1="${padX}" y1="${H - padY}" x2="${W - padX}" y2="${H - padY}"
+              stroke="var(--border)" stroke-width="1" />
+        <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" />
+        ${dots}
+        <text x="${padX}" y="11" font-size="10" fill="var(--muted)">${yMax} lb</text>
+        <text x="${padX}" y="${H - 4}" font-size="10" fill="var(--muted)">${yMin} lb</text>
+      </svg>`;
+  };
+
+  let openDetailsId = null;
+  const renderDetails = () => {
+    if (openDetailsId == null) return;
+    const ex = exerciseById(openDetailsId);
+    if (!ex) return;
+    const lvlIdx = state.levels[ex.id];
+    const lvl = ex.levels[lvlIdx];
+    const lvlZero = isLevelZero(lvl);
+    const tier = tierName(lvlIdx);
+    $("details-title").textContent = ex.name;
+
+    const history = exerciseHistory(ex.id);
+    const chartHtml = renderProgressChart(ex, history);
+    const historyHtml = history.length === 0
+      ? `<p class="details__empty">No history yet — complete this exercise
+           to start tracking.</p>`
+      : `<ul class="details__history">${history.map((entry) => {
+          const entryLvl = ex.levels[entry.level];
+          const entryTier = tierName(entry.level);
+          const entryZero = entryLvl ? isLevelZero(entryLvl) : false;
+          const setsLabel = entryZero
+            ? "completed"
+            : entryLvl
+              ? `${entry.sets}/${entryLvl.sets} sets`
+              : `${entry.sets} sets`;
+          const partial = entryLvl && !entryZero && entry.sets < entryLvl.sets;
+          const weight = entryLvl ? fmtWeight(entryLvl.weight) : "";
+          return `
+            <li class="details__entry${partial ? " is-partial" : ""}">
+              <span class="details__date">${friendlyDate(entry.date)}</span>
+              <span class="details__entry-tier">${entryTier}</span>
+              <span class="details__entry-meta">
+                ${setsLabel}${weight ? ` · ${weight} lb` : ""}
+              </span>
+            </li>`;
+        }).join("")}</ul>`;
+
+    const summary = lvlZero
+      ? `${tier} · ${fmtWeight(lvl.weight)} lb`
+      : `${tier} · ${fmtWeight(lvl.weight)} lb · ${lvl.sets}×${lvl.reps}+`;
+
+    $("details-body").innerHTML = `
+      <div class="details__hero">
+        <span class="details__icon">${ex.icon}</span>
+        <span class="details__hero-text">
+          <span class="details__hero-summary">${summary}</span>
+          <span class="details__hero-muscles">${ex.muscles}</span>
+        </span>
+      </div>
+      ${chartHtml ? `<h3 class="details__section">Progress</h3>${chartHtml}` : ""}
+      <h3 class="details__section">History</h3>
+      ${historyHtml}
+    `;
+  };
+
+  const openDetails = (exId) => {
+    openDetailsId = exId;
+    renderDetails();
+    $("details").hidden = false;
+    document.body.classList.add("modal-open");
+  };
+  const closeDetails = () => {
+    openDetailsId = null;
+    $("details").hidden = true;
+    if ($("picker").hidden) document.body.classList.remove("modal-open");
+  };
+
   // === Wiring ============================================================
   const setupListeners = () => {
     document.querySelector(".content").addEventListener("click", (event) => {
@@ -527,6 +667,7 @@
       }
       if (action === "upgrade") return changeLevel(exId, +1);
       if (action === "downgrade") return changeLevel(exId, -1);
+      if (action === "open-details") return openDetails(exId);
     });
 
     document.addEventListener("click", (event) => {
@@ -541,8 +682,12 @@
       if (!item) return;
       addExercise(item.dataset.id);
     });
+    $("details-close").addEventListener("click", closeDetails);
+    $("details-backdrop").addEventListener("click", closeDetails);
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && !$("picker").hidden) closePicker();
+      if (event.key !== "Escape") return;
+      if (!$("details").hidden) closeDetails();
+      else if (!$("picker").hidden) closePicker();
     });
   };
 

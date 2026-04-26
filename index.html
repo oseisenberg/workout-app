@@ -75,6 +75,25 @@
     </div>
   </div>
 
+  <div id="details" class="picker" hidden role="dialog" aria-modal="true"
+       aria-labelledby="details-title">
+    <div id="details-backdrop" class="picker__backdrop"></div>
+    <div class="picker__sheet" role="document">
+      <div class="picker__header">
+        <h2 id="details-title" class="picker__title">Exercise</h2>
+        <button id="details-close" type="button" class="picker__close"
+                aria-label="Close">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4 4 L12 12 M12 4 L4 12" fill="none"
+                  stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+      <div id="details-body" class="details__body"></div>
+    </div>
+  </div>
+
   <script src="./app.js" defer></script>
 </body>
 </html>
