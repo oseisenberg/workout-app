@@ -760,6 +760,7 @@ body {
 .fab:active { transform: scale(0.94); }
 .fab:hover { background: var(--accent-strong); }
 .fab svg { width: 26px; height: 26px; display: block; }
+.fab[hidden] { display: none; }
 
 /* Picker modal. */
 .picker {
