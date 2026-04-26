@@ -218,7 +218,9 @@ body {
 .exercise-row.is-done .exercise-row__target { color: #bbf7d0; }
 
 .lvl-pill {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 2px 8px;
   border-radius: 999px;
   background: var(--accent-soft);
@@ -228,6 +230,25 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.6px;
   white-space: nowrap;
+}
+.lvl-pill__pips {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.lvl-pill__pip {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid currentColor;
+  opacity: 0.55;
+}
+.lvl-pill__pip--on {
+  background: currentColor;
+  border-color: transparent;
+  opacity: 1;
 }
 .lvl-pill--zero {
   background: var(--surface);

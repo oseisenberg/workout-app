@@ -161,22 +161,33 @@
 
   // === Catalog ===========================================================
   // Sets and reps are constant across an exercise — only the weight changes
-  // between tiers. Upgrading bumps the weight by `weightStep`, which is
-  // hard-coded per exercise (e.g. 10 lb for a leg curl stack, 45 lb for a
-  // plate-loaded leg press). A Starter (Lvl 0) entry is prepended for
-  // everyone with sets/reps of 0 (sentinel for "no prescription") and the
-  // baseline weight as a reference. Completion at Starter is binary.
+  // between tiers. Each upgrade fills one pip; once all pips for a level are
+  // full, the next upgrade rolls over into the next level. So with
+  // pipsPerLevel = 2, going from Lvl 1 (●●○) to Lvl 2 (○○○) takes 3 upgrades.
+  // A Starter (Lvl 0) entry is prepended for everyone with sets/reps of 0
+  // (sentinel for "no prescription"). Completion at Starter is binary.
   const buildLevels = (t) => {
-    const tierCount = t.tiers || 0;
-    const start = t.weightStart;
-    const step = t.weightStep;
-    const out = [{ sets: 0, reps: 0, weight: [start, start] }];
-    for (let i = 0; i < tierCount; i++) {
-      const lo = start + i * step;
+    const pipsPerLevel = t.pipsPerLevel || 2;
+    const tiersPerLevel = pipsPerLevel + 1;
+    const levelCount = t.levels || 0;
+    const totalPrescriptive = levelCount * tiersPerLevel;
+    const out = [{
+      sets: 0,
+      reps: 0,
+      weight: [t.weightStart, t.weightStart],
+      level: 0,
+      pip: 0,
+      pipsPerLevel: 0,
+    }];
+    for (let i = 0; i < totalPrescriptive; i++) {
+      const lo = t.weightStart + i * t.weightStep;
       out.push({
         sets: t.sets,
         reps: t.reps,
-        weight: [lo, lo + step],
+        weight: [lo, lo + t.weightStep],
+        level: Math.floor(i / tiersPerLevel) + 1,
+        pip: i % tiersPerLevel,
+        pipsPerLevel,
       });
     }
     return out;
@@ -238,9 +249,20 @@
     CATALOG.filter((ex) => !state.addedIds.includes(ex.id));
   const isArchived = (exId) => state.archivedIds.includes(exId);
 
-  // Tier label is just the level index — numeric so progression reads as
-  // a clear count, regardless of how a particular exercise is configured.
-  const tierName = (idx) => `Lvl ${idx}`;
+  // Tier label is just the level number — pips are rendered separately so the
+  // pill stays clean even when no pips apply (Lvl 0).
+  const tierName = (lvl) => (lvl ? `Lvl ${lvl.level}` : "Lvl ?");
+  const renderPips = (lvl) => {
+    const total = lvl && lvl.pipsPerLevel ? lvl.pipsPerLevel : 0;
+    if (total === 0) return "";
+    let html = '<span class="lvl-pill__pips" aria-hidden="true">';
+    for (let i = 0; i < total; i++) {
+      html += `<span class="lvl-pill__pip${
+        i < lvl.pip ? " lvl-pill__pip--on" : ""
+      }"></span>`;
+    }
+    return html + "</span>";
+  };
 
   // Default to the middle level so there's room to upgrade or downgrade
   // right out of the gate.
@@ -344,14 +366,18 @@
   const changeLevel = (exId, delta) => {
     const ex = exerciseById(exId);
     if (!ex) return;
-    const next = state.levels[exId] + delta;
+    const oldIdx = state.levels[exId];
+    const next = oldIdx + delta;
     if (next < 0 || next >= ex.levels.length) return;
+    const oldLvl = ex.levels[oldIdx];
+    const newLvl = ex.levels[next];
     state.levels[exId] = next;
     const today = state.completed[todayKey()];
     if (today && today[exId]) today[exId].level = next;
     saveState();
     renderExercises();
-    if (delta > 0) flashUpgrade(exId);
+    // Flash only when the level number actually changes — not for pip-fills.
+    if (delta > 0 && newLvl.level > oldLvl.level) flashUpgrade(exId);
   };
 
   // Brief celebration when leveling up.
@@ -379,8 +405,9 @@
       const canUp = lvlIdx < ex.levels.length - 1;
       const setsDone = done ? done.sets : 0;
       const isPartial = done && !lvlZero && setsDone < lvl.sets;
-      const tier = tierName(lvlIdx);
-      const nextTier = canUp ? tierName(lvlIdx + 1) : null;
+      const tier = tierName(lvl);
+      const pipsHtml = renderPips(lvl);
+      const nextTier = canUp ? tierName(ex.levels[lvlIdx + 1]) : null;
       const weightText = fmtWeight(lvl.weight);
 
       const setChipsHtml = `<div class="menu-row menu-row--chips">
@@ -417,7 +444,7 @@
             <span class="exercise-row__meta">
               <span class="lvl-pill${
                 lvlZero ? " lvl-pill--zero" : ""
-              }">${tier}</span>
+              }">${tier}${pipsHtml}</span>
             </span>
           </span>
           <span class="exercise-row__stat">
@@ -617,7 +644,7 @@
     const lvlIdx = state.levels[ex.id];
     const lvl = ex.levels[lvlIdx];
     const lvlZero = isLevelZero(lvl);
-    const tier = tierName(lvlIdx);
+    const tier = tierName(lvl);
     $("details-title").textContent = ex.name;
 
     const history = exerciseHistory(ex.id);
@@ -627,7 +654,7 @@
            to start tracking.</p>`
       : `<ul class="details__history">${history.map((entry) => {
           const entryLvl = ex.levels[entry.level];
-          const entryTier = tierName(entry.level);
+          const entryTier = tierName(entryLvl);
           const entryZero = entryLvl ? isLevelZero(entryLvl) : false;
           const setsLabel = entryZero
             ? "completed"
