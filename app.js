@@ -193,7 +193,7 @@
   let CATALOG = [];
 
   // === State =============================================================
-  const STORAGE_KEY = "workout-app:state:v6";
+  const STORAGE_KEY = "workout-app:state:v7";
   const todayKey = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${
@@ -203,6 +203,7 @@
 
   const blankState = () => ({
     addedIds: [],
+    archivedIds: [],
     levels: {},
     completed: {},
   });
@@ -230,8 +231,14 @@
   const exerciseById = (id) => CATALOG.find((ex) => ex.id === id);
   const addedExercises = () =>
     state.addedIds.map(exerciseById).filter(Boolean);
+  const archivedExercises = () =>
+    state.archivedIds.map(exerciseById).filter(Boolean);
+  // Picker shows catalog templates that aren't currently active or archived.
   const availableExercises = () =>
-    CATALOG.filter((ex) => !state.addedIds.includes(ex.id));
+    CATALOG.filter((ex) =>
+      !state.addedIds.includes(ex.id) &&
+      !state.archivedIds.includes(ex.id));
+  const isArchived = (exId) => state.archivedIds.includes(exId);
 
   // Tier label is just the level index — numeric so progression reads as
   // a clear count, regardless of how a particular exercise is configured.
@@ -279,7 +286,26 @@
     const ex = exerciseById(id);
     if (!ex) return;
     state.addedIds.push(id);
+    state.archivedIds = state.archivedIds.filter((x) => x !== id);
     if (state.levels[id] == null) state.levels[id] = defaultLevel(ex);
+    saveState();
+    renderExercises();
+    renderPicker();
+  };
+
+  const archiveExercise = (id) => {
+    if (!state.addedIds.includes(id)) return;
+    state.addedIds = state.addedIds.filter((x) => x !== id);
+    if (!state.archivedIds.includes(id)) state.archivedIds.push(id);
+    saveState();
+    renderExercises();
+    renderPicker();
+  };
+
+  const unarchiveExercise = (id) => {
+    if (!state.archivedIds.includes(id)) return;
+    state.archivedIds = state.archivedIds.filter((x) => x !== id);
+    if (!state.addedIds.includes(id)) state.addedIds.push(id);
     saveState();
     renderExercises();
     renderPicker();
@@ -443,13 +469,29 @@
       </div>`;
   };
 
+  const archiveRowHtml = (ex) => `
+    <button type="button" class="archive-row" data-action="open-details"
+            data-id="${ex.id}">
+      <span class="archive-row__icon">${ex.icon}</span>
+      <span class="archive-row__name">${ex.name}</span>
+      <span class="archive-row__chevron" aria-hidden="true">›</span>
+    </button>`;
+
   const renderExercises = () => {
     const availableGrid = $("available-grid");
     const snoozedGrid = $("snoozed-grid");
     const snoozedCard = $("snoozed-card");
+    const archivedGrid = $("archived-grid");
+    const archivedCard = $("archived-card");
     const emptyState = $("empty-state");
     const allDoneState = $("all-done-state");
     if (!availableGrid || !snoozedGrid) return;
+
+    const archived = archivedExercises();
+    if (archivedGrid) {
+      archivedGrid.innerHTML = archived.map(archiveRowHtml).join("");
+    }
+    if (archivedCard) archivedCard.hidden = archived.length === 0;
 
     const all = addedExercises();
     if (all.length === 0) {
@@ -457,7 +499,8 @@
       snoozedGrid.innerHTML = "";
       if (snoozedCard) snoozedCard.hidden = true;
       if (allDoneState) allDoneState.hidden = true;
-      if (emptyState) emptyState.hidden = false;
+      if (emptyState) emptyState.hidden = archived.length > 0;
+      if (openDetailsId != null) renderDetails();
       return;
     }
     if (emptyState) emptyState.hidden = true;
@@ -615,6 +658,13 @@
       ? `${tier} · ${fmtWeight(lvl.weight)} lb`
       : `${tier} · ${fmtWeight(lvl.weight)} lb · ${lvl.sets}×${lvl.reps}+`;
 
+    const archived = isArchived(ex.id);
+    const archiveBtnHtml = `
+      <button type="button" class="details__archive"
+              data-action="${archived ? "unarchive" : "archive"}">
+        ${archived ? "Unarchive" : "Archive"}
+      </button>`;
+
     $("details-body").innerHTML = `
       <div class="details__hero">
         <span class="details__icon">${ex.icon}</span>
@@ -626,6 +676,7 @@
       ${chartHtml ? `<h3 class="details__section">Progress</h3>${chartHtml}` : ""}
       <h3 class="details__section">History</h3>
       ${historyHtml}
+      ${archiveBtnHtml}
     `;
   };
 
@@ -646,7 +697,7 @@
     document.querySelector(".content").addEventListener("click", (event) => {
       const target = event.target.closest("[data-action]");
       if (!target) return;
-      const row = target.closest(".exercise-row");
+      const row = target.closest(".exercise-row, .archive-row");
       if (!row) return;
       const exId = row.dataset.id;
       const action = target.dataset.action;
@@ -669,6 +720,19 @@
       if (action === "upgrade") return changeLevel(exId, +1);
       if (action === "downgrade") return changeLevel(exId, -1);
       if (action === "open-details") return openDetails(exId);
+    });
+
+    $("details-body").addEventListener("click", (event) => {
+      const target = event.target.closest("[data-action]");
+      if (!target || openDetailsId == null) return;
+      const action = target.dataset.action;
+      if (action === "archive") {
+        archiveExercise(openDetailsId);
+        closeDetails();
+      } else if (action === "unarchive") {
+        unarchiveExercise(openDetailsId);
+        closeDetails();
+      }
     });
 
     document.addEventListener("click", (event) => {
