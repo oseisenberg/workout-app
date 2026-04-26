@@ -1599,8 +1599,15 @@
     const xMax = single ? Math.max(xMin, today) : Math.max(...xs);
     const rawYMin = Math.min(...ys);
     const rawYMax = Math.max(...ys);
-    const yMin = single ? Math.max(0, rawYMin - 1) : rawYMin;
-    const yMax = single ? rawYMax + 1 : rawYMax;
+    // Always include the user's current tier in the y-range so the
+    // "now" marker is on-chart even if they upgraded past every
+    // logged completion.
+    const curTier = state.levels[ex.id];
+    const showCur = curTier > 0;
+    const yMinBase = showCur ? Math.min(rawYMin, curTier) : rawYMin;
+    const yMaxBase = showCur ? Math.max(rawYMax, curTier) : rawYMax;
+    const yMin = single ? Math.max(0, yMinBase - 1) : yMinBase;
+    const yMax = single ? yMaxBase + 1 : yMaxBase;
     const xRange = xMax - xMin || 86400000;
     const yRange = yMax - yMin || 1;
     const x = (t) => padX + ((t - xMin) / xRange) * (W - 2 * padX);
@@ -1649,6 +1656,14 @@
         </defs>
         <line x1="${padX}" y1="${H - padY}" x2="${W - padX}" y2="${H - padY}"
               stroke="var(--border)" stroke-width="1" />
+        ${showCur ? `
+          <line x1="${padX}" y1="${y(curTier).toFixed(1)}"
+                x2="${W - padX}" y2="${y(curTier).toFixed(1)}"
+                stroke="var(--accent)" stroke-opacity="0.35"
+                stroke-width="1" stroke-dasharray="3 3" />
+          <text x="${W - padX - 2}" y="${(y(curTier) - 4).toFixed(1)}"
+                font-size="9" fill="var(--accent)" fill-opacity="0.75"
+                text-anchor="end">Now</text>` : ""}
         ${single ? "" : `
           <path d="${areaPath}" fill="url(#chart-fill)" stroke="none" />
           <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2"
