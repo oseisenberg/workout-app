@@ -191,7 +191,7 @@
   let CATALOG = [];
 
   // === State =============================================================
-  const STORAGE_KEY = "workout-app:state:v5";
+  const STORAGE_KEY = "workout-app:state:v6";
   const todayKey = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${
@@ -202,7 +202,6 @@
   const blankState = () => ({
     addedIds: [],
     levels: {},
-    weights: {},   // per-exercise current working weight in lb
     completed: {},
   });
 
@@ -262,33 +261,6 @@
     return out;
   };
 
-  // Weight chips inside the current tier's range. Step size scales with
-  // the range so very wide ranges (heavy compounds) don't flood the menu.
-  const weightStepFor = (range) =>
-    range <= 20 ? 5 : range <= 50 ? 10 : 25;
-  const weightChoices = (ex) => {
-    const lvl = currentLevel(ex);
-    if (isLevelZero(lvl)) return [];
-    const [lo, hi] = lvl.weight;
-    const step = weightStepFor(hi - lo);
-    const out = [];
-    for (let w = lo; w <= hi; w += step) out.push(w);
-    if (out[out.length - 1] !== hi) out.push(hi);
-    return out;
-  };
-
-  // Choose a sensible starting weight for an exercise the first time it's
-  // added (or after a tier change pushes the saved value out of range).
-  const defaultWeightFor = (ex, lvlIdx) => {
-    const lvl = ex.levels[lvlIdx];
-    if (!isLevelZero(lvl)) return lvl.weight[0];
-    return ex.levels[1] ? ex.levels[1].weight[0] : lvl.weight[0];
-  };
-  const currentWeight = (ex) => {
-    const w = state.weights[ex.id];
-    return w == null ? defaultWeightFor(ex, state.levels[ex.id]) : w;
-  };
-
   // === Mutations =========================================================
   const addExercise = (id) => {
     if (state.addedIds.includes(id)) return;
@@ -296,20 +268,9 @@
     if (!ex) return;
     state.addedIds.push(id);
     if (state.levels[id] == null) state.levels[id] = defaultLevel(ex);
-    if (state.weights[id] == null) {
-      state.weights[id] = defaultWeightFor(ex, state.levels[id]);
-    }
     saveState();
     renderExercises();
     renderPicker();
-  };
-
-  const setWeight = (exId, value) => {
-    const ex = exerciseById(exId);
-    if (!ex) return;
-    state.weights[exId] = value;
-    saveState();
-    renderExercises();
   };
 
   const markComplete = (exId, setsDone) => {
@@ -350,15 +311,6 @@
     const next = state.levels[exId] + delta;
     if (next < 0 || next >= ex.levels.length) return;
     state.levels[exId] = next;
-    // Keep the saved working weight inside the new tier's range.
-    const newLvl = ex.levels[next];
-    if (!isLevelZero(newLvl)) {
-      const [lo, hi] = newLvl.weight;
-      const w = state.weights[exId];
-      if (w == null || w < lo || w > hi) {
-        state.weights[exId] = delta > 0 ? lo : hi;
-      }
-    }
     const today = state.completed[todayKey()];
     if (today && today[exId]) today[exId].level = next;
     saveState();
@@ -399,8 +351,7 @@
       const volumeText = lvlZero ? "—" : `${setsText}×${lvl.reps}+`;
       const tier = tierName(lvlIdx);
       const nextTier = canUp ? tierName(lvlIdx + 1) : null;
-      const workingWeight = currentWeight(ex);
-      const weightText = `${workingWeight}`;
+      const weightText = fmtWeight(lvl.weight);
 
       const setChipsHtml = `<div class="menu-row menu-row--chips">
              <span class="menu-row__label">Sets done</span>
@@ -413,28 +364,13 @@
                })
                .join("")}</div>
            </div>`;
-      const weightChipsHtml = `<div class="menu-row menu-row--chips">
-             <span class="menu-row__label">Weight</span>
-             <div class="menu-row__chips">${weightChoices(ex)
-               .map((w) => {
-                 const sel = workingWeight === w;
-                 return `<button type="button" class="chip${
-                   sel ? " chip--on" : ""
-                 }" data-action="set-weight" data-value="${w}">${w}</button>`;
-               })
-               .join("")}</div>
-           </div>`;
       const menuBody = lvlZero
         ? `<p class="menu-zero">
              You're at <strong>Starter</strong> — just mark complete when
              you've done what you can. Upgrade to <strong>${nextTier}</strong>
              when you can hit the full prescription.
            </p>`
-        : `${setChipsHtml}${weightChipsHtml}`;
-
-      const summary = lvlZero
-        ? `${tier} · tier weight ${fmtWeight(lvl.weight)} lb`
-        : `${tier} tier · ${lvl.sets}×${lvl.reps}+ · range ${fmtWeight(lvl.weight)} lb`;
+        : setChipsHtml;
 
       return `
       <div class="exercise-row${done ? " is-done" : ""}${
@@ -485,10 +421,6 @@
         <div class="exercise-row__menu" role="region"
              aria-label="Adjust ${ex.name}">
           ${menuBody}
-          <div class="menu-level">
-            <span class="menu-level__caption">Current level</span>
-            <span class="menu-level__summary">${summary}</span>
-          </div>
           <div class="menu-row menu-row--level">
             <button type="button" class="level-btn"
                     data-action="downgrade"
@@ -598,10 +530,6 @@
         markComplete(exId, Number(target.dataset.value));
         return;
       }
-      if (action === "set-weight") {
-        setWeight(exId, Number(target.dataset.value));
-        return;
-      }
       if (action === "upgrade") return changeLevel(exId, +1);
       if (action === "downgrade") return changeLevel(exId, -1);
     });
@@ -648,13 +576,10 @@
     loadState();
     // Drop any addedIds whose template was removed from the catalog.
     state.addedIds = state.addedIds.filter((id) => exerciseById(id));
-    // Backfill levels and working weights for added exercises that don't
-    // have one yet.
+    // Backfill levels for added exercises that don't have one yet.
     for (const id of state.addedIds) {
-      const ex = exerciseById(id);
-      if (state.levels[id] == null) state.levels[id] = defaultLevel(ex);
-      if (state.weights[id] == null) {
-        state.weights[id] = defaultWeightFor(ex, state.levels[id]);
+      if (state.levels[id] == null) {
+        state.levels[id] = defaultLevel(exerciseById(id));
       }
     }
 

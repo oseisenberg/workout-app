@@ -376,24 +376,6 @@ body {
   border-bottom: 1px dashed var(--border-strong);
 }
 
-.menu-level {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding-bottom: 4px;
-}
-.menu-level__caption {
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--muted);
-}
-.menu-level__summary {
-  font-size: 13px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
 .menu-row {
   display: flex;
   align-items: center;
