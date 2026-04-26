@@ -533,22 +533,17 @@
       return;
     }
     if (empty) empty.hidden = true;
-    list.innerHTML = items.map((ex) => {
-      const startIdx = defaultLevel(ex);
-      const lvl = ex.levels[startIdx];
-      return `
+    list.innerHTML = items.map((ex) => `
       <button type="button" class="picker-item" data-id="${ex.id}">
         <span class="picker-item__icon">${ex.icon}</span>
-        <span class="picker-item__title">
-          <span class="picker-item__name">${ex.name}</span>
-          <span class="picker-item__muscles">${ex.muscles}</span>
+        <span class="picker-item__name">${ex.name}</span>
+        <span class="picker-item__add" aria-label="Add ${ex.name}">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5 V19 M5 12 H19" fill="none" stroke="currentColor"
+                  stroke-width="2.4" stroke-linecap="round" />
+          </svg>
         </span>
-        <span class="picker-item__starts">
-          starts as ${tierName(startIdx)} · ${lvl.sets}×${lvl.reps}+ · ${fmtWeight(lvl.weight)} lb
-        </span>
-        <span class="picker-item__add" aria-hidden="true">+</span>
-      </button>`;
-    }).join("");
+      </button>`).join("");
   };
 
   const openPicker = () => {
