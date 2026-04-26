@@ -108,7 +108,8 @@
       "weightStep": 20,
       "pipsPerLevel": 2,
       "levels": 4,
-      "snoozeDays": 2
+      "snoozeDays": 2,
+      "common": true
     },
     {
       "id": "bench-press",
@@ -121,7 +122,8 @@
       "weightStep": 10,
       "pipsPerLevel": 3,
       "levels": 4,
-      "snoozeDays": 2
+      "snoozeDays": 2,
+      "common": true
     },
     {
       "id": "deadlift",
@@ -134,7 +136,8 @@
       "weightStep": 20,
       "pipsPerLevel": 2,
       "levels": 4,
-      "snoozeDays": 3
+      "snoozeDays": 3,
+      "common": true
     },
     {
       "id": "bicep-curl",
@@ -146,7 +149,8 @@
       "weightStart": 5,
       "weightStep": 5,
       "pipsPerLevel": 1,
-      "levels": 4
+      "levels": 4,
+      "common": true
     },
     {
       "id": "overhead-press",
@@ -170,7 +174,8 @@
       "repsStart": 1,
       "repsStep": 5,
       "pipsPerLevel": 1,
-      "levels": 4
+      "levels": 4,
+      "common": true
     },
     {
       "id": "pullup",
@@ -182,7 +187,8 @@
       "repsStart": 1,
       "repsStep": 2,
       "pipsPerLevel": 2,
-      "levels": 4
+      "levels": 4,
+      "common": true
     },
     {
       "id": "situp",
@@ -194,7 +200,21 @@
       "repsStart": 1,
       "repsStep": 5,
       "pipsPerLevel": 1,
-      "levels": 4
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "lunge",
+      "name": "Lunge",
+      "muscles": "Quads · Glutes · Hamstrings",
+      "icon": "lunge",
+      "bodyweight": true,
+      "sets": 3,
+      "repsStart": 1,
+      "repsStep": 5,
+      "pipsPerLevel": 1,
+      "levels": 4,
+      "common": true
     },
     {
       "id": "tricep-pushdown",

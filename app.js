@@ -181,6 +181,17 @@
         <circle cx="36" cy="22" r="4" />
         <line x1="30" y1="40" x2="40" y2="34" />
       </svg>`,
+    "lunge": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="56" x2="58" y2="56" />
+        <circle cx="30" cy="14" r="4" />
+        <line x1="30" y1="18" x2="30" y2="36" />
+        <path d="M30 36 L42 48 L42 56" stroke="var(--accent)" stroke-width="3.5" />
+        <line x1="30" y1="36" x2="14" y2="56"
+              stroke="var(--accent)" stroke-width="3.5" />
+      </svg>`,
     "dumbbell": `
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
            stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -248,6 +259,7 @@
     icon: ICONS[t.icon] || ICONS.barbell,
     levels: buildLevels(t),
     snoozeDays: t.snoozeDays != null ? t.snoozeDays : 1,
+    common: !!t.common,
   });
 
   let CATALOG = [];
@@ -884,16 +896,27 @@
   };
 
   let pickerQuery = "";
+  let pickerShowAll = false;
   const renderPicker = () => {
     const list = $("picker-list");
     const empty = $("picker-empty");
     if (!list) return;
     const q = pickerQuery.trim().toLowerCase();
-    const items = availableExercises().filter((ex) =>
-      !q ||
-      ex.name.toLowerCase().includes(q) ||
-      (ex.muscles || "").toLowerCase().includes(q));
-    if (items.length === 0) {
+    const all = availableExercises();
+    // When searching, ignore the common-only filter so anything in the
+    // catalog can be found. Without a query, default to common exercises
+    // until the user explicitly taps "Show all".
+    const items = all.filter((ex) => {
+      if (q) {
+        return ex.name.toLowerCase().includes(q) ||
+               (ex.muscles || "").toLowerCase().includes(q);
+      }
+      return pickerShowAll || ex.common;
+    });
+    const hiddenCount = !q && !pickerShowAll
+      ? all.filter((ex) => !ex.common).length
+      : 0;
+    if (items.length === 0 && hiddenCount === 0) {
       list.innerHTML = "";
       if (empty) {
         empty.textContent = q
@@ -904,7 +927,7 @@
       return;
     }
     if (empty) empty.hidden = true;
-    list.innerHTML = items.map((ex) => {
+    const itemHtml = items.map((ex) => {
       const archived = isArchived(ex.id);
       const label = archived ? "Restore" : "Add";
       return `
@@ -925,10 +948,17 @@
         </span>
       </button>`;
     }).join("");
+    const moreHtml = hiddenCount > 0
+      ? `<button type="button" class="picker__more" data-action="show-more">
+           Show all (${hiddenCount} more)
+         </button>`
+      : "";
+    list.innerHTML = itemHtml + moreHtml;
   };
 
   const openPicker = () => {
     pickerQuery = "";
+    pickerShowAll = false;
     const search = $("picker-search");
     if (search) search.value = "";
     renderPicker();
@@ -1266,6 +1296,12 @@
     $("picker-close").addEventListener("click", closePicker);
     $("picker-backdrop").addEventListener("click", closePicker);
     $("picker-list").addEventListener("click", (event) => {
+      const more = event.target.closest(".picker__more");
+      if (more) {
+        pickerShowAll = true;
+        renderPicker();
+        return;
+      }
       const item = event.target.closest(".picker-item");
       if (!item) return;
       addExercise(item.dataset.id);
