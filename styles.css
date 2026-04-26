@@ -115,10 +115,11 @@ button {
 }
 
 .row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 56px 80px 12px;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 10px;
+  padding: 12px 14px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -130,7 +131,6 @@ button {
 .row:hover, .row:active { background: var(--surface-2); border-color: var(--surface-3); }
 
 .row-main {
-  flex: 1;
   min-width: 0;
 }
 
@@ -148,12 +148,40 @@ button {
   font-size: 13px;
   color: var(--muted);
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-stat {
+  font-size: 14px;
+  color: var(--text);
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .row-chev {
   color: var(--dim);
   font-size: 18px;
   line-height: 1;
+  text-align: right;
+}
+
+.list-header {
+  display: grid;
+  grid-template-columns: 1fr 56px 80px 12px;
+  align-items: end;
+  gap: 10px;
+  padding: 0 14px 4px;
+  font-size: 10px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.list-header > span:nth-child(2),
+.list-header > span:nth-child(3) {
+  text-align: right;
 }
 
 .section-label {

@@ -168,19 +168,25 @@
   const renderList = () => {
     const rows = EXERCISES.map((base) => {
       const e = exerciseWithOverrides(base.id);
-      const range = `${e.repMin}–${e.repMax} reps @ ${e.weightMin}–${e.weightMax} ${e.unit}`;
       return `
         <a class="row" href="#/exercise/${escape(e.id)}">
           <div class="row-main">
             <p class="row-title">${escape(e.name)}</p>
-            <p class="row-sub">${escape(e.muscle)} &middot; ${escape(range)}</p>
+            <p class="row-sub">${escape(e.muscle)}</p>
           </div>
+          <span class="row-stat">${e.repMin}–${e.repMax}</span>
+          <span class="row-stat">${e.weightMin}–${e.weightMax}</span>
           <span class="row-chev" aria-hidden="true">&rsaquo;</span>
         </a>`;
     }).join("");
 
     return `
-      <p class="section-label">Exercises</p>
+      <div class="list-header">
+        <span>Exercise</span>
+        <span>Reps</span>
+        <span>Weight</span>
+        <span></span>
+      </div>
       <div class="list">${rows}</div>
     `;
   };
