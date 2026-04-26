@@ -210,34 +210,28 @@
     const levelCount = t.levels || 0;
     const totalPrescriptive = levelCount * tiersPerLevel;
     const bw = !!t.bodyweight;
-    // Lvl 0 covers everything below the first prescriptive tier so the
-    // user can express "very light warmup" weights without committing to
-    // the Lvl 1 set/rep prescription. Sets/reps stay at 0 (binary
-    // completion); weight or reps shows the [0, start] band.
+    // Lvl 0 is binary with no weight or rep prescription — represents "I
+    // did the exercise but couldn't do the full sets at any weight". Lvl 1
+    // pip 0 then owns the [0, weightStart] band as the first tier where
+    // full sets are expected; subsequent pips step up by weightStep.
     const out = [{
       sets: 0,
-      reps: bw ? [0, t.repsStart] : 0,
-      weight: bw ? null : [0, t.weightStart],
+      reps: 0,
+      weight: null,
       bodyweight: bw,
       level: 0,
       pip: 0,
       pipsPerLevel: 0,
     }];
     for (let i = 0; i < totalPrescriptive; i++) {
-      // Bodyweight reps are a [min, max] range that scales with the tier,
-      // matching how weight ranges work for weighted exercises. Weighted
-      // exercises keep reps as a constant number.
-      const reps = bw
-        ? [t.repsStart + i * t.repsStep, t.repsStart + (i + 1) * t.repsStep]
-        : t.reps;
-      const weight = bw
-        ? null
-        : [t.weightStart + i * t.weightStep,
-           t.weightStart + (i + 1) * t.weightStep];
+      const wLo = i === 0 ? 0 : t.weightStart + (i - 1) * t.weightStep;
+      const wHi = i === 0 ? t.weightStart : t.weightStart + i * t.weightStep;
+      const rLo = i === 0 ? 0 : t.repsStart + (i - 1) * t.repsStep;
+      const rHi = i === 0 ? t.repsStart : t.repsStart + i * t.repsStep;
       out.push({
         sets: t.sets,
-        reps,
-        weight,
+        reps: bw ? [rLo, rHi] : t.reps,
+        weight: bw ? null : [wLo, wHi],
         bodyweight: bw,
         level: Math.floor(i / tiersPerLevel) + 1,
         pip: i % tiersPerLevel,
@@ -501,9 +495,12 @@
       const pipsHtml = renderPips(lvl);
       const nextTier = canUp ? tierName(ex.levels[lvlIdx + 1]) : null;
       const isBw = !!lvl.bodyweight;
-      const weightText = isBw ? fmtReps(lvl.reps) : fmtWeight(lvl.weight);
-      const weightStatHtml = `<span class="exercise-row__stat">
-             <span class="exercise-row__stat-value">${weightText}</span>
+      const weightStatHtml = lvlZero
+        ? `<span class="exercise-row__try" aria-label="No fixed prescription">Try it</span>`
+        : `<span class="exercise-row__stat">
+             <span class="exercise-row__stat-value">${
+               isBw ? fmtReps(lvl.reps) : fmtWeight(lvl.weight)
+             }</span>
              <span class="exercise-row__stat-label">${isBw ? "reps" : "lb"}</span>
            </span>`;
 
@@ -1022,9 +1019,7 @@
          </p>`;
 
     const summary = lvlZero
-      ? lvl.bodyweight
-        ? `${tier} · ${fmtReps(lvl.reps)} reps · binary`
-        : `${tier} · ${fmtWeight(lvl.weight)} lb · binary`
+      ? `${tier} · just trying it out`
       : lvl.bodyweight
         ? `${tier} · ${lvl.sets}×${fmtReps(lvl.reps)} reps`
         : `${tier} · ${fmtWeight(lvl.weight)} lb · ${lvl.sets}×${fmtReps(lvl.reps)}`;
