@@ -448,13 +448,6 @@
       .map(([date, day]) => ({ date, ...day[exId] }))
       .sort((a, b) => (a.date < b.date ? 1 : -1));
 
-  const setChoices = (ex) => {
-    const target = currentLevel(ex).sets;
-    const out = [];
-    for (let i = 1; i <= target + 2; i++) out.push(i);
-    return out;
-  };
-
   // === Mutations =========================================================
   const addExercise = (id) => {
     if (state.addedIds.includes(id)) return;
@@ -534,25 +527,21 @@
     renderPicker();
   };
 
-  const markComplete = (exId, setsDone) => {
+  // kind is one of "full" (default), "partial", or "skipped". Skipped means
+  // "I'm marking today done so it stops bugging me, but I didn't actually
+  // do it" — the entry still counts for snooze logic but is excluded from
+  // streaks, muscle activity, and the progression chart.
+  const markComplete = (exId, kind) => {
     const ex = exerciseById(exId);
     if (!ex) return;
     const lvl = currentLevel(ex);
     const day = todayKey();
     if (!state.completed[day]) state.completed[day] = {};
-    // At Lvl 0 completion is binary; ignore any setsDone value.
-    if (isLevelZero(lvl)) {
-      state.completed[day][exId] = { level: state.levels[exId], sets: 1 };
-      saveState();
-      renderExercises();
-      return;
-    }
-    const sets = setsDone == null ? lvl.sets : setsDone;
-    if (sets <= 0) {
-      clearComplete(exId);
-      return;
-    }
-    state.completed[day][exId] = { level: state.levels[exId], sets };
+    // At Lvl 0 there's no partial — it's just done or not.
+    const finalKind = isLevelZero(lvl) && kind === "partial"
+      ? "full"
+      : kind || "full";
+    state.completed[day][exId] = { level: state.levels[exId], kind: finalKind };
     saveState();
     renderExercises();
   };
@@ -596,11 +585,10 @@
   // into Snoozed (which may be collapsed and therefore invisible). After
   // the animation finishes, run the state mutation and pulse the Snoozed
   // header so the user can see where the exercise went.
-  const animateThenComplete = (exId, setsValue) => {
+  const animateThenComplete = (exId, kind) => {
     const wasDone = !!todaysCompletion(exId);
     const apply = () => {
-      if (setsValue != null) markComplete(exId, setsValue);
-      else markComplete(exId);
+      markComplete(exId, kind);
       flashSnoozedHeader();
     };
     if (wasDone) {
@@ -671,8 +659,9 @@
       const done = todaysCompletion(ex.id);
       const canDown = lvlIdx > 0;
       const canUp = lvlIdx < ex.levels.length - 1;
-      const setsDone = done ? done.sets : 0;
-      const isPartial = done && !lvlZero && setsDone < lvl.sets;
+      const doneKind = done ? (done.kind || "full") : null;
+      const isPartial = doneKind === "partial";
+      const isSkipped = doneKind === "skipped";
       const tier = tierName(lvl);
       const pipsHtml = renderPips(lvl);
       const nextTier = canUp ? tierName(ex.levels[lvlIdx + 1]) : null;
@@ -686,32 +675,58 @@
              <span class="exercise-row__stat-label">${isBw ? "reps" : "lb"}</span>
            </span>`;
 
-      const setChipsHtml = `<div class="menu-row menu-row--chips">
-             <span class="menu-row__label">
-               Sets done <span class="menu-row__hint">suggested ${lvl.sets}×${fmtReps(lvl.reps)}</span>
+      // Two completion alternates to the green check: "partial" credits the
+      // day without claiming a full session, "skipped" snoozes the row
+      // without counting it as work. At Lvl 0 only skip applies (Lvl 0 is
+      // binary by design).
+      const partialBtnHtml = lvlZero
+        ? ""
+        : `<button type="button" class="menu-action${
+             isPartial ? " menu-action--on" : ""
+           }" data-action="mark-partial">
+             <span class="menu-action__icon" aria-hidden="true">
+               <svg viewBox="0 0 16 16">
+                 <circle cx="8" cy="8" r="6" fill="none"
+                         stroke="currentColor" stroke-width="1.6" />
+                 <path d="M 8 2 A 6 6 0 0 1 8 14 Z" fill="currentColor" />
+               </svg>
              </span>
-             <div class="menu-row__chips">${setChoices(ex)
-               .map((n) => {
-                 const sel = setsDone === n;
-                 return `<button type="button" class="chip${
-                   sel ? " chip--on" : ""
-                 }" data-action="set-sets" data-value="${n}">${n}</button>`;
-               })
-               .join("")}</div>
-           </div>`;
+             <span class="menu-action__text">
+               <span class="menu-action__title">Mark partial</span>
+               <span class="menu-action__hint">Counted, just not a full session</span>
+             </span>
+           </button>`;
+      const skipBtnHtml = `<button type="button" class="menu-action${
+        isSkipped ? " menu-action--on" : ""
+      }" data-action="mark-skipped">
+             <span class="menu-action__icon" aria-hidden="true">
+               <svg viewBox="0 0 16 16">
+                 <path d="M3 8 L13 8 M9 4 L13 8 L9 12" fill="none"
+                       stroke="currentColor" stroke-width="1.8"
+                       stroke-linecap="round" stroke-linejoin="round" />
+               </svg>
+             </span>
+             <span class="menu-action__text">
+               <span class="menu-action__title">Snooze today</span>
+               <span class="menu-action__hint">Not done — skip until tomorrow</span>
+             </span>
+           </button>`;
       const menuBody = lvlZero
         ? `<p class="menu-zero">
              <strong>Lvl 0</strong> is binary — no target sets or reps.
              Just tap done when you've done what you can. Upgrade to
              <strong>${nextTier}</strong> once you're ready to start
              counting sets.
-           </p>`
-        : setChipsHtml;
+           </p>
+           <div class="menu-row menu-row--actions">${skipBtnHtml}</div>`
+        : `<div class="menu-row menu-row--actions">
+             ${partialBtnHtml}${skipBtnHtml}
+           </div>`;
 
       return `
       <div class="exercise-row${done ? " is-done" : ""}${
         isPartial ? " is-partial" : ""
-      }${lvlZero ? " is-zero" : ""}" data-id="${ex.id}">
+      }${isSkipped ? " is-skipped" : ""}${lvlZero ? " is-zero" : ""}" data-id="${ex.id}">
         <button type="button" class="exercise-row__main"
                 data-action="open-details">
           <span class="exercise-row__icon">${ex.icon}</span>
@@ -834,15 +849,21 @@
   };
 
   // === Analysis tab =====================================================
+  const isCounted = (entry) =>
+    entry && (entry.kind || "full") !== "skipped";
+
   const computeActivity = () => {
-    const dates = Object.keys(state.completed).filter(
-      (d) =>
-        state.completed[d] && Object.keys(state.completed[d]).length > 0
-    );
-    let totalSets = 0;
+    // Skipped-only days don't count toward streak/totals — they represent
+    // "I marked this snoozed so it stops bugging me", not real work.
+    const dates = Object.keys(state.completed).filter((d) => {
+      const day = state.completed[d];
+      if (!day) return false;
+      return Object.values(day).some(isCounted);
+    });
+    let totalDone = 0;
     for (const d of dates) {
       for (const exId in state.completed[d]) {
-        totalSets += state.completed[d][exId].sets || 0;
+        if (isCounted(state.completed[d][exId])) totalDone++;
       }
     }
     // Streak: walk back from today (or yesterday if today empty) until a gap.
@@ -859,7 +880,7 @@
       streak++;
       cur.setDate(cur.getDate() - 1);
     }
-    return { workouts: dates.length, totalSets, streak };
+    return { workouts: dates.length, totalDone, streak };
   };
 
   // Map a muscle string from the catalog to one or more body-region keys.
@@ -899,6 +920,7 @@
       const day = state.completed[date];
       if (!day) continue;
       for (const exId in day) {
+        if (!isCounted(day[exId])) continue;
         const ex = exerciseById(exId);
         if (!ex || !ex.muscles) continue;
         for (const m of ex.muscles.split("·").map((s) => s.trim())) {
@@ -1013,6 +1035,7 @@
       const day = state.completed[date];
       if (!day) continue;
       for (const exId in day) {
+        if (!isCounted(day[exId])) continue;
         const ex = exerciseById(exId);
         if (!ex || !ex.muscles) continue;
         for (const m of ex.muscles.split("·").map((s) => s.trim())) {
@@ -1048,8 +1071,8 @@
             <span class="stat__label">Day streak</span>
           </div>
           <div class="stat">
-            <span class="stat__value">${activity.totalSets}</span>
-            <span class="stat__label">Total sets</span>
+            <span class="stat__value">${activity.totalDone}</span>
+            <span class="stat__label">Exercises done</span>
           </div>
         </div>
       </section>`;
@@ -1339,15 +1362,17 @@
         if (Math.random() > 0.65) continue;
         if (Math.random() < 0.12 && curTier < totalTiers - 1) curTier++;
         const lvl = ex.levels[curTier];
-        const targetSets = lvl.sets || 1;
-        const sets = isLevelZero(lvl)
-          ? 1
-          : Math.random() < 0.12
-            ? Math.max(1, targetSets - 1)
-            : targetSets;
+        const r = Math.random();
+        const kind = isLevelZero(lvl)
+          ? "full"
+          : r < 0.08
+            ? "skipped"
+            : r < 0.2
+              ? "partial"
+              : "full";
         const dateKey = fmt(d);
         if (!completed[dateKey]) completed[dateKey] = {};
-        completed[dateKey][exId] = { level: curTier, sets };
+        completed[dateKey][exId] = { level: curTier, kind };
         lastTs = d;
       }
     }
@@ -1479,7 +1504,7 @@
 
   const renderProgressChart = (ex, history) => {
     const points = history
-      .filter((h) => h.level > 0)
+      .filter((h) => h.level > 0 && (h.kind || "full") !== "skipped")
       .map((h) => ({ ts: parseDateStr(h.date), tier: h.level }))
       .sort((a, b) => a.ts - b.ts);
     if (points.length < 2) return "";
@@ -1715,8 +1740,12 @@
         target.setAttribute("aria-expanded", open ? "true" : "false");
         return;
       }
-      if (action === "set-sets") {
-        animateThenComplete(exId, Number(target.dataset.value));
+      if (action === "mark-partial" || action === "mark-skipped") {
+        const kind = action === "mark-partial" ? "partial" : "skipped";
+        const cur = todaysCompletion(exId);
+        // Tapping the active alternate again clears it back to "not done".
+        if (cur && (cur.kind || "full") === kind) clearComplete(exId);
+        else animateThenComplete(exId, kind);
         return;
       }
       if (action === "upgrade") return changeLevel(exId, +1);
@@ -1887,6 +1916,29 @@
         if (ex) state.levels[id] = defaultLevel(ex);
       }
       state.levelsResetV8 = true;
+      saveState();
+    }
+    // One-time migration: completion entries used to carry a `sets` count;
+    // they now carry a `kind` of "full" / "partial" / "skipped". Translate
+    // legacy entries by treating sets-below-target as partial, everything
+    // else as full. Skipped is a new state with no legacy equivalent.
+    if (!state.completionKindV9) {
+      for (const date in state.completed) {
+        const day = state.completed[date];
+        if (!day) continue;
+        for (const exId in day) {
+          const entry = day[exId];
+          if (!entry || entry.kind) continue;
+          const ex = exerciseById(exId);
+          const lvl = ex && ex.levels[entry.level];
+          const target = lvl ? (lvl.sets || 0) : 0;
+          entry.kind = !lvl || isLevelZero(lvl) || (entry.sets || 0) >= target
+            ? "full"
+            : "partial";
+          delete entry.sets;
+        }
+      }
+      state.completionKindV9 = true;
       saveState();
     }
 

@@ -318,6 +318,12 @@ body {
     rgba(234, 179, 8, 0.02)
   ), var(--surface-2);
 }
+/* Skipped today — neutral grey, no celebratory tint. The row is in Snoozed
+   so the user can still see it, just dimmer than a real completion. */
+.exercise-row.is-skipped {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
 .exercise-row.is-open { z-index: 10; }
 
 .exercise-row__main {
@@ -505,6 +511,10 @@ body {
 .exercise-row.is-partial .done-btn[aria-pressed="true"] {
   background: #ca8a04;
 }
+.exercise-row.is-skipped .done-btn[aria-pressed="true"] {
+  background: #3a3a40;
+  color: var(--muted);
+}
 .done-btn svg { width: 18px; height: 18px; display: block; }
 
 .caret-btn {
@@ -515,6 +525,7 @@ body {
 }
 .exercise-row:not(.is-done) .caret-btn { background: #2a3a30; }
 .exercise-row.is-partial .caret-btn { background: #854d0e; }
+.exercise-row.is-skipped .caret-btn { background: #3a3a40; }
 .caret-btn svg { width: 12px; height: 8px; transition: transform 0.18s ease; }
 .exercise-row.is-open .caret-btn svg { transform: rotate(180deg); }
 
@@ -547,55 +558,67 @@ body {
   to   { transform: translateY(0) scale(1); }
 }
 
-.menu-row--chips {
-  flex-wrap: wrap;
-  padding-bottom: 6px;
+/* Alternate completion actions — partial / skipped — stacked under the
+   green check button. The check itself stays the primary action; these
+   are quieter "this didn't go to plan" outs. */
+.menu-row--actions {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding-bottom: 8px;
   border-bottom: 1px dashed var(--border-strong);
 }
-.menu-row__label {
+.menu-action {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--muted);
-  min-width: 80px;
-}
-.menu-row__hint {
-  text-transform: none;
-  letter-spacing: 0.2px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-.menu-row__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  flex: 1;
-}
-.chip {
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
   background: var(--surface-2);
   color: var(--text);
   border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  min-width: 36px;
-  padding: 6px 10px;
+  border-radius: 10px;
   font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  text-align: left;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: background 0.1s ease, border-color 0.1s ease, color 0.1s ease;
 }
-.chip:active { transform: scale(0.95); }
-.chip--on {
-  background: var(--ok-strong);
-  border-color: var(--ok-strong);
-  color: white;
+.menu-action:active { transform: scale(0.99); }
+.menu-action__icon {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.menu-action__icon svg { width: 16px; height: 16px; display: block; }
+.menu-action__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.menu-action__title {
+  font-size: 13px;
+  font-weight: 600;
+}
+.menu-action__hint {
+  font-size: 11px;
+  color: var(--muted);
+}
+.menu-action--on {
+  background: rgba(234, 179, 8, 0.12);
+  border-color: rgba(234, 179, 8, 0.6);
+}
+.menu-action--on .menu-action__icon { color: #ca8a04; }
+.menu-action[data-action="mark-skipped"].menu-action--on {
+  background: rgba(148, 163, 184, 0.14);
+  border-color: rgba(148, 163, 184, 0.5);
+}
+.menu-action[data-action="mark-skipped"].menu-action--on .menu-action__icon {
+  color: var(--muted);
 }
 
 .menu-zero {
@@ -604,7 +627,6 @@ body {
   font-size: 12.5px;
   line-height: 1.45;
   color: var(--muted);
-  border-bottom: 1px dashed var(--border-strong);
 }
 
 .menu-row {
