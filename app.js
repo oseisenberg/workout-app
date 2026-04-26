@@ -1,57 +1,74 @@
 (() => {
   const $ = (id) => document.getElementById(id);
 
-  const WORKOUTS = [
+  const EXERCISES = [
     {
-      id: "push-a",
-      name: "Push Day A",
-      focus: "Chest, Shoulders, Triceps",
-      duration: "45 min",
-      exercises: [
-        "Bench Press — 4 x 6",
-        "Overhead Press — 3 x 8",
-        "Incline DB Press — 3 x 10",
-        "Triceps Pushdown — 3 x 12",
-      ],
+      id: "bench-press",
+      name: "Bench Press",
+      muscle: "Chest",
+      equipment: "Barbell",
+      sets: "4 x 6",
+      notes: "Flat bench. Pause briefly at the chest, drive through the heels.",
     },
     {
-      id: "pull-a",
-      name: "Pull Day A",
-      focus: "Back, Biceps",
-      duration: "50 min",
-      exercises: [
-        "Deadlift — 3 x 5",
-        "Pull-ups — 4 x AMRAP",
-        "Barbell Row — 3 x 8",
-        "Hammer Curl — 3 x 12",
-      ],
+      id: "overhead-press",
+      name: "Overhead Press",
+      muscle: "Shoulders",
+      equipment: "Barbell",
+      sets: "3 x 8",
+      notes: "Standing. Keep core tight, bar travels in a straight line.",
     },
     {
-      id: "legs-a",
-      name: "Leg Day A",
-      focus: "Quads, Glutes, Hamstrings",
-      duration: "55 min",
-      exercises: [
-        "Back Squat — 4 x 6",
-        "Romanian Deadlift — 3 x 8",
-        "Walking Lunges — 3 x 12",
-        "Calf Raise — 4 x 15",
-      ],
+      id: "deadlift",
+      name: "Deadlift",
+      muscle: "Posterior chain",
+      equipment: "Barbell",
+      sets: "3 x 5",
+      notes: "Neutral spine, brace before each rep.",
     },
     {
-      id: "conditioning",
-      name: "Conditioning",
-      focus: "Cardio, Core",
-      duration: "30 min",
-      exercises: [
-        "Row Erg — 5 x 500m",
-        "Plank — 3 x 60s",
-        "Hanging Leg Raise — 3 x 12",
-      ],
+      id: "pull-up",
+      name: "Pull-up",
+      muscle: "Back",
+      equipment: "Bodyweight",
+      sets: "4 x AMRAP",
+      notes: "Full hang at the bottom, chin over the bar.",
+    },
+    {
+      id: "back-squat",
+      name: "Back Squat",
+      muscle: "Quads, Glutes",
+      equipment: "Barbell",
+      sets: "4 x 6",
+      notes: "High-bar. Knees track over toes, depth at or below parallel.",
+    },
+    {
+      id: "romanian-deadlift",
+      name: "Romanian Deadlift",
+      muscle: "Hamstrings, Glutes",
+      equipment: "Barbell",
+      sets: "3 x 8",
+      notes: "Soft knees, hinge at the hips, feel the stretch.",
+    },
+    {
+      id: "row",
+      name: "Barbell Row",
+      muscle: "Back",
+      equipment: "Barbell",
+      sets: "3 x 8",
+      notes: "Torso ~45°. Pull to the lower ribcage.",
+    },
+    {
+      id: "plank",
+      name: "Plank",
+      muscle: "Core",
+      equipment: "Bodyweight",
+      sets: "3 x 60s",
+      notes: "Straight line from head to heels, glutes engaged.",
     },
   ];
 
-  const findWorkout = (id) => WORKOUTS.find((w) => w.id === id);
+  const findExercise = (id) => EXERCISES.find((e) => e.id === id);
 
   const setNet = () => {
     const el = $("net-status");
@@ -75,48 +92,45 @@
     }[c]));
 
   const renderList = () => {
-    const rows = WORKOUTS.map(
-      (w) => `
-        <a class="row" href="#/workout/${escape(w.id)}">
+    const rows = EXERCISES.map(
+      (e) => `
+        <a class="row" href="#/exercise/${escape(e.id)}">
           <div class="row-main">
-            <p class="row-title">${escape(w.name)}</p>
-            <p class="row-sub">${escape(w.focus)} &middot; ${escape(w.duration)}</p>
+            <p class="row-title">${escape(e.name)}</p>
+            <p class="row-sub">${escape(e.muscle)} &middot; ${escape(e.sets)}</p>
           </div>
           <span class="row-chev" aria-hidden="true">&rsaquo;</span>
         </a>`
     ).join("");
 
     return `
-      <p class="section-label">Routines</p>
+      <p class="section-label">Exercises</p>
       <div class="list">${rows}</div>
     `;
   };
 
   const renderDetail = (id) => {
-    const w = findWorkout(id);
-    if (!w) {
-      return `<div class="empty">Workout not found.</div>`;
+    const e = findExercise(id);
+    if (!e) {
+      return `<div class="empty">Exercise not found.</div>`;
     }
-    const items = w.exercises
-      .map((e) => `<li>${escape(e)}</li>`)
-      .join("");
     return `
       <section class="detail-card">
-        <h2 class="detail-title">${escape(w.name)}</h2>
-        <p class="detail-meta">${escape(w.focus)}</p>
+        <h2 class="detail-title">${escape(e.name)}</h2>
+        <p class="detail-meta">${escape(e.muscle)}</p>
         <dl class="dl">
-          <dt>Duration</dt><dd>${escape(w.duration)}</dd>
-          <dt>Exercises</dt><dd>${w.exercises.length}</dd>
+          <dt>Equipment</dt><dd>${escape(e.equipment)}</dd>
+          <dt>Default sets</dt><dd>${escape(e.sets)}</dd>
         </dl>
       </section>
 
       <section class="detail-card">
-        <p class="section-label" style="margin:0 0 8px">Exercises</p>
-        <ul style="margin:0; padding-left:20px; line-height:1.6;">${items}</ul>
+        <p class="section-label" style="margin:0 0 8px">Notes</p>
+        <p style="margin:0; line-height:1.5; color:var(--text);">${escape(e.notes)}</p>
       </section>
 
       <div class="actions">
-        <button class="btn btn-accent" data-action="start">Start Workout</button>
+        <button class="btn btn-accent" data-action="log">Log a Set</button>
         <button class="btn" data-action="edit">Edit</button>
         <button class="btn" data-action="history">View History</button>
         <button class="btn btn-danger" data-action="delete">Delete</button>
@@ -130,27 +144,27 @@
     const back = $("back-btn");
     const hash = location.hash || "#/";
 
-    const detailMatch = hash.match(/^#\/workout\/([^/]+)$/);
+    const detailMatch = hash.match(/^#\/exercise\/([^/]+)$/);
     if (detailMatch) {
-      const w = findWorkout(detailMatch[1]);
-      title.textContent = w ? w.name : "Workout";
+      const e = findExercise(detailMatch[1]);
+      title.textContent = e ? e.name : "Exercise";
       back.hidden = false;
       view.innerHTML = renderDetail(detailMatch[1]);
-      bindDetailActions(w);
+      bindDetailActions(e);
       return;
     }
 
-    title.textContent = "Workouts";
+    title.textContent = "Exercises";
     back.hidden = true;
     view.innerHTML = renderList();
   };
 
-  const bindDetailActions = (w) => {
-    if (!w) return;
+  const bindDetailActions = (e) => {
+    if (!e) return;
     $("view").querySelectorAll("[data-action]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const action = btn.getAttribute("data-action");
-        alert(`${action}: ${w.name} (not implemented)`);
+        alert(`${action}: ${e.name} (not implemented)`);
       });
     });
   };
