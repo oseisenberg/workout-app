@@ -1,0 +1,414 @@
+{
+  "templates": [
+    {
+      "id": "leg-press",
+      "name": "Leg Press",
+      "muscles": "Quads · Glutes",
+      "icon": "leg-press",
+      "description": "Push a weighted sled away from you with your legs while seated. Targets the quads and glutes with the back supported.",
+      "mistakes": [
+        "Don't lock out your knees at the top",
+        "Keep your lower back pressed flat against the pad",
+        "Don't let your knees cave inward"
+      ],
+      "sets": 3,
+      "reps": 10,
+      "weightStart": 45,
+      "weightStep": 45,
+      "pipsPerLevel": 1,
+      "levels": 4,
+      "snoozeDays": 2,
+      "common": true
+    },
+    {
+      "id": "lat-pulldown",
+      "name": "Lat Pulldown",
+      "muscles": "Lats · Biceps",
+      "icon": "lat-pulldown",
+      "description": "Pull a wide bar down to your upper chest while seated. Builds back width and works the biceps.",
+      "mistakes": [
+        "Don't lean way back to muscle the weight down",
+        "Pull to your upper chest, not behind your neck",
+        "Drive your elbows down rather than just bending your arms"
+      ],
+      "sets": 3,
+      "reps": 10,
+      "weightStart": 10,
+      "weightStep": 10,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "chest-press",
+      "name": "Chest Press",
+      "muscles": "Chest · Triceps",
+      "icon": "chest-press",
+      "description": "Push two handles forward from a seated position. A controlled way to load the chest, shoulders, and triceps.",
+      "mistakes": [
+        "Don't fully lock out your elbows at the top",
+        "Keep your shoulder blades pinned back into the pad",
+        "Avoid bouncing the weight at the bottom"
+      ],
+      "sets": 3,
+      "reps": 10,
+      "weightStart": 10,
+      "weightStep": 10,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "seated-row",
+      "name": "Seated Row",
+      "muscles": "Back · Biceps",
+      "icon": "seated-row",
+      "description": "Pull a cable handle toward your torso while seated, squeezing your shoulder blades together at the end.",
+      "mistakes": [
+        "Don't round your back as you reach forward",
+        "Pull with your back, not just your arms",
+        "Don't lean back excessively to use momentum"
+      ],
+      "sets": 3,
+      "reps": 10,
+      "weightStart": 10,
+      "weightStep": 10,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "leg-extension",
+      "name": "Leg Extension",
+      "muscles": "Quads",
+      "icon": "leg-extension",
+      "description": "Straighten your legs against a padded arm to isolate the quadriceps.",
+      "mistakes": [
+        "Don't swing or kick the weight up",
+        "Pause briefly at full extension",
+        "Keep your back flat against the pad"
+      ],
+      "sets": 3,
+      "reps": 12,
+      "weightStart": 10,
+      "weightStep": 10,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "leg-curl",
+      "name": "Leg Curl",
+      "muscles": "Hamstrings",
+      "icon": "leg-curl",
+      "description": "Curl your lower legs back against a padded arm to target the hamstrings.",
+      "mistakes": [
+        "Don't lift your hips off the bench",
+        "Control the weight on the way down — no dropping",
+        "Avoid using momentum to start the curl"
+      ],
+      "sets": 3,
+      "reps": 12,
+      "weightStart": 10,
+      "weightStep": 10,
+      "pipsPerLevel": 1,
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "shoulder-press",
+      "name": "Shoulder Press",
+      "muscles": "Shoulders · Triceps",
+      "icon": "chest-press",
+      "description": "Press handles overhead from shoulder height. Builds the deltoids with back support.",
+      "mistakes": [
+        "Don't arch your lower back to push the weight up",
+        "Keep your core tight throughout",
+        "Lower under control — don't let it drop"
+      ],
+      "sets": 3,
+      "reps": 10,
+      "weightStart": 10,
+      "weightStep": 10,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "dip-chin-assist",
+      "name": "Dip / Chin Assist",
+      "muscles": "Chest · Triceps · Lats",
+      "icon": "pullup",
+      "description": "Assisted dip or chin-up using a counterweight pad to support some of your bodyweight.",
+      "mistakes": [
+        "Use the lowest assistance you can manage",
+        "Go through the full range — no half reps",
+        "Don't kip or swing your legs"
+      ],
+      "sets": 3,
+      "reps": 8,
+      "weightStart": 10,
+      "weightStep": 10,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "cable-upright-row",
+      "name": "Cable Upright Row",
+      "muscles": "Shoulders · Traps",
+      "icon": "cable",
+      "description": "Pull a cable bar straight up the front of your body to about chin height. Hits the side delts and traps.",
+      "mistakes": [
+        "Don't pull above chin level — it stresses the shoulders",
+        "Lead with your elbows, keeping them above your wrists",
+        "Don't shrug excessively at the top"
+      ],
+      "sets": 3,
+      "reps": 10,
+      "weightStart": 10,
+      "weightStep": 10,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "cable-bicep-curl",
+      "name": "Cable Bicep Curl",
+      "muscles": "Biceps",
+      "icon": "cable",
+      "description": "Curl a cable bar or rope from down by your sides up to your shoulders. Constant tension on the biceps through the full range.",
+      "mistakes": [
+        "Keep your elbows pinned to your sides",
+        "Don't swing your torso to lift",
+        "Control the lowering phase — don't drop the weight"
+      ],
+      "sets": 3,
+      "reps": 10,
+      "weightStart": 10,
+      "weightStep": 10,
+      "pipsPerLevel": 1,
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "cable-crossover",
+      "name": "Cable Crossover",
+      "muscles": "Chest · Shoulders",
+      "icon": "cable-crossover",
+      "description": "Bring two cable handles together in front of your chest from a high pulley. Isolates the chest with constant cable tension.",
+      "mistakes": [
+        "Keep a slight bend in your elbows the whole time",
+        "Don't shrug — keep shoulders down",
+        "Move through the full range slowly"
+      ],
+      "sets": 3,
+      "reps": 12,
+      "weightStart": 10,
+      "weightStep": 10,
+      "pipsPerLevel": 1,
+      "levels": 4
+    },
+    {
+      "id": "pec-deck",
+      "name": "Pec Deck",
+      "muscles": "Chest",
+      "icon": "pec-deck",
+      "description": "Squeeze two padded arms together in front of you to isolate the chest from a seated position.",
+      "mistakes": [
+        "Don't let your shoulders roll forward",
+        "Squeeze and pause briefly at the center",
+        "Avoid going too wide at the start — protect the shoulder"
+      ],
+      "sets": 3,
+      "reps": 12,
+      "weightStart": 10,
+      "weightStep": 10,
+      "pipsPerLevel": 2,
+      "levels": 4
+    },
+    {
+      "id": "back-squat",
+      "name": "Back Squat",
+      "muscles": "Quads · Glutes · Core",
+      "icon": "barbell",
+      "description": "Squat with a barbell across your upper back. The headline lower-body lift — builds quads, glutes, and core stability.",
+      "mistakes": [
+        "Don't let your knees cave inward",
+        "Keep chest up and your back in a neutral arch",
+        "Hit at least parallel — don't half-rep"
+      ],
+      "sets": 3,
+      "reps": 5,
+      "weightStart": 25,
+      "weightStep": 25,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "snoozeDays": 2
+    },
+    {
+      "id": "bench-press",
+      "name": "Bench Press",
+      "muscles": "Chest · Triceps · Shoulders",
+      "icon": "barbell",
+      "description": "Press a barbell off your chest while lying on a bench. The classic upper-body strength lift.",
+      "mistakes": [
+        "Don't bounce the bar off your chest",
+        "Keep wrists straight, stacked over elbows",
+        "Plant your feet firmly and use leg drive"
+      ],
+      "sets": 3,
+      "reps": 5,
+      "weightStart": 10,
+      "weightStep": 10,
+      "pipsPerLevel": 3,
+      "levels": 4,
+      "snoozeDays": 2
+    },
+    {
+      "id": "deadlift",
+      "name": "Deadlift",
+      "muscles": "Posterior chain",
+      "icon": "barbell",
+      "description": "Lift a barbell from the floor to standing. Hits the entire posterior chain — back, glutes, hamstrings.",
+      "mistakes": [
+        "Keep the bar close to your body the whole way up",
+        "Don't round your lower back",
+        "Engage your lats before you start the pull"
+      ],
+      "sets": 3,
+      "reps": 5,
+      "weightStart": 25,
+      "weightStep": 25,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "snoozeDays": 3
+    },
+    {
+      "id": "bicep-curl",
+      "name": "Bicep Curl",
+      "muscles": "Biceps",
+      "icon": "dumbbell",
+      "description": "Curl dumbbells from your sides up to your shoulders. The simplest bicep isolation.",
+      "mistakes": [
+        "Don't swing your body to lift heavier",
+        "Keep elbows pinned to your sides",
+        "Control the lowering phase, don't drop"
+      ],
+      "sets": 3,
+      "reps": 10,
+      "weightStart": 5,
+      "weightStep": 5,
+      "pipsPerLevel": 1,
+      "levels": 4
+    },
+    {
+      "id": "overhead-press",
+      "name": "Overhead Press",
+      "muscles": "Shoulders · Triceps",
+      "icon": "dumbbell",
+      "description": "Press dumbbells from shoulder height up overhead. Targets the deltoids and triceps with free weights.",
+      "mistakes": [
+        "Don't arch your back excessively to push",
+        "Keep your core tight throughout",
+        "Press straight up, not forward"
+      ],
+      "sets": 3,
+      "reps": 8,
+      "weightStart": 5,
+      "weightStep": 5,
+      "pipsPerLevel": 1,
+      "levels": 4
+    },
+    {
+      "id": "pushup",
+      "name": "Pushup",
+      "muscles": "Chest · Triceps · Core",
+      "icon": "pushup",
+      "description": "Bodyweight chest exercise. Lower your chest to the ground and push back up while holding a plank.",
+      "mistakes": [
+        "Keep a straight line from head to heels",
+        "Lower all the way down, not just halfway",
+        "Don't let your hips sag or pike up"
+      ],
+      "bodyweight": true,
+      "sets": 3,
+      "repsStart": 5,
+      "repsStep": 5,
+      "pipsPerLevel": 1,
+      "levels": 4
+    },
+    {
+      "id": "pullup",
+      "name": "Pullup",
+      "muscles": "Lats · Biceps · Back",
+      "icon": "pullup",
+      "description": "Pull yourself up so your chin clears a bar. Hard but the gold standard for lats and biceps.",
+      "mistakes": [
+        "Use the full range — start from a dead hang",
+        "Don't kip or swing your legs",
+        "Engage your shoulders before you pull"
+      ],
+      "bodyweight": true,
+      "sets": 3,
+      "repsStart": 2,
+      "repsStep": 2,
+      "pipsPerLevel": 2,
+      "levels": 4
+    },
+    {
+      "id": "situp",
+      "name": "Situp",
+      "muscles": "Core",
+      "icon": "situp",
+      "description": "Sit up from lying flat to work the abdominal wall.",
+      "mistakes": [
+        "Don't yank on your neck with your hands",
+        "Use your abs, not momentum",
+        "Anchor your feet only if you can't keep them down"
+      ],
+      "bodyweight": true,
+      "sets": 3,
+      "repsStart": 5,
+      "repsStep": 5,
+      "pipsPerLevel": 1,
+      "levels": 4
+    },
+    {
+      "id": "lunge",
+      "name": "Lunge",
+      "muscles": "Quads · Glutes · Hamstrings",
+      "icon": "lunge",
+      "description": "Step forward and lower until both knees bend roughly 90 degrees. Works one leg at a time.",
+      "mistakes": [
+        "Don't let your front knee drift past your toes",
+        "Keep your torso upright, not leaning forward",
+        "Push through your front heel coming up"
+      ],
+      "bodyweight": true,
+      "sets": 3,
+      "repsStart": 5,
+      "repsStep": 5,
+      "pipsPerLevel": 1,
+      "levels": 4
+    },
+    {
+      "id": "tricep-pushdown",
+      "name": "Tricep Pushdown",
+      "muscles": "Triceps",
+      "icon": "lat-pulldown",
+      "description": "Push a cable bar down with your arms while keeping your elbows fixed. Isolates the triceps.",
+      "mistakes": [
+        "Keep elbows pinned to your sides",
+        "Don't lean forward to push the weight",
+        "Get full extension at the bottom"
+      ],
+      "sets": 3,
+      "reps": 12,
+      "weightStart": 10,
+      "weightStep": 10,
+      "pipsPerLevel": 1,
+      "levels": 4
+    }
+  ]
+}

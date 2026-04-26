@@ -1,7 +1,8 @@
-"""Generate simple PWA icons (no external deps).
+"""Generate the workout app's PWA icons (no external deps).
 
-Renders a rounded-square background with a stylized 'W' (workout)
-in white. Produces 180/192/512 PNGs needed for iOS + Android PWAs.
+Renders a rounded-square dark background with a stylized capital "W" in
+light blue. Produces 180/192/512 PNGs needed for iOS + Android PWAs and
+a 64px favicon.
 """
 
 import os
@@ -10,9 +11,8 @@ import zlib
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "icons")
 
-BG = (15, 23, 42)        # slate-900
-ACCENT = (251, 146, 60)  # orange-400
-WHITE = (255, 255, 255)
+BG = (17, 17, 19)            # matches app --bg
+LIGHT_BLUE = (96, 165, 250)  # tailwind blue-400
 
 
 def rounded_square_mask(size, radius):
@@ -38,41 +38,41 @@ def rounded_square_mask(size, radius):
     return mask
 
 
-def draw_dumbbell(pixels, size):
-    """Draw a simple dumbbell silhouette in white."""
-    cx, cy = size // 2, size // 2
-    bar_h = max(2, size // 14)
-    bar_w = size // 2
-    # bar
-    for y in range(cy - bar_h // 2, cy + bar_h // 2 + 1):
-        for x in range(cx - bar_w // 2, cx + bar_w // 2 + 1):
-            pixels[y][x] = WHITE
-    # weights (two stacked rectangles each side)
-    weight_w = size // 10
-    inner_h = size // 3
-    outer_h = size // 2
-    for sign in (-1, 1):
-        bx = cx + sign * (bar_w // 2)
-        # inner plate
-        for y in range(cy - inner_h // 2, cy + inner_h // 2 + 1):
-            for x in range(bx - weight_w if sign > 0 else bx,
-                           bx if sign > 0 else bx + weight_w):
-                if 0 <= x < size:
-                    pixels[y][x] = WHITE
-        # outer plate
-        ox = bx + sign * weight_w
-        for y in range(cy - outer_h // 2, cy + outer_h // 2 + 1):
-            for x in range(ox - weight_w if sign > 0 else ox,
-                           ox if sign > 0 else ox + weight_w):
-                if 0 <= x < size:
-                    pixels[y][x] = WHITE
-        # accent cap
-        cap_x = ox + sign * weight_w
-        for y in range(cy - outer_h // 2, cy + outer_h // 2 + 1):
-            for x in range(cap_x - max(2, weight_w // 3) if sign > 0 else cap_x,
-                           cap_x if sign > 0 else cap_x + max(2, weight_w // 3)):
-                if 0 <= x < size:
-                    pixels[y][x] = ACCENT
+def stamp_square(pixels, size, cx, cy, radius, color):
+    for dy in range(-radius, radius + 1):
+        for dx in range(-radius, radius + 1):
+            x, y = int(cx + dx), int(cy + dy)
+            if 0 <= x < size and 0 <= y < size:
+                pixels[y][x] = color
+
+
+def draw_thick_line(pixels, size, p1, p2, color, thickness):
+    x1, y1 = p1
+    x2, y2 = p2
+    length = max(abs(x2 - x1), abs(y2 - y1))
+    steps = max(1, int(length) + 1)
+    radius = max(1, thickness // 2)
+    for i in range(steps + 1):
+        t = i / steps
+        cx = x1 + (x2 - x1) * t
+        cy = y1 + (y2 - y1) * t
+        stamp_square(pixels, size, cx, cy, radius, color)
+
+
+def draw_w(pixels, size):
+    """Draw a capital W using four thick diagonal strokes."""
+    s = size
+    # Vertices for the W shape, padded ~18% on each side.
+    pts = [
+        (0.18 * s, 0.24 * s),   # top-left
+        (0.34 * s, 0.78 * s),   # bottom-left-of-center
+        (0.50 * s, 0.48 * s),   # middle dip
+        (0.66 * s, 0.78 * s),   # bottom-right-of-center
+        (0.82 * s, 0.24 * s),   # top-right
+    ]
+    stroke = max(2, int(0.13 * s))
+    for i in range(len(pts) - 1):
+        draw_thick_line(pixels, s, pts[i], pts[i + 1], LIGHT_BLUE, stroke)
 
 
 def write_png(path, size):
@@ -80,9 +80,8 @@ def write_png(path, size):
     mask = rounded_square_mask(size, radius)
     pixels = [[BG if mask[y][x] else (0, 0, 0) for x in range(size)]
               for y in range(size)]
-    draw_dumbbell(pixels, size)
+    draw_w(pixels, size)
 
-    # Build raw RGBA bytes (transparent outside mask)
     raw = bytearray()
     for y in range(size):
         raw.append(0)  # filter type 0

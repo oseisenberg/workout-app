@@ -6,7 +6,7 @@
         content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Workout</title>
   <meta name="description" content="Track your workouts." />
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#111113" />
 
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" type="image/png" href="./icons/favicon.png" />
@@ -23,35 +23,169 @@
 <body>
   <header class="topbar">
     <h1>Workout</h1>
-    <span id="net-status" class="badge" aria-live="polite">online</span>
+    <button id="settings-btn" class="icon-btn" type="button"
+            aria-label="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25
+                 a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38
+                 a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51
+                 a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38
+                 a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25
+                 a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18
+                 a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08
+                 a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08
+                 a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09
+                 a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08
+                 a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+              fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor"
+                stroke-width="1.8" />
+      </svg>
+    </button>
   </header>
 
   <main class="content">
-    <section class="card">
-      <h2>Exercises</h2>
-      <div id="exercise-grid" class="exercise-grid"></div>
-    </section>
+    <div id="home-view">
+      <section id="available-card" class="card">
+        <div class="card-header">
+          <h2>Available</h2>
+          <button id="edit-order-btn" type="button" class="card-action">
+            Edit
+          </button>
+        </div>
+        <div id="available-grid" class="exercise-grid"></div>
+        <div id="all-done-state" class="all-done" hidden role="status">
+          <svg class="all-done__icon" viewBox="0 0 72 72" aria-hidden="true">
+            <circle cx="36" cy="36" r="34" fill="rgba(34, 197, 94, 0.12)" />
+            <circle cx="36" cy="36" r="28" fill="none"
+                    stroke="currentColor" stroke-width="2.4" />
+            <path d="M22 37 L31 46 L51 26" fill="none"
+                  stroke="currentColor" stroke-width="4"
+                  stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span class="all-done__label">All done</span>
+        </div>
+        <p id="empty-state" class="empty-state" hidden>
+          No exercises yet. Tap <span aria-hidden="true">+</span>
+          to add one from the catalog.
+        </p>
+      </section>
 
-    <section class="card">
-      <h2>PWA shell</h2>
-      <p>If you're seeing this on your iPhone home screen, install worked.</p>
-      <dl class="diag">
-        <dt>Standalone</dt><dd id="diag-standalone">…</dd>
-        <dt>Service worker</dt><dd id="diag-sw">…</dd>
-        <dt>Display mode</dt><dd id="diag-display">…</dd>
-        <dt>Viewport</dt><dd id="diag-viewport">…</dd>
-      </dl>
-    </section>
+      <section id="snoozed-card" class="card card--snoozed card--collapsed" hidden>
+        <button id="snoozed-toggle" type="button" class="card-toggle"
+                aria-expanded="false" aria-controls="snoozed-grid">
+          <span class="card-toggle__title">Snoozed</span>
+          <span id="snoozed-count" class="card-toggle__count">0</span>
+          <svg class="card-toggle__chevron" viewBox="0 0 12 12"
+               aria-hidden="true">
+            <path d="M3 5 L6 8 L9 5" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round" />
+          </svg>
+        </button>
+        <div id="snoozed-grid" class="exercise-grid"></div>
+      </section>
+    </div>
 
-    <section class="card">
-      <h2>Install on iPhone</h2>
-      <ol>
-        <li>Open this page in Safari.</li>
-        <li>Tap the Share button.</li>
-        <li>Choose <em>Add to Home Screen</em>.</li>
-      </ol>
-    </section>
+    <div id="analysis-view" hidden></div>
   </main>
+
+  <nav class="tabs" role="tablist">
+    <button id="tab-home" type="button" class="tab tab--active"
+            data-tab="home" role="tab" aria-selected="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 6 H20 M4 12 H20 M4 18 H20" fill="none"
+              stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" />
+      </svg>
+      <span>Home</span>
+    </button>
+    <button id="tab-analysis" type="button" class="tab"
+            data-tab="analysis" role="tab" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 19 V5 M4 19 H20 M8 14 V19 M13 9 V19 M18 12 V19"
+              fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <span>Analysis</span>
+    </button>
+  </nav>
+
+  <button id="add-exercise-btn" class="fab" type="button"
+          aria-label="Add exercise">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 5 V19 M5 12 H19" fill="none" stroke="currentColor"
+            stroke-width="2.4" stroke-linecap="round" />
+    </svg>
+  </button>
+
+  <div id="picker" class="picker" hidden role="dialog" aria-modal="true"
+       aria-labelledby="picker-title">
+    <div id="picker-backdrop" class="picker__backdrop"></div>
+    <div class="picker__sheet" role="document">
+      <div class="picker__header">
+        <h2 id="picker-title" class="picker__title">Add exercise</h2>
+        <button id="picker-close" type="button" class="picker__close"
+                aria-label="Close">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4 4 L12 12 M12 4 L4 12" fill="none"
+                  stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+      <input id="picker-search" type="search" class="picker__search"
+             placeholder="Search exercises…" autocomplete="off"
+             autocapitalize="off" spellcheck="false" />
+      <div id="picker-filters" class="picker__filters"></div>
+      <div id="picker-list" class="picker__list"></div>
+      <p id="picker-empty" class="picker__empty" hidden>
+        You've added every exercise in the catalog.
+      </p>
+    </div>
+  </div>
+
+  <div id="details" class="picker" hidden role="dialog" aria-modal="true"
+       aria-labelledby="details-title">
+    <div id="details-backdrop" class="picker__backdrop"></div>
+    <div class="picker__sheet" role="document">
+      <div class="picker__header">
+        <h2 id="details-title" class="picker__title">Exercise</h2>
+        <button id="details-close" type="button" class="picker__close"
+                aria-label="Close">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4 4 L12 12 M12 4 L4 12" fill="none"
+                  stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+      <div id="details-body" class="details__body"></div>
+    </div>
+  </div>
+
+  <div id="settings" class="picker" hidden role="dialog" aria-modal="true"
+       aria-labelledby="settings-title">
+    <div id="settings-backdrop" class="picker__backdrop"></div>
+    <div class="picker__sheet" role="document">
+      <div class="picker__header">
+        <h2 id="settings-title" class="picker__title">Settings</h2>
+        <button id="settings-close" type="button" class="picker__close"
+                aria-label="Close">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4 4 L12 12 M12 4 L4 12" fill="none"
+                  stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+      <div id="settings-body" class="settings__body"></div>
+    </div>
+  </div>
+
+  <input id="import-input" type="file" accept="application/json,.json"
+         hidden />
 
   <script src="./app.js" defer></script>
 </body>
