@@ -947,9 +947,14 @@
   // Two stylized body diagrams (front + back) with muscle regions painted
   // as anatomically-shaped paths over a simple silhouette. Each path's
   // fill changes with `counts`; the border stays grey across all states
-  // (see .muscle CSS).
-  const renderBodyDiagram = (counts) => {
-    const c = (k) => muscleClass(counts[k] || 0);
+  // (see .muscle CSS). Each region carries a data-region attribute so
+  // the parent click handler can surface a detail panel for it.
+  const renderBodyDiagram = (counts, selected) => {
+    const cls = (k) => {
+      const base = muscleClass(counts[k] || 0);
+      return selected === k ? `${base} muscle--selected` : base;
+    };
+    const c = (k) => `class="${cls(k)}" data-region="${k}"`;
     const silhouette = `
       <g class="body-outline">
         <circle cx="60" cy="22" r="14" />
@@ -968,28 +973,24 @@
         <svg class="body" viewBox="0 0 120 232" aria-label="Front body"
              role="img">
           ${silhouette}
-          <path class="${c("shoulders")}"
+          <path ${c("shoulders")}
                 d="M 22 48 Q 28 42 36 46 L 38 60 Q 30 62 22 58 Z" />
-          <path class="${c("shoulders")}"
+          <path ${c("shoulders")}
                 d="M 98 48 Q 92 42 84 46 L 82 60 Q 90 62 98 58 Z" />
-          <path class="${c("chest")}"
+          <path ${c("chest")}
                 d="M 41 48 Q 56 46 58 50 L 58 68 Q 50 72 42 68 Q 38 60 41 48 Z" />
-          <path class="${c("chest")}"
+          <path ${c("chest")}
                 d="M 79 48 Q 64 46 62 50 L 62 68 Q 70 72 78 68 Q 82 60 79 48 Z" />
-          <rect class="${c("biceps")}" x="22" y="62" width="11" height="22"
-                rx="5" />
-          <rect class="${c("biceps")}" x="87" y="62" width="11" height="22"
-                rx="5" />
-          <path class="${c("core")}"
+          <rect ${c("biceps")} x="22" y="62" width="11" height="22" rx="5" />
+          <rect ${c("biceps")} x="87" y="62" width="11" height="22" rx="5" />
+          <path ${c("core")}
                 d="M 50 78 Q 60 76 70 78 L 70 116 Q 60 120 50 116 Z" />
-          <path class="${c("quads")}"
+          <path ${c("quads")}
                 d="M 42 128 L 58 128 L 56 178 Q 49 184 42 178 Z" />
-          <path class="${c("quads")}"
+          <path ${c("quads")}
                 d="M 78 128 L 62 128 L 64 178 Q 71 184 78 178 Z" />
-          <rect class="${c("calves")}" x="44" y="190" width="10" height="22"
-                rx="4" />
-          <rect class="${c("calves")}" x="66" y="190" width="10" height="22"
-                rx="4" />
+          <rect ${c("calves")} x="44" y="190" width="10" height="22" rx="4" />
+          <rect ${c("calves")} x="66" y="190" width="10" height="22" rx="4" />
         </svg>
       </div>`;
 
@@ -999,32 +1000,28 @@
         <svg class="body" viewBox="0 0 120 232" aria-label="Back body"
              role="img">
           ${silhouette}
-          <path class="${c("shoulders")}"
+          <path ${c("shoulders")}
                 d="M 22 48 Q 28 42 36 46 L 38 60 Q 30 62 22 58 Z" />
-          <path class="${c("shoulders")}"
+          <path ${c("shoulders")}
                 d="M 98 48 Q 92 42 84 46 L 82 60 Q 90 62 98 58 Z" />
-          <path class="${c("back")}"
+          <path ${c("back")}
                 d="M 50 46 Q 60 44 70 46 L 76 80 Q 60 84 44 80 Z" />
-          <path class="${c("lats")}"
+          <path ${c("lats")}
                 d="M 38 64 L 56 90 L 50 104 L 38 88 Z" />
-          <path class="${c("lats")}"
+          <path ${c("lats")}
                 d="M 82 64 L 64 90 L 70 104 L 82 88 Z" />
-          <rect class="${c("triceps")}" x="22" y="62" width="11" height="22"
-                rx="5" />
-          <rect class="${c("triceps")}" x="87" y="62" width="11" height="22"
-                rx="5" />
-          <path class="${c("glutes")}"
+          <rect ${c("triceps")} x="22" y="62" width="11" height="22" rx="5" />
+          <rect ${c("triceps")} x="87" y="62" width="11" height="22" rx="5" />
+          <path ${c("glutes")}
                 d="M 42 126 Q 50 124 58 128 L 58 142 Q 50 148 42 142 Z" />
-          <path class="${c("glutes")}"
+          <path ${c("glutes")}
                 d="M 78 126 Q 70 124 62 128 L 62 142 Q 70 148 78 142 Z" />
-          <path class="${c("hamstrings")}"
+          <path ${c("hamstrings")}
                 d="M 42 152 L 58 152 L 56 196 Q 49 200 42 196 Z" />
-          <path class="${c("hamstrings")}"
+          <path ${c("hamstrings")}
                 d="M 78 152 L 62 152 L 64 196 Q 71 200 78 196 Z" />
-          <rect class="${c("calves")}" x="44" y="200" width="10" height="22"
-                rx="4" />
-          <rect class="${c("calves")}" x="66" y="200" width="10" height="22"
-                rx="4" />
+          <rect ${c("calves")} x="44" y="200" width="10" height="22" rx="4" />
+          <rect ${c("calves")} x="66" y="200" width="10" height="22" rx="4" />
         </svg>
       </div>`;
 
@@ -1049,16 +1046,63 @@
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
   };
 
+  // Friendly title-case names for the region keys used in the body diagram.
+  const REGION_LABELS = {
+    quads: "Quads", glutes: "Glutes", hamstrings: "Hamstrings",
+    lats: "Lats", biceps: "Biceps", triceps: "Triceps",
+    chest: "Chest", shoulders: "Shoulders", back: "Back",
+    core: "Core", calves: "Calves",
+  };
+
+  // Per-exercise tally for everything that maps to a single region within
+  // a date window. Used by the muscle-detail panel below.
+  const exercisesForRegionSince = (region, sinceDate) => {
+    const counts = {};
+    for (const date in state.completed) {
+      if (sinceDate && date < sinceDate) continue;
+      const day = state.completed[date];
+      if (!day) continue;
+      for (const exId in day) {
+        if (!isCounted(day[exId])) continue;
+        const ex = exerciseById(exId);
+        if (!ex || !ex.muscles) continue;
+        const regions = new Set();
+        for (const m of ex.muscles.split("·").map((s) => s.trim())) {
+          for (const r of muscleRegions(m)) regions.add(r);
+        }
+        if (regions.has(region)) counts[exId] = (counts[exId] || 0) + 1;
+      }
+    }
+    return Object.entries(counts)
+      .map(([id, count]) => {
+        const ex = exerciseById(id);
+        return { id, name: ex ? ex.name : id, count };
+      })
+      .sort((a, b) => b.count - a.count);
+  };
+
+  const RANGE_OPTIONS = [
+    { key: "today", label: "Today",        days: 0  },
+    { key: "month", label: "Last 30 days", days: 30 },
+    { key: "quarter", label: "Last 3 months", days: 90 },
+  ];
+  const rangeSinceDate = (key) =>
+    key === "today" ? todayKey() : dateNDaysAgo(
+      RANGE_OPTIONS.find((o) => o.key === key).days);
+  const rangeShortLabel = (key) =>
+    key === "today" ? "today" :
+    key === "month" ? "the last 30 days" :
+    "the last 3 months";
+
   let muscleRange = "today";
+  let muscleSelected = null;
   const renderAnalysis = () => {
     const view = $("analysis-view");
     if (!view) return;
     const activity = computeActivity();
     const exercises = state.addedIds.map(exerciseById).filter(Boolean);
-    const todayCounts = regionCountsSince(todayKey());
-    const monthCounts = regionCountsSince(dateNDaysAgo(30));
-    const hasToday = Object.values(todayCounts).some((v) => v > 0);
-    const hasMonth = Object.values(monthCounts).some((v) => v > 0);
+    const counts = regionCountsSince(rangeSinceDate(muscleRange));
+    const hasData = Object.values(counts).some((v) => v > 0);
 
     const activityCard = `
       <section class="card">
@@ -1079,30 +1123,62 @@
         </div>
       </section>`;
 
-    const counts = muscleRange === "today" ? todayCounts : monthCounts;
-    const hasData = muscleRange === "today" ? hasToday : hasMonth;
+    let detailHtml = "";
+    if (muscleSelected) {
+      const exs = exercisesForRegionSince(
+        muscleSelected, rangeSinceDate(muscleRange));
+      const label = REGION_LABELS[muscleSelected] || muscleSelected;
+      const rangeLbl = rangeShortLabel(muscleRange);
+      detailHtml = `
+        <div class="muscle-detail">
+          <div class="muscle-detail__head">
+            <span class="muscle-detail__title">${label}</span>
+            <button type="button" class="muscle-detail__close"
+                    data-action="muscle-clear" aria-label="Close detail">
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M4 4 L12 12 M12 4 L4 12" fill="none"
+                      stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
+          ${exs.length === 0
+            ? `<p class="muscle-detail__empty">
+                 No work for ${label.toLowerCase()} in ${rangeLbl}.
+               </p>`
+            : `<p class="muscle-detail__count">
+                 ${exs.reduce((s, e) => s + e.count, 0)} session${
+                  exs.reduce((s, e) => s + e.count, 0) === 1 ? "" : "s"
+                } across ${exs.length} exercise${
+                  exs.length === 1 ? "" : "s"
+                } in ${rangeLbl}
+               </p>
+               <ul class="muscle-detail__list">
+                 ${exs.map((e) => `
+                   <li>
+                     <span class="muscle-detail__name">${e.name}</span>
+                     <span class="muscle-detail__hits">${e.count}×</span>
+                   </li>`).join("")}
+               </ul>`}
+        </div>`;
+    }
+    const toggleHtml = RANGE_OPTIONS.map((o) => `
+      <button type="button" role="tab"
+              class="muscle-toggle__btn${
+                muscleRange === o.key ? " muscle-toggle__btn--active" : ""
+              }"
+              data-range="${o.key}">${o.label}</button>`).join("");
+    const emptyMsg = muscleRange === "today"
+      ? "No exercises completed today yet."
+      : `Nothing in ${rangeShortLabel(muscleRange)} yet.`;
     const musclesCard = `
       <section class="card">
         <h2>Muscles worked</h2>
-        <div class="muscle-toggle" role="tablist">
-          <button type="button" role="tab"
-                  class="muscle-toggle__btn${
-                    muscleRange === "today" ? " muscle-toggle__btn--active" : ""
-                  }"
-                  data-range="today">Today</button>
-          <button type="button" role="tab"
-                  class="muscle-toggle__btn${
-                    muscleRange === "month" ? " muscle-toggle__btn--active" : ""
-                  }"
-                  data-range="month">Last 30 days</button>
-        </div>
+        <div class="muscle-toggle" role="tablist">${toggleHtml}</div>
         ${hasData
-          ? renderBodyDiagram(counts)
-          : `<p class="empty-state">${
-            muscleRange === "today"
-              ? "No exercises completed today yet."
-              : "Nothing in the past month yet."
-          }</p>`}
+          ? renderBodyDiagram(counts, muscleSelected)
+          : `<p class="empty-state">${emptyMsg}</p>`}
+        ${detailHtml}
       </section>`;
 
     const empty = activity.workouts === 0 && exercises.length === 0
@@ -1601,10 +1677,7 @@
     const chartHtml = renderProgressChart(ex, history);
     const progressHtml = chartHtml
       ? chartHtml
-      : `<p class="details__empty">
-           Complete this exercise on a few different days to start seeing
-           your progress here.
-         </p>`;
+      : `<p class="details__empty">No completions yet — your progression chart will start filling in as you log this exercise.</p>`;
 
     // Each exercise has one tracked metric (the one progression is built
     // from): weight for weighted exercises, reps for bodyweight. Sets are
@@ -1738,6 +1811,38 @@
     if ($("picker").hidden) document.body.classList.remove("modal-open");
   };
 
+  // Treat a quick downward flick anywhere inside a modal as a close
+  // gesture. The threshold is intentionally tight (>=80px in <350ms) so
+  // ordinary scrolling — which moves the finger upward, or downward
+  // slowly with frequent direction changes — won't trip it. Touches that
+  // start in a scroll container already past the top defer to native
+  // scrolling instead.
+  const attachSwipeDownClose = (modalEl, closeFn) => {
+    let startY = null;
+    let startT = 0;
+    const onStart = (e) => {
+      if (!e.touches || e.touches.length !== 1) { startY = null; return; }
+      const scrollable = e.target.closest(
+        ".picker__list, .details__body, .settings__body"
+      );
+      if (scrollable && scrollable.scrollTop > 0) { startY = null; return; }
+      startY = e.touches[0].clientY;
+      startT = Date.now();
+    };
+    const onEnd = (e) => {
+      if (startY == null) return;
+      const t = e.changedTouches && e.changedTouches[0];
+      const dy = t ? t.clientY - startY : 0;
+      const dt = Date.now() - startT;
+      startY = null;
+      if (dy > 80 && dt < 350) closeFn();
+    };
+    modalEl.addEventListener("touchstart", onStart, { passive: true });
+    modalEl.addEventListener("touchend", onEnd, { passive: true });
+    modalEl.addEventListener("touchcancel", () => { startY = null; },
+      { passive: true });
+  };
+
   // === Wiring ============================================================
   const setupListeners = () => {
     document.querySelector(".content").addEventListener("click", (event) => {
@@ -1853,6 +1958,9 @@
     $("settings-btn").addEventListener("click", openSettings);
     $("settings-close").addEventListener("click", closeSettings);
     $("settings-backdrop").addEventListener("click", closeSettings);
+    attachSwipeDownClose($("picker"), closePicker);
+    attachSwipeDownClose($("details"), closeDetails);
+    attachSwipeDownClose($("settings"), closeSettings);
     $("settings").addEventListener("click", (event) => {
       const target = event.target.closest("[data-action]");
       if (!target) return;
@@ -1887,9 +1995,22 @@
     });
     $("analysis-view").addEventListener("click", (event) => {
       const btn = event.target.closest(".muscle-toggle__btn");
-      if (!btn || !btn.dataset.range) return;
-      muscleRange = btn.dataset.range;
-      renderAnalysis();
+      if (btn && btn.dataset.range) {
+        muscleRange = btn.dataset.range;
+        renderAnalysis();
+        return;
+      }
+      if (event.target.closest("[data-action=\"muscle-clear\"]")) {
+        muscleSelected = null;
+        renderAnalysis();
+        return;
+      }
+      const region = event.target.closest("[data-region]");
+      if (region) {
+        const key = region.dataset.region;
+        muscleSelected = muscleSelected === key ? null : key;
+        renderAnalysis();
+      }
     });
     $("snoozed-toggle").addEventListener("click", () => {
       const card = $("snoozed-card");

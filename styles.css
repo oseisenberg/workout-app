@@ -1106,6 +1106,75 @@ body.modal-open { overflow: hidden; }
 .muscle--lvl2 { fill: rgba(59, 130, 246, 0.55); }
 .muscle--lvl3 { fill: rgba(59, 130, 246, 0.78); }
 .muscle--lvl4 { fill: var(--accent); }
+.muscle { cursor: pointer; }
+.muscle--selected {
+  stroke: var(--accent);
+  stroke-width: 1.6;
+}
+
+/* Per-muscle detail panel below the body diagrams. Surfaces which
+   exercises hit the selected region within the active range. */
+.muscle-detail {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.muscle-detail__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.muscle-detail__title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.muscle-detail__close {
+  background: transparent;
+  border: 0;
+  padding: 4px;
+  color: var(--muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.muscle-detail__close svg { width: 14px; height: 14px; display: block; }
+.muscle-detail__count {
+  margin: 4px 0 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.muscle-detail__empty {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.muscle-detail__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.muscle-detail__list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 13px;
+  border-top: 1px dashed var(--border);
+}
+.muscle-detail__list li:first-child { border-top: 0; }
+.muscle-detail__hits {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
 
 /* Exercise details modal — same sheet chrome as the picker, different body. */
 .details__body {
@@ -1215,10 +1284,13 @@ body.modal-open { overflow: hidden; }
   border: 1px solid var(--border);
   border-radius: 10px;
 }
+/* Three fixed columns so labels, inputs, and unit suffixes line up
+   vertically across rows. The unit column has a min-width even when
+   empty so rows without units still align with rows that have them. */
 .details__edit-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 64px 36px;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
   font-size: 13px;
 }
@@ -1226,12 +1298,10 @@ body.modal-open { overflow: hidden; }
   color: var(--muted);
 }
 .details__edit-input {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  display: contents;
 }
 .details__edit-input input {
-  width: 64px;
+  width: 100%;
   padding: 6px 8px;
   background: var(--surface);
   border: 1px solid var(--border-strong);
@@ -1256,7 +1326,7 @@ body.modal-open { overflow: hidden; }
 .details__edit-unit {
   font-size: 11px;
   color: var(--muted);
-  min-width: 24px;
+  text-align: left;
 }
 .details__edit-reset {
   margin-top: 4px;
