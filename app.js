@@ -8,6 +8,8 @@
       id: "leg-press",
       name: "Leg Press",
       muscles: "Quads · Glutes",
+      sets: "3–4",
+      reps: "8–12",
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -23,6 +25,8 @@
       id: "lat-pulldown",
       name: "Lat Pulldown",
       muscles: "Lats · Biceps",
+      sets: "3",
+      reps: "8–12",
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -43,6 +47,8 @@
       id: "chest-press",
       name: "Chest Press",
       muscles: "Chest · Triceps",
+      sets: "3–4",
+      reps: "8–12",
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -64,6 +70,8 @@
       id: "seated-row",
       name: "Seated Row",
       muscles: "Back · Biceps",
+      sets: "3",
+      reps: "8–12",
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -82,6 +90,8 @@
       id: "leg-extension",
       name: "Leg Extension",
       muscles: "Quads",
+      sets: "3",
+      reps: "10–15",
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -103,6 +113,8 @@
       id: "leg-curl",
       name: "Leg Curl",
       muscles: "Hamstrings",
+      sets: "3",
+      reps: "10–15",
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -125,6 +137,8 @@
       id: "cable-crossover",
       name: "Cable Crossover",
       muscles: "Chest · Shoulders",
+      sets: "3",
+      reps: "12–15",
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -149,6 +163,8 @@
       id: "pec-deck",
       name: "Pec Deck",
       muscles: "Chest",
+      sets: "3",
+      reps: "10–12",
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -173,10 +189,20 @@
     const grid = $("exercise-grid");
     if (!grid) return;
     grid.innerHTML = EXERCISES.map((ex) => `
-      <button type="button" class="exercise-tile" data-id="${ex.id}">
-        <span class="exercise-tile__icon">${ex.icon}</span>
-        <span class="exercise-tile__name">${ex.name}</span>
-        <span class="exercise-tile__muscles">${ex.muscles}</span>
+      <button type="button" class="exercise-row" data-id="${ex.id}">
+        <span class="exercise-row__icon">${ex.icon}</span>
+        <span class="exercise-row__title">
+          <span class="exercise-row__name">${ex.name}</span>
+          <span class="exercise-row__muscles">${ex.muscles}</span>
+        </span>
+        <span class="exercise-row__stat">
+          <span class="exercise-row__stat-label">Sets</span>
+          <span class="exercise-row__stat-value">${ex.sets}</span>
+        </span>
+        <span class="exercise-row__stat">
+          <span class="exercise-row__stat-label">Reps</span>
+          <span class="exercise-row__stat-value">${ex.reps}</span>
+        </span>
       </button>
     `).join("");
   };

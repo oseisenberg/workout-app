@@ -96,57 +96,79 @@ body {
 .diag dd { margin: 0; }
 
 .exercise-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 4px;
-}
-@media (min-width: 520px) {
-  .exercise-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-@media (min-width: 760px) {
-  .exercise-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-
-.exercise-tile {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.exercise-row {
+  display: grid;
+  grid-template-columns: 56px 1fr auto auto;
   align-items: center;
-  gap: 6px;
-  padding: 14px 10px 12px;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 14px;
   background: #16223a;
   border: 1px solid #25324d;
   border-radius: 12px;
   color: var(--text);
   font: inherit;
-  text-align: center;
+  text-align: left;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.08s ease, background 0.12s ease,
               border-color 0.12s ease;
 }
-.exercise-tile:active {
-  transform: scale(0.97);
+.exercise-row:active {
+  transform: scale(0.99);
   background: #1b2a48;
   border-color: var(--accent);
 }
 
-.exercise-tile__icon {
+.exercise-row__icon {
   display: block;
-  width: 100%;
-  aspect-ratio: 1;
-  max-width: 88px;
+  width: 56px;
+  height: 56px;
   color: var(--text);
 }
-.exercise-tile__icon svg { width: 100%; height: 100%; display: block; }
+.exercise-row__icon svg { width: 100%; height: 100%; display: block; }
 
-.exercise-tile__name {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.15;
+.exercise-row__title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
-.exercise-tile__muscles {
-  font-size: 11px;
+.exercise-row__name {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.exercise-row__muscles {
+  font-size: 12px;
   color: var(--muted);
   letter-spacing: 0.2px;
+}
+
+.exercise-row__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 48px;
+}
+.exercise-row__stat-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.exercise-row__stat-value {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
 }
