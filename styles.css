@@ -1230,6 +1230,16 @@ body.modal-open { overflow: hidden; }
   letter-spacing: 0.6px;
   color: var(--muted);
 }
+/* Section heading + an inline action (used by Progress so the chart
+   toggle rides on the same row as the heading instead of taking its
+   own). The h3's existing margin still owns the vertical spacing. */
+.details__section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.details__section-head .details__section { margin-bottom: 0; }
 
 .details__chart {
   width: 100%;
@@ -1314,23 +1324,23 @@ body.modal-open { overflow: hidden; }
 .details__chart-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  align-self: flex-start;
-  margin: 4px 0 0;
-  padding: 6px 10px;
+  gap: 5px;
+  padding: 2px 4px;
   background: transparent;
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  color: var(--muted);
+  border: 0;
+  color: var(--accent);
   font: inherit;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+.details__chart-toggle:active { opacity: 0.6; }
 .details__chart-toggle svg {
-  width: 10px;
-  height: 7px;
+  width: 9px;
+  height: 6px;
   transition: transform 0.18s ease;
 }
 .details__chart-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }

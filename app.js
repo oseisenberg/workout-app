@@ -1747,18 +1747,23 @@
            </div>
          </div>`
       : "";
+    const progressHeadHtml = `
+      <div class="details__section-head">
+        <h3 class="details__section">Progress</h3>
+        ${chartHtml ? `
+          <button type="button" class="details__chart-toggle"
+                  data-action="toggle-chart"
+                  aria-expanded="${chartExpanded ? "true" : "false"}">
+            ${chartExpanded ? "Hide chart" : "Show chart"}
+            <svg viewBox="0 0 12 8" aria-hidden="true">
+              <path d="M1 1.5 L6 6.5 L11 1.5" fill="none"
+                    stroke="currentColor" stroke-width="1.8"
+                    stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>` : ""}
+      </div>`;
     const progressHtml = chartHtml
       ? `${progressSummaryHtml}
-         <button type="button" class="details__chart-toggle"
-                 data-action="toggle-chart"
-                 aria-expanded="${chartExpanded ? "true" : "false"}">
-           ${chartExpanded ? "Hide chart" : "Show chart"}
-           <svg viewBox="0 0 12 8" aria-hidden="true">
-             <path d="M1 1.5 L6 6.5 L11 1.5" fill="none"
-                   stroke="currentColor" stroke-width="1.8"
-                   stroke-linecap="round" stroke-linejoin="round" />
-           </svg>
-         </button>
          <div class="details__chart-wrap"${chartExpanded ? "" : " hidden"}>
            ${chartHtml}
          </div>`
@@ -1875,7 +1880,7 @@
       </div>
       ${descriptionHtml}
       ${mistakesHtml}
-      <h3 class="details__section">Progress</h3>
+      ${progressHeadHtml}
       ${progressHtml}
       ${customizeHtml}
       ${archiveBtnHtml}
