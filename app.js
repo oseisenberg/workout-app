@@ -231,13 +231,11 @@
   const exerciseById = (id) => CATALOG.find((ex) => ex.id === id);
   const addedExercises = () =>
     state.addedIds.map(exerciseById).filter(Boolean);
-  const archivedExercises = () =>
-    state.archivedIds.map(exerciseById).filter(Boolean);
-  // Picker shows catalog templates that aren't currently active or archived.
+  // Picker shows everything not currently active. Archived templates are
+  // included so they can be restored from the same place; they're flagged
+  // visually so the user can tell them apart from never-added templates.
   const availableExercises = () =>
-    CATALOG.filter((ex) =>
-      !state.addedIds.includes(ex.id) &&
-      !state.archivedIds.includes(ex.id));
+    CATALOG.filter((ex) => !state.addedIds.includes(ex.id));
   const isArchived = (exId) => state.archivedIds.includes(exId);
 
   // Tier label is just the level index — numeric so progression reads as
@@ -469,29 +467,13 @@
       </div>`;
   };
 
-  const archiveRowHtml = (ex) => `
-    <button type="button" class="archive-row" data-action="open-details"
-            data-id="${ex.id}">
-      <span class="archive-row__icon">${ex.icon}</span>
-      <span class="archive-row__name">${ex.name}</span>
-      <span class="archive-row__chevron" aria-hidden="true">›</span>
-    </button>`;
-
   const renderExercises = () => {
     const availableGrid = $("available-grid");
     const snoozedGrid = $("snoozed-grid");
     const snoozedCard = $("snoozed-card");
-    const archivedGrid = $("archived-grid");
-    const archivedCard = $("archived-card");
     const emptyState = $("empty-state");
     const allDoneState = $("all-done-state");
     if (!availableGrid || !snoozedGrid) return;
-
-    const archived = archivedExercises();
-    if (archivedGrid) {
-      archivedGrid.innerHTML = archived.map(archiveRowHtml).join("");
-    }
-    if (archivedCard) archivedCard.hidden = archived.length === 0;
 
     const all = addedExercises();
     if (all.length === 0) {
@@ -499,7 +481,7 @@
       snoozedGrid.innerHTML = "";
       if (snoozedCard) snoozedCard.hidden = true;
       if (allDoneState) allDoneState.hidden = true;
-      if (emptyState) emptyState.hidden = archived.length > 0;
+      if (emptyState) emptyState.hidden = false;
       if (openDetailsId != null) renderDetails();
       return;
     }
@@ -532,17 +514,27 @@
       return;
     }
     if (empty) empty.hidden = true;
-    list.innerHTML = items.map((ex) => `
-      <button type="button" class="picker-item" data-id="${ex.id}">
+    list.innerHTML = items.map((ex) => {
+      const archived = isArchived(ex.id);
+      const label = archived ? "Restore" : "Add";
+      return `
+      <button type="button"
+              class="picker-item${archived ? " picker-item--archived" : ""}"
+              data-id="${ex.id}">
         <span class="picker-item__icon">${ex.icon}</span>
-        <span class="picker-item__name">${ex.name}</span>
-        <span class="picker-item__add" aria-label="Add ${ex.name}">
+        <span class="picker-item__name">
+          ${ex.name}${archived
+            ? ' <span class="picker-item__badge">Archived</span>'
+            : ""}
+        </span>
+        <span class="picker-item__add" aria-label="${label} ${ex.name}">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 5 V19 M5 12 H19" fill="none" stroke="currentColor"
                   stroke-width="2.4" stroke-linecap="round" />
           </svg>
         </span>
-      </button>`).join("");
+      </button>`;
+    }).join("");
   };
 
   const openPicker = () => {
@@ -697,7 +689,7 @@
     document.querySelector(".content").addEventListener("click", (event) => {
       const target = event.target.closest("[data-action]");
       if (!target) return;
-      const row = target.closest(".exercise-row, .archive-row");
+      const row = target.closest(".exercise-row");
       if (!row) return;
       const exId = row.dataset.id;
       const action = target.dataset.action;
