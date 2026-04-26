@@ -119,6 +119,18 @@
         <rect x="48" y="22" width="6" height="20" rx="1.5"
               stroke="var(--accent)" />
       </svg>`,
+    "cable": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="56" x2="58" y2="56" />
+        <line x1="32" y1="10" x2="32" y2="32" />
+        <circle cx="32" cy="10" r="3" />
+        <line x1="32" y1="32" x2="32" y2="40"
+              stroke="var(--accent)" />
+        <line x1="22" y1="40" x2="42" y2="40"
+              stroke="var(--accent)" />
+      </svg>`,
     "dumbbell": `
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
            stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -234,6 +246,8 @@
     levels: buildLevels(t),
     snoozeDays: t.snoozeDays != null ? t.snoozeDays : 1,
     common: !!t.common,
+    description: t.description || "",
+    mistakes: Array.isArray(t.mistakes) ? t.mistakes : [],
   });
 
   let CATALOG = [];
@@ -1278,6 +1292,18 @@
         </div>
       </div>`;
 
+    const descriptionHtml = ex.description
+      ? `<h3 class="details__section">About</h3>
+         <p class="details__about">${ex.description}</p>`
+      : "";
+
+    const mistakesHtml = ex.mistakes && ex.mistakes.length
+      ? `<h3 class="details__section">Watch out for</h3>
+         <ul class="details__mistakes">
+           ${ex.mistakes.map((m) => `<li>${m}</li>`).join("")}
+         </ul>`
+      : "";
+
     $("details-body").innerHTML = `
       <div class="details__hero">
         <span class="details__icon">${ex.icon}</span>
@@ -1286,6 +1312,8 @@
           <span class="details__hero-muscles">${ex.muscles}</span>
         </span>
       </div>
+      ${descriptionHtml}
+      ${mistakesHtml}
       <h3 class="details__section">Progress</h3>
       ${progressHtml}
       ${archiveBtnHtml}

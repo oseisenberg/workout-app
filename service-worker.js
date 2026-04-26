@@ -1,5 +1,5 @@
 // Bump CACHE_VERSION to force clients to fetch updated shell assets.
-const CACHE_VERSION = "v75";
+const CACHE_VERSION = "v76";
 const CACHE_NAME = `workout-shell-${CACHE_VERSION}`;
 
 const SHELL_ASSETS = [

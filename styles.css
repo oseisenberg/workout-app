@@ -1035,6 +1035,33 @@ body.modal-open { overflow: hidden; }
   padding: 6px;
 }
 
+.details__about {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.details__mistakes {
+  margin: 0;
+  padding: 10px 12px 10px 26px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.details__mistakes li {
+  margin: 0;
+  padding-left: 2px;
+}
+.details__mistakes li + li { margin-top: 4px; }
+.details__mistakes li::marker { color: var(--err); }
+
 .details__empty {
   margin: 0;
   padding: 16px;
