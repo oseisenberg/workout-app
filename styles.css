@@ -732,47 +732,41 @@ body.modal-open { overflow: hidden; }
   line-height: 1.2;
 }
 
-.muscle-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.muscle-list__item {
+/* Body diagrams: front + back, muscle ellipses tinted by activity. */
+.bodies {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(120px, 2fr) auto;
-  align-items: center;
-  gap: 10px;
-  padding: 4px 2px;
-  font-size: 13px;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  justify-items: center;
 }
-.muscle-list__name {
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.body { width: 100%; height: auto; max-height: 320px; }
+.body-outline rect,
+.body-outline circle {
+  fill: var(--surface-2);
+  stroke: var(--border-strong);
+  stroke-width: 1;
 }
-.muscle-list__bar {
-  display: block;
-  height: 6px;
-  background: var(--surface-2);
-  border-radius: 999px;
-  overflow: hidden;
+.muscle {
+  fill: var(--surface);
+  stroke: var(--border-strong);
+  stroke-width: 0.7;
+  transition: fill 0.18s ease;
 }
-.muscle-list__bar-fill {
-  display: block;
-  height: 100%;
-  background: var(--accent);
-  border-radius: 999px;
+.muscle--lvl1 {
+  fill: rgba(59, 130, 246, 0.28);
+  stroke: rgba(59, 130, 246, 0.55);
 }
-.muscle-list__count {
-  font-variant-numeric: tabular-nums;
-  font-size: 12px;
-  color: var(--muted);
-  min-width: 20px;
-  text-align: right;
+.muscle--lvl2 {
+  fill: rgba(59, 130, 246, 0.5);
+  stroke: rgba(59, 130, 246, 0.75);
+}
+.muscle--lvl3 {
+  fill: rgba(59, 130, 246, 0.75);
+  stroke: var(--accent);
+}
+.muscle--lvl4 {
+  fill: var(--accent);
+  stroke: var(--accent);
 }
 
 .progress-list {

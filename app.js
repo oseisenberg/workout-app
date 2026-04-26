@@ -659,6 +659,114 @@
     return { workouts: dates.length, totalSets, streak };
   };
 
+  // Map a muscle string from the catalog to one or more body-region keys.
+  const MUSCLE_REGIONS = {
+    "quads": ["quads"],
+    "glutes": ["glutes"],
+    "hamstrings": ["hamstrings"],
+    "lats": ["lats"],
+    "biceps": ["biceps"],
+    "triceps": ["triceps"],
+    "chest": ["chest"],
+    "shoulders": ["shoulders"],
+    "back": ["back"],
+    "core": ["core"],
+    "calves": ["calves"],
+    "posterior chain": ["back", "glutes", "hamstrings"],
+  };
+  const muscleRegions = (name) => {
+    const key = name.toLowerCase();
+    return MUSCLE_REGIONS[key] || [];
+  };
+
+  const dateNDaysAgo = (n) => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${
+      String(d.getDate()).padStart(2, "0")
+    }`;
+  };
+
+  // counts keyed by region for completions on or after `sinceDate` (inclusive).
+  const regionCountsSince = (sinceDate) => {
+    const counts = {};
+    for (const date in state.completed) {
+      if (sinceDate && date < sinceDate) continue;
+      const day = state.completed[date];
+      if (!day) continue;
+      for (const exId in day) {
+        const ex = exerciseById(exId);
+        if (!ex || !ex.muscles) continue;
+        for (const m of ex.muscles.split("·").map((s) => s.trim())) {
+          if (!m) continue;
+          for (const r of muscleRegions(m)) {
+            counts[r] = (counts[r] || 0) + 1;
+          }
+        }
+      }
+    }
+    return counts;
+  };
+
+  const muscleClass = (count) => {
+    if (!count) return "muscle";
+    if (count === 1) return "muscle muscle--lvl1";
+    if (count <= 3) return "muscle muscle--lvl2";
+    if (count <= 6) return "muscle muscle--lvl3";
+    return "muscle muscle--lvl4";
+  };
+
+  // Two simple stylized body diagrams (front + back) with muscle regions
+  // colored by `counts`. Each region is an ellipse layered over a rounded
+  // body silhouette so the figure stays simple and readable on a phone.
+  const renderBodyDiagram = (counts) => {
+    const c = (k) => muscleClass(counts[k] || 0);
+    const silhouette = `
+      <g class="body-outline">
+        <circle cx="60" cy="22" r="14" />
+        <rect x="38" y="42" width="44" height="82" rx="14" />
+        <rect x="20" y="46" width="14" height="72" rx="7" />
+        <rect x="86" y="46" width="14" height="72" rx="7" />
+        <rect x="40" y="124" width="18" height="100" rx="8" />
+        <rect x="62" y="124" width="18" height="100" rx="8" />
+      </g>`;
+    const front = `
+      <svg class="body" viewBox="0 0 120 232" aria-label="Front body"
+           role="img">
+        ${silhouette}
+        <ellipse class="${c("shoulders")}" cx="27" cy="50" rx="8" ry="6" />
+        <ellipse class="${c("shoulders")}" cx="93" cy="50" rx="8" ry="6" />
+        <ellipse class="${c("chest")}" cx="60" cy="58" rx="18" ry="8" />
+        <ellipse class="${c("biceps")}" cx="27" cy="72" rx="5" ry="13" />
+        <ellipse class="${c("biceps")}" cx="93" cy="72" rx="5" ry="13" />
+        <ellipse class="${c("core")}" cx="60" cy="96" rx="14" ry="18" />
+        <ellipse class="${c("quads")}" cx="49" cy="158" rx="8" ry="22" />
+        <ellipse class="${c("quads")}" cx="71" cy="158" rx="8" ry="22" />
+        <ellipse class="${c("calves")}" cx="49" cy="206" rx="6" ry="14" />
+        <ellipse class="${c("calves")}" cx="71" cy="206" rx="6" ry="14" />
+      </svg>`;
+    const back = `
+      <svg class="body" viewBox="0 0 120 232" aria-label="Back body"
+           role="img">
+        ${silhouette}
+        <ellipse class="${c("shoulders")}" cx="27" cy="50" rx="8" ry="6" />
+        <ellipse class="${c("shoulders")}" cx="93" cy="50" rx="8" ry="6" />
+        <ellipse class="${c("back")}" cx="60" cy="62" rx="20" ry="14" />
+        <ellipse class="${c("lats")}" cx="44" cy="80" rx="6" ry="12" />
+        <ellipse class="${c("lats")}" cx="76" cy="80" rx="6" ry="12" />
+        <ellipse class="${c("triceps")}" cx="27" cy="72" rx="5" ry="13" />
+        <ellipse class="${c("triceps")}" cx="93" cy="72" rx="5" ry="13" />
+        <ellipse class="${c("glutes")}" cx="49" cy="130" rx="8" ry="8" />
+        <ellipse class="${c("glutes")}" cx="71" cy="130" rx="8" ry="8" />
+        <ellipse class="${c("hamstrings")}" cx="49" cy="162" rx="8" ry="20" />
+        <ellipse class="${c("hamstrings")}" cx="71" cy="162" rx="8" ry="20" />
+        <ellipse class="${c("calves")}" cx="49" cy="206" rx="6" ry="14" />
+        <ellipse class="${c("calves")}" cx="71" cy="206" rx="6" ry="14" />
+      </svg>`;
+    return `<div class="bodies">${front}${back}</div>`;
+  };
+
   const computeMuscleStats = () => {
     const counts = {};
     for (const date in state.completed) {
@@ -680,9 +788,11 @@
     const view = $("analysis-view");
     if (!view) return;
     const activity = computeActivity();
-    const muscles = computeMuscleStats();
     const exercises = state.addedIds.map(exerciseById).filter(Boolean);
-    const maxMuscleCount = muscles.length ? muscles[0][1] : 1;
+    const todayCounts = regionCountsSince(todayKey());
+    const monthCounts = regionCountsSince(dateNDaysAgo(30));
+    const hasToday = Object.values(todayCounts).some((v) => v > 0);
+    const hasMonth = Object.values(monthCounts).some((v) => v > 0);
 
     const activityCard = `
       <section class="card">
@@ -703,21 +813,20 @@
         </div>
       </section>`;
 
-    const musclesCard = muscles.length === 0 ? "" : `
+    const todayCard = `
       <section class="card">
-        <h2>Muscles worked</h2>
-        <ul class="muscle-list">
-          ${muscles.map(([name, count]) => `
-            <li class="muscle-list__item">
-              <span class="muscle-list__name">${name}</span>
-              <span class="muscle-list__bar">
-                <span class="muscle-list__bar-fill"
-                      style="width: ${(count / maxMuscleCount) * 100}%">
-                </span>
-              </span>
-              <span class="muscle-list__count">${count}</span>
-            </li>`).join("")}
-        </ul>
+        <h2>Today</h2>
+        ${hasToday
+          ? renderBodyDiagram(todayCounts)
+          : `<p class="empty-state">No exercises completed today yet.</p>`}
+      </section>`;
+
+    const monthCard = `
+      <section class="card">
+        <h2>Last 30 days</h2>
+        ${hasMonth
+          ? renderBodyDiagram(monthCounts)
+          : `<p class="empty-state">Nothing in the past month yet.</p>`}
       </section>`;
 
     const progressCard = exercises.length === 0 ? "" : `
@@ -751,7 +860,7 @@
          </p>`
       : "";
 
-    view.innerHTML = activityCard + musclesCard + progressCard + empty;
+    view.innerHTML = activityCard + todayCard + monthCard + progressCard + empty;
   };
 
   // === Tab switching =====================================================
@@ -1062,6 +1171,17 @@
       if (state.levels[id] == null) {
         state.levels[id] = defaultLevel(exerciseById(id));
       }
+    }
+    // One-time migration: previously the default level was the middle of
+    // the range, so existing state may have exercises sitting partway up.
+    // Reset them to the new Lvl 1 default. Completion history is untouched.
+    if (!state.levelsResetV8) {
+      for (const id of state.addedIds) {
+        const ex = exerciseById(id);
+        if (ex) state.levels[id] = defaultLevel(ex);
+      }
+      state.levelsResetV8 = true;
+      saveState();
     }
 
     renderExercises();
