@@ -726,6 +726,8 @@
         <rect x="62" y="124" width="18" height="100" rx="8" />
       </g>`;
     const front = `
+      <div class="body-figure">
+        <span class="body-figure__label">Front</span>
       <svg class="body" viewBox="0 0 120 232" aria-label="Front body"
            role="img">
         ${silhouette}
@@ -739,8 +741,11 @@
         <ellipse class="${c("quads")}" cx="71" cy="158" rx="8" ry="22" />
         <ellipse class="${c("calves")}" cx="49" cy="206" rx="6" ry="14" />
         <ellipse class="${c("calves")}" cx="71" cy="206" rx="6" ry="14" />
-      </svg>`;
+      </svg>
+      </div>`;
     const back = `
+      <div class="body-figure">
+        <span class="body-figure__label">Back</span>
       <svg class="body" viewBox="0 0 120 232" aria-label="Back body"
            role="img">
         ${silhouette}
@@ -757,7 +762,8 @@
         <ellipse class="${c("hamstrings")}" cx="71" cy="162" rx="8" ry="20" />
         <ellipse class="${c("calves")}" cx="49" cy="206" rx="6" ry="14" />
         <ellipse class="${c("calves")}" cx="71" cy="206" rx="6" ry="14" />
-      </svg>`;
+      </svg>
+      </div>`;
     return `<div class="bodies">${front}${back}</div>`;
   };
 
@@ -778,6 +784,7 @@
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
   };
 
+  let muscleRange = "today";
   const renderAnalysis = () => {
     const view = $("analysis-view");
     if (!view) return;
@@ -807,20 +814,30 @@
         </div>
       </section>`;
 
-    const todayCard = `
+    const counts = muscleRange === "today" ? todayCounts : monthCounts;
+    const hasData = muscleRange === "today" ? hasToday : hasMonth;
+    const musclesCard = `
       <section class="card">
-        <h2>Today</h2>
-        ${hasToday
-          ? renderBodyDiagram(todayCounts)
-          : `<p class="empty-state">No exercises completed today yet.</p>`}
-      </section>`;
-
-    const monthCard = `
-      <section class="card">
-        <h2>Last 30 days</h2>
-        ${hasMonth
-          ? renderBodyDiagram(monthCounts)
-          : `<p class="empty-state">Nothing in the past month yet.</p>`}
+        <h2>Muscles worked</h2>
+        <div class="muscle-toggle" role="tablist">
+          <button type="button" role="tab"
+                  class="muscle-toggle__btn${
+                    muscleRange === "today" ? " muscle-toggle__btn--active" : ""
+                  }"
+                  data-range="today">Today</button>
+          <button type="button" role="tab"
+                  class="muscle-toggle__btn${
+                    muscleRange === "month" ? " muscle-toggle__btn--active" : ""
+                  }"
+                  data-range="month">Last 30 days</button>
+        </div>
+        ${hasData
+          ? renderBodyDiagram(counts)
+          : `<p class="empty-state">${
+            muscleRange === "today"
+              ? "No exercises completed today yet."
+              : "Nothing in the past month yet."
+          }</p>`}
       </section>`;
 
     const empty = activity.workouts === 0 && exercises.length === 0
@@ -830,7 +847,7 @@
          </p>`
       : "";
 
-    view.innerHTML = activityCard + todayCard + monthCard + empty;
+    view.innerHTML = activityCard + musclesCard + empty;
   };
 
   // === Tab switching =====================================================
@@ -1150,6 +1167,12 @@
     });
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.addEventListener("click", () => switchTab(tab.dataset.tab));
+    });
+    $("analysis-view").addEventListener("click", (event) => {
+      const btn = event.target.closest(".muscle-toggle__btn");
+      if (!btn || !btn.dataset.range) return;
+      muscleRange = btn.dataset.range;
+      renderAnalysis();
     });
     $("snoozed-toggle").addEventListener("click", () => {
       const card = $("snoozed-card");
