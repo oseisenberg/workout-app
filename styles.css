@@ -561,14 +561,15 @@ body {
   to   { transform: translateY(0) scale(1); }
 }
 
-/* Alternate completion actions — partial / skipped — share a row above
-   the level buttons. Each carries its own tint so the difference between
-   "I did some" and "I'm skipping it" reads at a glance. */
+/* Alternate completion actions — partial / skipped — each on their own
+   row so the labels can stay full-text. The level buttons below are
+   icon-only and split the same width. */
 .menu-row--actions {
-  gap: 6px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
 }
 .menu-action {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -633,7 +634,7 @@ body {
   color: var(--text);
   border: 0;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 6px 12px;
   font: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -641,7 +642,11 @@ body {
   -webkit-tap-highlight-color: transparent;
   letter-spacing: 0.3px;
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
+.level-btn svg { width: 14px; height: 14px; display: block; }
 .level-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;

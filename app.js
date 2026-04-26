@@ -786,13 +786,23 @@
           <div class="menu-row menu-row--level">
             <button type="button" class="level-btn"
                     data-action="downgrade"
+                    aria-label="Downgrade ${ex.name}"
                     ${canDown ? "" : "disabled"}>
-              <span aria-hidden="true">▼</span> Downgrade
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M4 6 L8 11 L12 6" fill="none"
+                      stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
             </button>
             <button type="button" class="level-btn level-btn--up"
                     data-action="upgrade"
+                    aria-label="Upgrade ${ex.name}"
                     ${canUp ? "" : "disabled"}>
-              Upgrade <span aria-hidden="true">▲</span>
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M4 10 L8 5 L12 10" fill="none"
+                      stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
             </button>
           </div>
         </div>
