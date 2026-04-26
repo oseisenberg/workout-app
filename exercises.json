@@ -19,7 +19,7 @@
       "sets": 3,
       "reps": 10,
       "weightStart": 60,
-      "weightStep": 20,
+      "weightStep": 10,
       "tiers": 5
     },
     {
@@ -30,7 +30,7 @@
       "sets": 3,
       "reps": 10,
       "weightStart": 50,
-      "weightStep": 20,
+      "weightStep": 10,
       "tiers": 5
     },
     {
@@ -41,7 +41,7 @@
       "sets": 3,
       "reps": 10,
       "weightStart": 60,
-      "weightStep": 20,
+      "weightStep": 10,
       "tiers": 5
     },
     {
@@ -52,7 +52,7 @@
       "sets": 3,
       "reps": 12,
       "weightStart": 40,
-      "weightStep": 15,
+      "weightStep": 10,
       "tiers": 5
     },
     {
@@ -85,7 +85,7 @@
       "sets": 3,
       "reps": 12,
       "weightStart": 40,
-      "weightStep": 15,
+      "weightStep": 10,
       "tiers": 5
     },
     {
@@ -96,7 +96,7 @@
       "sets": 3,
       "reps": 5,
       "weightStart": 95,
-      "weightStep": 40,
+      "weightStep": 10,
       "tiers": 5
     },
     {
@@ -107,7 +107,7 @@
       "sets": 3,
       "reps": 5,
       "weightStart": 65,
-      "weightStep": 30,
+      "weightStep": 10,
       "tiers": 5
     },
     {
@@ -118,7 +118,7 @@
       "sets": 3,
       "reps": 5,
       "weightStart": 135,
-      "weightStep": 50,
+      "weightStep": 10,
       "tiers": 5
     },
     {
@@ -151,7 +151,7 @@
       "sets": 3,
       "reps": 12,
       "weightStart": 25,
-      "weightStep": 15,
+      "weightStep": 10,
       "tiers": 5
     }
   ]
