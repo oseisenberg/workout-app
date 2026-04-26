@@ -86,6 +86,13 @@ body {
   letter-spacing: 0.6px;
 }
 
+.card--snoozed { background: var(--surface); }
+.card--snoozed h2 { color: var(--muted); }
+.card--snoozed .exercise-row { opacity: 0.78; }
+.card--snoozed .exercise-row.is-done .done-btn[aria-pressed="true"] {
+  background: #166534;
+}
+
 .exercise-grid {
   display: flex;
   flex-direction: column;

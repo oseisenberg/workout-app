@@ -27,13 +27,21 @@
   </header>
 
   <main class="content">
-    <section class="card">
-      <h2>Exercises</h2>
-      <div id="exercise-grid" class="exercise-grid"></div>
+    <section id="available-card" class="card">
+      <h2>Available</h2>
+      <div id="available-grid" class="exercise-grid"></div>
+      <p id="all-done-state" class="empty-state" hidden>
+        Nice — every exercise is done. They'll come back tomorrow.
+      </p>
       <p id="empty-state" class="empty-state" hidden>
         No exercises yet. Tap <span aria-hidden="true">+</span>
         to add one from the catalog.
       </p>
+    </section>
+
+    <section id="snoozed-card" class="card card--snoozed" hidden>
+      <h2>Snoozed</h2>
+      <div id="snoozed-grid" class="exercise-grid"></div>
     </section>
   </main>
 

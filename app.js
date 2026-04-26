@@ -382,18 +382,7 @@
   };
 
   // === Rendering =========================================================
-  const renderExercises = () => {
-    const grid = $("exercise-grid");
-    const empty = $("empty-state");
-    if (!grid) return;
-    const list = addedExercises();
-    if (list.length === 0) {
-      grid.innerHTML = "";
-      if (empty) empty.hidden = false;
-      return;
-    }
-    if (empty) empty.hidden = true;
-    grid.innerHTML = list.map((ex) => {
+  const exerciseRowHtml = (ex) => {
       const lvl = currentLevel(ex);
       const lvlIdx = state.levels[ex.id];
       const lvlZero = isLevelZero(lvl);
@@ -519,7 +508,40 @@
           </div>
         </div>
       </div>`;
-    }).join("");
+  };
+
+  const renderExercises = () => {
+    const availableGrid = $("available-grid");
+    const snoozedGrid = $("snoozed-grid");
+    const snoozedCard = $("snoozed-card");
+    const emptyState = $("empty-state");
+    const allDoneState = $("all-done-state");
+    if (!availableGrid || !snoozedGrid) return;
+
+    const all = addedExercises();
+    if (all.length === 0) {
+      availableGrid.innerHTML = "";
+      snoozedGrid.innerHTML = "";
+      if (snoozedCard) snoozedCard.hidden = true;
+      if (allDoneState) allDoneState.hidden = true;
+      if (emptyState) emptyState.hidden = false;
+      return;
+    }
+    if (emptyState) emptyState.hidden = true;
+
+    const available = [];
+    const snoozed = [];
+    for (const ex of all) {
+      (todaysCompletion(ex.id) ? snoozed : available).push(ex);
+    }
+
+    availableGrid.innerHTML = available.map(exerciseRowHtml).join("");
+    snoozedGrid.innerHTML = snoozed.map(exerciseRowHtml).join("");
+
+    if (snoozedCard) snoozedCard.hidden = snoozed.length === 0;
+    if (allDoneState) {
+      allDoneState.hidden = !(available.length === 0 && snoozed.length > 0);
+    }
   };
 
   const renderPicker = () => {
@@ -558,7 +580,7 @@
 
   // === Wiring ============================================================
   const setupListeners = () => {
-    $("exercise-grid").addEventListener("click", (event) => {
+    document.querySelector(".content").addEventListener("click", (event) => {
       const target = event.target.closest("[data-action]");
       if (!target) return;
       const row = target.closest(".exercise-row");
@@ -652,7 +674,7 @@
     }
   };
   init().catch((err) => {
-    const grid = $("exercise-grid");
+    const grid = $("available-grid");
     if (grid) {
       grid.innerHTML = `<p class="load-error">Couldn't load exercise catalog: ${
         err.message
