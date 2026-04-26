@@ -300,7 +300,40 @@
     purpose: t.purpose || "muscle",
   });
 
+  // Raw exercises.json templates and the in-memory catalog derived from
+  // them. Customizations stored on state get merged into the templates
+  // before templateToExercise runs, so every consumer of CATALOG (render,
+  // analysis, etc.) sees the user's tweaked values.
+  let TEMPLATES = [];
   let CATALOG = [];
+
+  // Fields the user is allowed to override per exercise. pipsPerLevel and
+  // levels are deliberately NOT here — letting the user touch them would
+  // re-shape the leveling system, which we want kept stable.
+  const CUSTOMIZABLE_FIELDS = [
+    "weightStart", "weightStep", "repsStart", "repsStep",
+    "sets", "reps", "snoozeDays",
+  ];
+
+  const mergeCustomization = (t) => {
+    const overrides = (state.customizations && state.customizations[t.id]) || {};
+    const out = { ...t };
+    for (const f of CUSTOMIZABLE_FIELDS) {
+      if (overrides[f] != null) out[f] = overrides[f];
+    }
+    return out;
+  };
+
+  const rebuildCatalog = () => {
+    CATALOG = TEMPLATES.map((t) => templateToExercise(mergeCustomization(t)));
+  };
+
+  const rebuildExercise = (exId) => {
+    const t = TEMPLATES.find((x) => x.id === exId);
+    const idx = CATALOG.findIndex((e) => e.id === exId);
+    if (!t || idx < 0) return;
+    CATALOG[idx] = templateToExercise(mergeCustomization(t));
+  };
 
   // === State =============================================================
   const STORAGE_KEY = "workout-app:state:v7";
@@ -316,6 +349,7 @@
     archivedIds: [],
     levels: {},
     completed: {},
+    customizations: {},
   });
 
   let state = blankState();
@@ -441,6 +475,43 @@
     saveState();
     renderExercises();
     renderPicker();
+  };
+
+  // Range-clamp values so the user can't break the level system with junk
+  // input — e.g., a 0 or negative weightStep would collapse the whole
+  // ladder. Returns null if the value should be ignored.
+  const sanitizeCustomization = (field, raw) => {
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return null;
+    if (field === "weightStart") return Math.max(0, Math.round(n));
+    if (field === "repsStart") return Math.max(0, Math.round(n));
+    if (field === "weightStep") return Math.max(1, Math.round(n));
+    if (field === "repsStep") return Math.max(1, Math.round(n));
+    if (field === "sets") return Math.max(1, Math.min(10, Math.round(n)));
+    if (field === "reps") return Math.max(1, Math.min(50, Math.round(n)));
+    if (field === "snoozeDays") return Math.max(0, Math.min(14, Math.round(n)));
+    return null;
+  };
+
+  const setCustomization = (exId, field, raw) => {
+    if (!CUSTOMIZABLE_FIELDS.includes(field)) return;
+    const v = sanitizeCustomization(field, raw);
+    if (v == null) return;
+    if (!state.customizations) state.customizations = {};
+    if (!state.customizations[exId]) state.customizations[exId] = {};
+    state.customizations[exId][field] = v;
+    rebuildExercise(exId);
+    saveState();
+    renderExercises();
+  };
+
+  const resetCustomization = (exId) => {
+    if (state.customizations && state.customizations[exId]) {
+      delete state.customizations[exId];
+    }
+    rebuildExercise(exId);
+    saveState();
+    renderExercises();
   };
 
   const deleteExerciseHistory = (exId) => {
@@ -1546,6 +1617,52 @@
          </ul>`
       : "";
 
+    // Customization fields exposed in the details modal. The leveling
+    // structure (pipsPerLevel, levels) is intentionally NOT here — only
+    // values that re-shape ranges or recovery cadence within a fixed level
+    // ladder.
+    const t = TEMPLATES.find((x) => x.id === ex.id) || {};
+    const overrides = (state.customizations && state.customizations[ex.id]) || {};
+    const isCustomized = Object.keys(overrides).length > 0;
+    const customField = (label, field, unit, attrs = "") => {
+      const value = overrides[field] != null ? overrides[field] : t[field];
+      if (value == null) return "";
+      return `
+        <label class="details__edit-row">
+          <span class="details__edit-label">${label}</span>
+          <span class="details__edit-input">
+            <input type="number" inputmode="numeric" data-edit="${field}"
+                   value="${value}" ${attrs} />
+            ${unit ? `<span class="details__edit-unit">${unit}</span>` : ""}
+          </span>
+        </label>`;
+    };
+    const customizeHtml = `
+      <h3 class="details__section">Customize</h3>
+      <div class="details__edit">
+        ${t.bodyweight
+          ? customField("Reps per tier", "repsStep", "reps",
+              `min="1" max="20" step="1"`) +
+            customField("Starting reps", "repsStart", "reps",
+              `min="0" max="50" step="1"`)
+          : customField("Weight per tier", "weightStep", "lb",
+              `min="1" max="100" step="1"`) +
+            customField("Starting weight", "weightStart", "lb",
+              `min="0" max="500" step="1"`)}
+        ${customField("Suggested sets", "sets", "",
+          `min="1" max="10" step="1"`)}
+        ${t.bodyweight ? "" : customField("Suggested reps", "reps", "",
+          `min="1" max="50" step="1"`)}
+        ${customField("Snooze for", "snoozeDays", "days",
+          `min="0" max="14" step="1"`)}
+        ${isCustomized
+          ? `<button type="button" class="details__edit-reset"
+                     data-action="reset-customization">
+               Reset to defaults
+             </button>`
+          : ""}
+      </div>`;
+
     $("details-body").innerHTML = `
       <div class="details__hero">
         <span class="details__icon">${ex.icon}</span>
@@ -1558,6 +1675,7 @@
       ${mistakesHtml}
       <h3 class="details__section">Progress</h3>
       ${progressHtml}
+      ${customizeHtml}
       ${archiveBtnHtml}
     `;
   };
@@ -1640,7 +1758,15 @@
         )) {
           deleteExerciseHistory(openDetailsId);
         }
+      } else if (action === "reset-customization") {
+        resetCustomization(openDetailsId);
       }
+    });
+
+    $("details-body").addEventListener("change", (event) => {
+      const input = event.target.closest("input[data-edit]");
+      if (!input || openDetailsId == null) return;
+      setCustomization(openDetailsId, input.dataset.edit, input.value);
     });
 
     document.addEventListener("click", (event) => {
@@ -1737,9 +1863,13 @@
     const res = await fetch("./exercises.json");
     if (!res.ok) throw new Error("failed to load exercises.json");
     const data = await res.json();
-    CATALOG = data.templates.map(templateToExercise);
+    TEMPLATES = data.templates;
+    // Initial catalog uses defaults; rebuilt below once state is loaded so
+    // customizations get applied.
+    CATALOG = TEMPLATES.map(templateToExercise);
 
     loadState();
+    rebuildCatalog();
     // Drop any addedIds whose template was removed from the catalog.
     state.addedIds = state.addedIds.filter((id) => exerciseById(id));
     // Backfill levels for added exercises that don't have one yet.
