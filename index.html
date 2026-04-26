@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Workout</title>
+  <meta name="description" content="Track your workouts." />
+  <meta name="theme-color" content="#0f172a" />
+
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/png" href="./icons/favicon.png" />
+
+  <!-- iOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Workout" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>Workout</h1>
+    <span id="net-status" class="badge" aria-live="polite">online</span>
+  </header>
+
+  <main class="content">
+    <section class="card">
+      <h2>PWA shell</h2>
+      <p>If you're seeing this on your iPhone home screen, install worked.</p>
+      <dl class="diag">
+        <dt>Standalone</dt><dd id="diag-standalone">…</dd>
+        <dt>Service worker</dt><dd id="diag-sw">…</dd>
+        <dt>Display mode</dt><dd id="diag-display">…</dd>
+        <dt>Viewport</dt><dd id="diag-viewport">…</dd>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Install on iPhone</h2>
+      <ol>
+        <li>Open this page in Safari.</li>
+        <li>Tap the Share button.</li>
+        <li>Choose <em>Add to Home Screen</em>.</li>
+      </ol>
+    </section>
+  </main>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>
