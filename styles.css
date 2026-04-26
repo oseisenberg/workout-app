@@ -14,10 +14,13 @@
 
 * { box-sizing: border-box; }
 
+html {
+  background: #050505;
+}
+
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
                "Helvetica Neue", Arial, sans-serif;
@@ -27,10 +30,17 @@ html, body {
 }
 
 body {
+  background: var(--bg);
   display: flex;
   flex-direction: column;
   padding: env(safe-area-inset-top) env(safe-area-inset-right)
            env(safe-area-inset-bottom) env(safe-area-inset-left);
+  /* Constrain to a phone-sized column so the desktop view mirrors
+     the iPhone PWA. On a phone, body fills the screen anyway. */
+  max-width: 430px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
 }
 
 button {
