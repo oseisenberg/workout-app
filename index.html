@@ -42,14 +42,16 @@
       <section id="available-card" class="card">
         <h2>Available</h2>
         <div id="available-grid" class="exercise-grid"></div>
-        <div id="all-done-state" class="all-done" hidden aria-label="All done">
-          <svg class="all-done__icon" viewBox="0 0 48 48" aria-hidden="true">
-            <circle cx="24" cy="24" r="20" fill="none"
-                    stroke="currentColor" stroke-width="2.5" />
-            <path d="M14 25 L21 32 L34 18" fill="none"
-                  stroke="currentColor" stroke-width="3.2"
+        <div id="all-done-state" class="all-done" hidden role="status">
+          <svg class="all-done__icon" viewBox="0 0 72 72" aria-hidden="true">
+            <circle cx="36" cy="36" r="34" fill="rgba(34, 197, 94, 0.12)" />
+            <circle cx="36" cy="36" r="28" fill="none"
+                    stroke="currentColor" stroke-width="2.4" />
+            <path d="M22 37 L31 46 L51 26" fill="none"
+                  stroke="currentColor" stroke-width="4"
                   stroke-linecap="round" stroke-linejoin="round" />
           </svg>
+          <span class="all-done__label">All done</span>
         </div>
         <p id="empty-state" class="empty-state" hidden>
           No exercises yet. Tap <span aria-hidden="true">+</span>
