@@ -1115,6 +1115,13 @@
           Just the active exercises and their current levels.
         </span>
       </button>
+      <button type="button" class="settings__option" data-action="import-data">
+        <span class="settings__option-title">Import data</span>
+        <span class="settings__option-desc">
+          Load a previously exported JSON file. Replaces your current
+          exercises, levels, and (if included) history.
+        </span>
+      </button>
       ${hasBackup
         ? `<button type="button" class="settings__option settings__option--danger"
                    data-action="undo-test-data">
@@ -1270,6 +1277,42 @@
     if (includeHistory) payload.completed = state.completed;
     const suffix = includeHistory ? "full" : "no-history";
     downloadJson(`workout-export-${stamp}-${suffix}.json`, payload);
+  };
+
+  // Replace state.{addedIds, archivedIds, levels, completed} with the
+  // contents of an export payload. Migration flags (levelsResetV8, etc.)
+  // and any future state fields are preserved. Unknown exercise ids are
+  // dropped so a stale export can't re-add removed catalog entries.
+  const importData = (raw) => {
+    let payload;
+    try {
+      payload = JSON.parse(raw);
+    } catch {
+      alert("That file isn't valid JSON.");
+      return;
+    }
+    if (!payload || typeof payload !== "object") {
+      alert("That file doesn't look like a workout export.");
+      return;
+    }
+    if (!confirm(
+      "Replace your current exercises, levels, and history with the " +
+      "contents of this file?",
+    )) return;
+    state.addedIds = Array.isArray(payload.addedIds)
+      ? payload.addedIds.filter((id) => exerciseById(id))
+      : [];
+    state.archivedIds = Array.isArray(payload.archivedIds)
+      ? payload.archivedIds.filter((id) => exerciseById(id))
+      : [];
+    state.levels = (payload.levels && typeof payload.levels === "object")
+      ? { ...payload.levels }
+      : {};
+    if (payload.completed && typeof payload.completed === "object") {
+      state.completed = JSON.parse(JSON.stringify(payload.completed));
+    }
+    saveState();
+    renderExercises();
   };
 
   const parseDateStr = (s) => {
@@ -1579,13 +1622,28 @@
       const action = target.dataset.action;
       if (action === "export-all") exportData(true);
       else if (action === "export-no-history") exportData(false);
-      else if (action === "load-test-data") {
+      else if (action === "import-data") {
+        $("import-input").click();
+      } else if (action === "load-test-data") {
         generateTestData();
         closeSettings();
       } else if (action === "undo-test-data") {
         undoTestData();
         closeSettings();
       }
+    });
+    $("import-input").addEventListener("change", (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        importData(reader.result);
+        closeSettings();
+      };
+      reader.onerror = () => alert("Couldn't read the file.");
+      reader.readAsText(file);
+      // Reset the input so picking the same file again still triggers change.
+      event.target.value = "";
     });
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.addEventListener("click", () => switchTab(tab.dataset.tab));
