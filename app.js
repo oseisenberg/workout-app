@@ -210,10 +210,14 @@
     const levelCount = t.levels || 0;
     const totalPrescriptive = levelCount * tiersPerLevel;
     const bw = !!t.bodyweight;
+    // Lvl 0 covers everything below the first prescriptive tier so the
+    // user can express "very light warmup" weights without committing to
+    // the Lvl 1 set/rep prescription. Sets/reps stay at 0 (binary
+    // completion); weight or reps shows the [0, start] band.
     const out = [{
       sets: 0,
-      reps: 0,
-      weight: bw ? null : [t.weightStart, t.weightStart],
+      reps: bw ? [0, t.repsStart] : 0,
+      weight: bw ? null : [0, t.weightStart],
       bodyweight: bw,
       level: 0,
       pip: 0,
@@ -498,9 +502,7 @@
       const nextTier = canUp ? tierName(ex.levels[lvlIdx + 1]) : null;
       const isBw = !!lvl.bodyweight;
       const weightText = isBw ? fmtReps(lvl.reps) : fmtWeight(lvl.weight);
-      const weightStatHtml = lvlZero
-        ? `<span class="exercise-row__try" aria-label="No fixed prescription">Try it</span>`
-        : `<span class="exercise-row__stat">
+      const weightStatHtml = `<span class="exercise-row__stat">
              <span class="exercise-row__stat-value">${weightText}</span>
              <span class="exercise-row__stat-label">${isBw ? "reps" : "lb"}</span>
            </span>`;
@@ -1020,7 +1022,9 @@
          </p>`;
 
     const summary = lvlZero
-      ? `${tier} · just trying it out`
+      ? lvl.bodyweight
+        ? `${tier} · ${fmtReps(lvl.reps)} reps · binary`
+        : `${tier} · ${fmtWeight(lvl.weight)} lb · binary`
       : lvl.bodyweight
         ? `${tier} · ${lvl.sets}×${fmtReps(lvl.reps)} reps`
         : `${tier} · ${fmtWeight(lvl.weight)} lb · ${lvl.sets}×${fmtReps(lvl.reps)}`;
