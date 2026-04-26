@@ -168,12 +168,15 @@
   // baseline weight as a reference. Completion at Starter is binary.
   const buildLevels = (t) => {
     const tierCount = t.tiers || 0;
-    const out = [{ sets: 0, reps: 0, weight: t.weightStart }];
+    const start = t.weightStart;
+    const step = t.weightStep;
+    const out = [{ sets: 0, reps: 0, weight: [start, start] }];
     for (let i = 0; i < tierCount; i++) {
+      const lo = start + i * step;
       out.push({
         sets: t.sets,
         reps: t.reps,
-        weight: t.weightStart + i * t.weightStep,
+        weight: [lo, lo + step],
       });
     }
     return out;
@@ -251,6 +254,7 @@
   const currentLevel = (ex) => ex.levels[state.levels[ex.id]];
   const isLevelZero = (lvl) => lvl.sets === 0;
   const todaysCompletion = (exId) => (state.completed[todayKey()] || {})[exId];
+  const fmtWeight = (w) => (w[0] === w[1] ? `${w[0]}` : `${w[0]}–${w[1]}`);
 
   const setChoices = (ex) => {
     const target = currentLevel(ex).sets;
@@ -349,7 +353,7 @@
       const volumeText = lvlZero ? "—" : `${setsText}×${lvl.reps}+`;
       const tier = tierName(lvlIdx);
       const nextTier = canUp ? tierName(lvlIdx + 1) : null;
-      const weightText = `${lvl.weight}`;
+      const weightText = fmtWeight(lvl.weight);
 
       const setChipsHtml = `<div class="menu-row menu-row--chips">
              <span class="menu-row__label">Sets done</span>
