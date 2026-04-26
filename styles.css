@@ -26,12 +26,18 @@ button, [role="button"], a {
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
                "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+/* Body fills the visual viewport (100dvh). On iOS PWA, the home-indicator
+   safe area sits *outside* that viewport, so any background visible below
+   the body comes from <html>. Painting <html> in the tab-bar surface
+   color makes the safe area read as a seamless continuation of the bar
+   instead of a stripe of body bg. */
+html { background: var(--surface); }
+body { background: var(--bg); }
 
 html { height: 100%; }
 body {
