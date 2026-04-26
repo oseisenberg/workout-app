@@ -7,16 +7,19 @@
   // `levels` go from easier to harder. Upgrading moves to the next level and
   // is meant to feel like a milestone — bigger jump than just adding a couple
   // of pounds. The middle level is the default starting point.
+  //
+  // Each level has `sets`, a target minimum `reps` (no upper bound — more is
+  // always fine), and a `weight` range [min, max] in pounds.
   const EXERCISES = [
     {
       id: "leg-press",
       name: "Leg Press",
       muscles: "Quads · Glutes",
       levels: [
-        { sets: 2, reps: [6, 10] },
-        { sets: 3, reps: [8, 12] },
-        { sets: 4, reps: [10, 15] },
-        { sets: 5, reps: [12, 20] },
+        { sets: 2, reps: 8,  weight: [90, 135] },
+        { sets: 3, reps: 10, weight: [135, 180] },
+        { sets: 4, reps: 12, weight: [180, 230] },
+        { sets: 5, reps: 15, weight: [230, 290] },
       ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
@@ -34,9 +37,9 @@
       name: "Lat Pulldown",
       muscles: "Lats · Biceps",
       levels: [
-        { sets: 2, reps: [6, 10] },
-        { sets: 3, reps: [8, 12] },
-        { sets: 4, reps: [10, 15] },
+        { sets: 2, reps: 8,  weight: [60, 80] },
+        { sets: 3, reps: 10, weight: [80, 100] },
+        { sets: 4, reps: 12, weight: [100, 125] },
       ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
@@ -59,10 +62,10 @@
       name: "Chest Press",
       muscles: "Chest · Triceps",
       levels: [
-        { sets: 2, reps: [6, 10] },
-        { sets: 3, reps: [8, 12] },
-        { sets: 4, reps: [10, 15] },
-        { sets: 5, reps: [12, 20] },
+        { sets: 2, reps: 8,  weight: [50, 70] },
+        { sets: 3, reps: 10, weight: [70, 90] },
+        { sets: 4, reps: 12, weight: [90, 115] },
+        { sets: 5, reps: 15, weight: [115, 140] },
       ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
@@ -86,9 +89,9 @@
       name: "Seated Row",
       muscles: "Back · Biceps",
       levels: [
-        { sets: 2, reps: [6, 10] },
-        { sets: 3, reps: [8, 12] },
-        { sets: 4, reps: [10, 15] },
+        { sets: 2, reps: 8,  weight: [60, 80] },
+        { sets: 3, reps: 10, weight: [80, 100] },
+        { sets: 4, reps: 12, weight: [100, 125] },
       ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
@@ -109,9 +112,9 @@
       name: "Leg Extension",
       muscles: "Quads",
       levels: [
-        { sets: 2, reps: [8, 12] },
-        { sets: 3, reps: [10, 15] },
-        { sets: 4, reps: [12, 20] },
+        { sets: 2, reps: 10, weight: [50, 70] },
+        { sets: 3, reps: 12, weight: [70, 90] },
+        { sets: 4, reps: 15, weight: [90, 115] },
       ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
@@ -135,9 +138,9 @@
       name: "Leg Curl",
       muscles: "Hamstrings",
       levels: [
-        { sets: 2, reps: [8, 12] },
-        { sets: 3, reps: [10, 15] },
-        { sets: 4, reps: [12, 20] },
+        { sets: 2, reps: 10, weight: [40, 60] },
+        { sets: 3, reps: 12, weight: [60, 80] },
+        { sets: 4, reps: 15, weight: [80, 100] },
       ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
@@ -162,9 +165,9 @@
       name: "Cable Crossover",
       muscles: "Chest · Shoulders",
       levels: [
-        { sets: 2, reps: [10, 12] },
-        { sets: 3, reps: [12, 15] },
-        { sets: 4, reps: [15, 20] },
+        { sets: 2, reps: 10, weight: [20, 30] },
+        { sets: 3, reps: 12, weight: [30, 40] },
+        { sets: 4, reps: 15, weight: [40, 55] },
       ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
@@ -191,9 +194,9 @@
       name: "Pec Deck",
       muscles: "Chest",
       levels: [
-        { sets: 2, reps: [8, 10] },
-        { sets: 3, reps: [10, 12] },
-        { sets: 4, reps: [12, 15] },
+        { sets: 2, reps: 10, weight: [50, 70] },
+        { sets: 3, reps: 12, weight: [70, 90] },
+        { sets: 4, reps: 15, weight: [90, 115] },
       ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
@@ -215,7 +218,7 @@
     },
   ];
 
-  const STORAGE_KEY = "workout-app:state:v1";
+  const STORAGE_KEY = "workout-app:state:v2";
   const todayKey = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${
@@ -255,21 +258,26 @@
   const exerciseById = (id) => EXERCISES.find((ex) => ex.id === id);
   const currentLevel = (ex) => ex.levels[state.levels[ex.id]];
   const todaysCompletion = (exId) => (state.completed[todayKey()] || {})[exId];
-  const fmtRange = (r) => (r[0] === r[1] ? `${r[0]}` : `${r[0]}–${r[1]}`);
+  const fmtWeight = (w) => `${w[0]}–${w[1]}`;
 
-  // Default sets/reps assumed when the user just taps "Done": the upper end
-  // of the current level's range.
+  // Default values assumed when the user just taps "Done": the level's
+  // target reps minimum and the upper end of the weight range.
   const defaultPerformed = (ex) => {
     const lvl = currentLevel(ex);
-    return { sets: lvl.sets, reps: lvl.reps[1], level: state.levels[ex.id] };
+    return {
+      sets: lvl.sets,
+      reps: lvl.reps,
+      weight: lvl.weight[1],
+      level: state.levels[ex.id],
+    };
   };
 
-  // Build the list of selectable values around the current level's range,
+  // Build the list of selectable values around the current level's target,
   // padded a little so the user can record going under or over.
   const repChoices = (ex) => {
-    const [lo, hi] = currentLevel(ex).reps;
-    const start = Math.max(1, lo - 2);
-    const end = hi + 3;
+    const target = currentLevel(ex).reps;
+    const start = Math.max(1, target - 3);
+    const end = target + 5;
     const out = [];
     for (let i = start; i <= end; i++) out.push(i);
     return out;
@@ -280,6 +288,16 @@
     const end = target + 3;
     const out = [];
     for (let i = start; i <= end; i++) out.push(i);
+    return out;
+  };
+  // Weights stepped in 5 lb increments around the level's range.
+  const weightChoices = (ex) => {
+    const step = 5;
+    const [lo, hi] = currentLevel(ex).weight;
+    const start = Math.max(0, Math.floor((lo - step * 2) / step) * step);
+    const end = Math.ceil((hi + step * 3) / step) * step;
+    const out = [];
+    for (let w = start; w <= end; w += step) out.push(w);
     return out;
   };
 
@@ -349,16 +367,24 @@
         .join("");
       const repOpts = repChoices(ex)
         .map((n) => {
-          const sel = done
-            ? done.reps === n
-            : n >= lvl.reps[0] && n <= lvl.reps[1];
+          const sel = done ? done.reps === n : lvl.reps === n;
           return `<button type="button" class="chip${sel ? " chip--on" : ""}"
                   data-action="set-reps" data-value="${n}">${n}</button>`;
         })
         .join("");
-      const performed = done
+      const weightOpts = weightChoices(ex)
+        .map((w) => {
+          const sel = done
+            ? done.weight === w
+            : w >= lvl.weight[0] && w <= lvl.weight[1];
+          return `<button type="button" class="chip${sel ? " chip--on" : ""}"
+                  data-action="set-weight" data-value="${w}">${w}</button>`;
+        })
+        .join("");
+      const setsRepsText = done
         ? `${done.sets} × ${done.reps}`
-        : `${lvl.sets} × ${fmtRange(lvl.reps)}`;
+        : `${lvl.sets} × ${lvl.reps}+`;
+      const weightText = done ? `${done.weight}` : fmtWeight(lvl.weight);
       return `
       <div class="exercise-row${done ? " is-done" : ""}" data-id="${ex.id}">
         <button type="button" class="exercise-row__main"
@@ -368,8 +394,12 @@
             <span class="exercise-row__name">${ex.name}</span>
             <span class="exercise-row__meta">
               <span class="lvl-pill">Lvl ${lvlIdx + 1}</span>
-              <span class="exercise-row__target">${performed}</span>
+              <span class="exercise-row__target">${setsRepsText}</span>
             </span>
+          </span>
+          <span class="exercise-row__weight">
+            <span class="exercise-row__weight-value">${weightText}</span>
+            <span class="exercise-row__weight-unit">lb</span>
           </span>
         </button>
         <div class="exercise-row__action" role="group"
@@ -401,6 +431,10 @@
             <span class="menu-row__label">Reps</span>
             <div class="menu-row__chips">${repOpts}</div>
           </div>
+          <div class="menu-row">
+            <span class="menu-row__label">Weight</span>
+            <div class="menu-row__chips">${weightOpts}</div>
+          </div>
           <div class="menu-row menu-row--level">
             <button type="button" class="level-btn"
                     data-action="downgrade"
@@ -408,7 +442,9 @@
               <span aria-hidden="true">▼</span> Downgrade
             </button>
             <span class="menu-row__level-text">
-              Level ${lvlIdx + 1}: ${lvl.sets} × ${fmtRange(lvl.reps)}
+              Lvl ${lvlIdx + 1}: ${lvl.sets}×${lvl.reps}+ · ${fmtWeight(
+        lvl.weight
+      )} lb
             </span>
             <button type="button" class="level-btn level-btn--up"
                     data-action="upgrade"
@@ -443,13 +479,18 @@
       target.setAttribute("aria-expanded", open ? "true" : "false");
       return;
     }
-    if (action === "set-sets" || action === "set-reps") {
+    if (
+      action === "set-sets" ||
+      action === "set-reps" ||
+      action === "set-weight"
+    ) {
       const ex = exerciseById(exId);
       const value = Number(target.dataset.value);
       const existing = todaysCompletion(exId) || defaultPerformed(ex);
       const next = { ...existing };
       if (action === "set-sets") next.sets = value;
-      else next.reps = value;
+      else if (action === "set-reps") next.reps = value;
+      else next.weight = value;
       markComplete(exId, next);
       return;
     }

@@ -118,7 +118,7 @@ body {
 
 .exercise-row__main {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-columns: 44px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   background: transparent;
@@ -131,6 +131,29 @@ body {
   -webkit-tap-highlight-color: transparent;
   min-width: 0;
 }
+
+.exercise-row__weight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  padding: 0 2px 0 4px;
+  min-width: 52px;
+  line-height: 1.1;
+}
+.exercise-row__weight-value {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.exercise-row__weight-unit {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+}
+.exercise-row.is-done .exercise-row__weight-value { color: #bbf7d0; }
 
 .exercise-row__icon {
   display: block;
