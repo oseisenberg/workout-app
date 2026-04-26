@@ -1168,21 +1168,6 @@
     });
   };
 
-  // === Network status ====================================================
-  const setNet = () => {
-    const el = $("net-status");
-    if (!el) return;
-    if (navigator.onLine) {
-      el.textContent = "online";
-      el.classList.add("online");
-      el.classList.remove("offline");
-    } else {
-      el.textContent = "offline";
-      el.classList.add("offline");
-      el.classList.remove("online");
-    }
-  };
-
   // === Init ==============================================================
   const init = async () => {
     const res = await fetch("./exercises.json");
@@ -1213,9 +1198,6 @@
 
     renderExercises();
     setupListeners();
-    setNet();
-    window.addEventListener("online", setNet);
-    window.addEventListener("offline", setNet);
 
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./service-worker.js").catch(() => {});

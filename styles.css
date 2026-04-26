@@ -54,21 +54,6 @@ body {
   letter-spacing: 0.2px;
 }
 
-.badge {
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--muted);
-}
-.badge.online { color: var(--ok); }
-.badge.offline { color: var(--err); }
-
-.topbar__actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
 .icon-btn {
   background: transparent;
   border: 0;
