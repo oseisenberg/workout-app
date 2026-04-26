@@ -952,25 +952,65 @@
     if (tab === "analysis") renderAnalysis();
   };
 
+  // High-level muscle groups for the picker filter chips. Each maps to a
+  // list of catalog muscle keywords; an exercise belongs to the group if
+  // any of its parsed muscle names contains any keyword. Order here is
+  // also the chip display order.
+  const MUSCLE_GROUPS = [
+    { key: "legs",      label: "Legs",      keys: ["quads", "glutes", "hamstrings", "calves", "posterior"] },
+    { key: "chest",     label: "Chest",     keys: ["chest"] },
+    { key: "back",      label: "Back",      keys: ["lats", "back", "posterior"] },
+    { key: "shoulders", label: "Shoulders", keys: ["shoulders", "traps"] },
+    { key: "arms",      label: "Arms",      keys: ["biceps", "triceps"] },
+    { key: "core",      label: "Core",      keys: ["core"] },
+  ];
+  const exerciseMatchesGroup = (ex, groupKey) => {
+    const group = MUSCLE_GROUPS.find((g) => g.key === groupKey);
+    if (!group) return true;
+    const muscles = (ex.muscles || "").toLowerCase();
+    return group.keys.some((k) => muscles.includes(k));
+  };
+
   let pickerQuery = "";
   let pickerShowAll = false;
+  let pickerGroup = null;
   const renderPicker = () => {
     const list = $("picker-list");
     const empty = $("picker-empty");
+    const filterRow = $("picker-filters");
     if (!list) return;
+
+    // Render the filter chip row each time so the active state stays in sync.
+    if (filterRow) {
+      filterRow.innerHTML = `
+        <button type="button" class="picker-chip${
+          pickerGroup === null ? " picker-chip--active" : ""
+        }" data-group="">All</button>
+        ${MUSCLE_GROUPS.map((g) => `
+          <button type="button" class="picker-chip${
+            pickerGroup === g.key ? " picker-chip--active" : ""
+          }" data-group="${g.key}">${g.label}</button>`).join("")}
+      `;
+    }
+
     const q = pickerQuery.trim().toLowerCase();
     const all = availableExercises();
-    // When searching, ignore the common-only filter so anything in the
-    // catalog can be found. Without a query, default to common exercises
-    // until the user explicitly taps "Show all".
-    const items = all.filter((ex) => {
+    // Filters compose: search (text) + group (chip) + common-only (default).
+    // Once any explicit filter is on, the common-only restriction is lifted
+    // so the user actually sees what they're filtering for.
+    const filtered = all.filter((ex) => {
       if (q) {
-        return ex.name.toLowerCase().includes(q) ||
-               (ex.muscles || "").toLowerCase().includes(q);
+        const matchesQ = ex.name.toLowerCase().includes(q) ||
+                         (ex.muscles || "").toLowerCase().includes(q);
+        if (!matchesQ) return false;
       }
-      return pickerShowAll || ex.common;
+      if (pickerGroup && !exerciseMatchesGroup(ex, pickerGroup)) return false;
+      const explicit = !!q || !!pickerGroup || pickerShowAll;
+      if (!explicit && !ex.common) return false;
+      return true;
     });
-    const hiddenCount = !q && !pickerShowAll
+    const items = filtered;
+    const hiddenCount = !q && !pickerGroup && !pickerShowAll
       ? all.filter((ex) => !ex.common).length
       : 0;
     if (items.length === 0 && hiddenCount === 0) {
@@ -978,7 +1018,9 @@
       if (empty) {
         empty.textContent = q
           ? `No exercises match "${pickerQuery.trim()}".`
-          : "You've added every exercise in the catalog.";
+          : pickerGroup
+            ? "Nothing left in this group."
+            : "You've added every exercise in the catalog.";
         empty.hidden = false;
       }
       return;
@@ -1006,6 +1048,7 @@
   const openPicker = () => {
     pickerQuery = "";
     pickerShowAll = false;
+    pickerGroup = null;
     const search = $("picker-search");
     if (search) search.value = "";
     renderPicker();
@@ -1484,6 +1527,14 @@
     });
     $("picker-search").addEventListener("input", (event) => {
       pickerQuery = event.target.value;
+      renderPicker();
+    });
+    $("picker-filters").addEventListener("click", (event) => {
+      const chip = event.target.closest(".picker-chip");
+      if (!chip) return;
+      const next = chip.dataset.group || null;
+      pickerGroup = pickerGroup === next ? null : next;
+      pickerShowAll = false;
       renderPicker();
     });
     $("details-close").addEventListener("click", closeDetails);
