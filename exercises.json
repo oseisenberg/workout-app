@@ -11,7 +11,8 @@
       "weightStep": 45,
       "pipsPerLevel": 1,
       "levels": 4,
-      "snoozeDays": 2
+      "snoozeDays": 2,
+      "common": true
     },
     {
       "id": "lat-pulldown",
@@ -23,7 +24,8 @@
       "weightStart": 20,
       "weightStep": 10,
       "pipsPerLevel": 2,
-      "levels": 4
+      "levels": 4,
+      "common": true
     },
     {
       "id": "chest-press",
@@ -35,7 +37,8 @@
       "weightStart": 20,
       "weightStep": 10,
       "pipsPerLevel": 2,
-      "levels": 4
+      "levels": 4,
+      "common": true
     },
     {
       "id": "seated-row",
@@ -47,7 +50,8 @@
       "weightStart": 20,
       "weightStep": 10,
       "pipsPerLevel": 2,
-      "levels": 4
+      "levels": 4,
+      "common": true
     },
     {
       "id": "leg-extension",
@@ -59,7 +63,8 @@
       "weightStart": 10,
       "weightStep": 10,
       "pipsPerLevel": 2,
-      "levels": 4
+      "levels": 4,
+      "common": true
     },
     {
       "id": "leg-curl",
@@ -71,7 +76,34 @@
       "weightStart": 10,
       "weightStep": 10,
       "pipsPerLevel": 1,
-      "levels": 4
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "shoulder-press",
+      "name": "Shoulder Press",
+      "muscles": "Shoulders · Triceps",
+      "icon": "chest-press",
+      "sets": 3,
+      "reps": 10,
+      "weightStart": 15,
+      "weightStep": 10,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "dip-chin-assist",
+      "name": "Dip / Chin Assist",
+      "muscles": "Chest · Triceps · Lats",
+      "icon": "pullup",
+      "sets": 3,
+      "reps": 8,
+      "weightStart": 10,
+      "weightStep": 10,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "common": true
     },
     {
       "id": "cable-crossover",
@@ -108,8 +140,7 @@
       "weightStep": 20,
       "pipsPerLevel": 2,
       "levels": 4,
-      "snoozeDays": 2,
-      "common": true
+      "snoozeDays": 2
     },
     {
       "id": "bench-press",
@@ -122,8 +153,7 @@
       "weightStep": 10,
       "pipsPerLevel": 3,
       "levels": 4,
-      "snoozeDays": 2,
-      "common": true
+      "snoozeDays": 2
     },
     {
       "id": "deadlift",
@@ -136,8 +166,7 @@
       "weightStep": 20,
       "pipsPerLevel": 2,
       "levels": 4,
-      "snoozeDays": 3,
-      "common": true
+      "snoozeDays": 3
     },
     {
       "id": "bicep-curl",
@@ -149,8 +178,7 @@
       "weightStart": 5,
       "weightStep": 5,
       "pipsPerLevel": 1,
-      "levels": 4,
-      "common": true
+      "levels": 4
     },
     {
       "id": "overhead-press",
@@ -174,8 +202,7 @@
       "repsStart": 1,
       "repsStep": 5,
       "pipsPerLevel": 1,
-      "levels": 4,
-      "common": true
+      "levels": 4
     },
     {
       "id": "pullup",
@@ -187,8 +214,7 @@
       "repsStart": 1,
       "repsStep": 2,
       "pipsPerLevel": 2,
-      "levels": 4,
-      "common": true
+      "levels": 4
     },
     {
       "id": "situp",
@@ -200,8 +226,7 @@
       "repsStart": 1,
       "repsStep": 5,
       "pipsPerLevel": 1,
-      "levels": 4,
-      "common": true
+      "levels": 4
     },
     {
       "id": "lunge",
@@ -213,8 +238,7 @@
       "repsStart": 1,
       "repsStep": 5,
       "pipsPerLevel": 1,
-      "levels": 4,
-      "common": true
+      "levels": 4
     },
     {
       "id": "tricep-pushdown",
