@@ -94,6 +94,7 @@ body {
 }
 
 .exercise-row {
+  position: relative;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -113,6 +114,7 @@ body {
     rgba(34, 197, 94, 0.02)
   ), var(--surface-2);
 }
+.exercise-row.is-open { z-index: 10; }
 
 .exercise-row__main {
   display: grid;
@@ -242,17 +244,34 @@ body {
 .caret-btn svg { width: 12px; height: 8px; transition: transform 0.18s ease; }
 .exercise-row.is-open .caret-btn svg { transform: rotate(180deg); }
 
-/* Adjustment menu — hidden by default, expands below the row. */
+/* Adjustment menu — floats as a popover anchored to the caret button so the
+   row itself never grows when it opens. */
 .exercise-row__menu {
-  grid-column: 1 / -1;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 8px;
+  left: auto;
+  width: min(320px, calc(100vw - 28px));
   display: none;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px 6px 4px;
-  border-top: 1px solid var(--border);
-  margin-top: 4px;
+  gap: 10px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5),
+              0 2px 6px rgba(0, 0, 0, 0.35);
+  z-index: 20;
+  transform-origin: top right;
 }
-.exercise-row.is-open .exercise-row__menu { display: flex; }
+.exercise-row.is-open .exercise-row__menu {
+  display: flex;
+  animation: popover-in 0.12s ease-out;
+}
+@keyframes popover-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
 
 .menu-row {
   display: flex;
