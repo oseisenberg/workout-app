@@ -965,9 +965,11 @@
     renderPicker();
     $("picker").hidden = false;
     document.body.classList.add("modal-open");
+    adjustModalsForViewport();
   };
   const closePicker = () => {
     $("picker").hidden = true;
+    adjustModalsForViewport();
     if ($("details").hidden && $("settings").hidden) {
       document.body.classList.remove("modal-open");
     }
@@ -1013,13 +1015,43 @@
     `;
   };
 
+  // When the on-screen keyboard appears, the visual viewport shrinks but
+  // position:fixed elements still cover the original viewport — so the
+  // modals end up partially behind the keyboard. Mirror the visual
+  // viewport's geometry onto every open modal so they resize with it.
+  const adjustModalsForViewport = () => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    for (const id of ["picker", "details", "settings"]) {
+      const el = $(id);
+      if (!el) continue;
+      if (el.hidden) {
+        el.style.height = "";
+        el.style.top = "";
+        el.style.left = "";
+        el.style.width = "";
+      } else {
+        el.style.height = `${vv.height}px`;
+        el.style.top = `${vv.offsetTop}px`;
+        el.style.left = `${vv.offsetLeft}px`;
+        el.style.width = `${vv.width}px`;
+      }
+    }
+  };
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", adjustModalsForViewport);
+    window.visualViewport.addEventListener("scroll", adjustModalsForViewport);
+  }
+
   const openSettings = () => {
     renderSettings();
     $("settings").hidden = false;
     document.body.classList.add("modal-open");
+    adjustModalsForViewport();
   };
   const closeSettings = () => {
     $("settings").hidden = true;
+    adjustModalsForViewport();
     if ($("picker").hidden && $("details").hidden) {
       document.body.classList.remove("modal-open");
     }
@@ -1291,10 +1323,12 @@
     renderDetails();
     $("details").hidden = false;
     document.body.classList.add("modal-open");
+    adjustModalsForViewport();
   };
   const closeDetails = () => {
     openDetailsId = null;
     $("details").hidden = true;
+    adjustModalsForViewport();
     if ($("picker").hidden) document.body.classList.remove("modal-open");
   };
 
