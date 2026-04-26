@@ -162,8 +162,19 @@
   // === Catalog ===========================================================
   // Levels are derived from the template's baseline + per-level steps so
   // weight, reps and sets each scale at a rate appropriate to the lift.
+  // A Level 0 is prepended for everyone — it represents "not yet able to do
+  // the full Lvl 1 prescription". Sets and reps are 0 (a sentinel for "no
+  // prescription"); weight stays at the baseline so they have a starting
+  // point. Completion at Lvl 0 is binary, so the user is never pushed to do
+  // more than they can.
   const buildLevels = (t) => {
-    const out = [];
+    const out = [
+      {
+        sets: 0,
+        reps: 0,
+        weight: [t.weightStart, t.weightStart],
+      },
+    ];
     for (let i = 0; i < t.levels; i++) {
       out.push({
         sets: t.setsStart + i * t.setsStep,
@@ -232,8 +243,9 @@
   // right out of the gate.
   const defaultLevel = (ex) => Math.floor((ex.levels.length - 1) / 2);
   const currentLevel = (ex) => ex.levels[state.levels[ex.id]];
+  const isLevelZero = (lvl) => lvl.sets === 0;
   const todaysCompletion = (exId) => (state.completed[todayKey()] || {})[exId];
-  const fmtWeight = (w) => `${w[0]}–${w[1]}`;
+  const fmtWeight = (w) => (w[0] === w[1] ? `${w[0]}` : `${w[0]}–${w[1]}`);
 
   const setChoices = (ex) => {
     const target = currentLevel(ex).sets;
@@ -257,14 +269,21 @@
   const markComplete = (exId, setsDone) => {
     const ex = exerciseById(exId);
     if (!ex) return;
-    const target = currentLevel(ex).sets;
-    const sets = setsDone == null ? target : setsDone;
+    const lvl = currentLevel(ex);
+    const day = todayKey();
+    if (!state.completed[day]) state.completed[day] = {};
+    // At Lvl 0 completion is binary; ignore any setsDone value.
+    if (isLevelZero(lvl)) {
+      state.completed[day][exId] = { level: state.levels[exId], sets: 1 };
+      saveState();
+      renderExercises();
+      return;
+    }
+    const sets = setsDone == null ? lvl.sets : setsDone;
     if (sets <= 0) {
       clearComplete(exId);
       return;
     }
-    const day = todayKey();
-    if (!state.completed[day]) state.completed[day] = {};
     state.completed[day][exId] = { level: state.levels[exId], sets };
     saveState();
     renderExercises();
@@ -319,33 +338,57 @@
       return;
     }
     if (empty) empty.hidden = true;
+    const maxLvl = (ex) => ex.levels.length - 1;
     grid.innerHTML = list.map((ex) => {
       const lvl = currentLevel(ex);
       const lvlIdx = state.levels[ex.id];
+      const lvlZero = isLevelZero(lvl);
       const done = todaysCompletion(ex.id);
       const canDown = lvlIdx > 0;
       const canUp = lvlIdx < ex.levels.length - 1;
       const setsDone = done ? done.sets : 0;
-      const isPartial = done && setsDone < lvl.sets;
-      const setOpts = setChoices(ex)
-        .map((n) => {
-          const sel = setsDone === n;
-          return `<button type="button" class="chip${sel ? " chip--on" : ""}"
-                  data-action="set-sets" data-value="${n}">${n}</button>`;
-        })
-        .join("");
-      const setsText = done ? `${setsDone}/${lvl.sets}` : `${lvl.sets}`;
+      const isPartial = done && !lvlZero && setsDone < lvl.sets;
+      const setsText = lvlZero
+        ? "—"
+        : done
+          ? `${setsDone}/${lvl.sets}`
+          : `${lvl.sets}`;
+      const repsText = lvlZero ? "—" : `${lvl.reps}+`;
+
+      const menuBody = lvlZero
+        ? `<p class="menu-zero">
+             You're at Level 0 — just mark complete when you've done what
+             you can. Upgrade when you can hit the full Level 1 sets.
+           </p>`
+        : `<div class="menu-row menu-row--chips">
+             <span class="menu-row__label">Sets done</span>
+             <div class="menu-row__chips">${setChoices(ex)
+               .map((n) => {
+                 const sel = setsDone === n;
+                 return `<button type="button" class="chip${
+                   sel ? " chip--on" : ""
+                 }" data-action="set-sets" data-value="${n}">${n}</button>`;
+               })
+               .join("")}</div>
+           </div>`;
+
+      const summary = lvlZero
+        ? `Lvl 0 of ${maxLvl(ex)} · sub-baseline · ${fmtWeight(lvl.weight)} lb`
+        : `Lvl ${lvlIdx} of ${maxLvl(ex)} · ${lvl.sets}×${lvl.reps}+ · ${fmtWeight(lvl.weight)} lb`;
+
       return `
       <div class="exercise-row${done ? " is-done" : ""}${
         isPartial ? " is-partial" : ""
-      }" data-id="${ex.id}">
+      }${lvlZero ? " is-zero" : ""}" data-id="${ex.id}">
         <button type="button" class="exercise-row__main"
                 data-action="open-details">
           <span class="exercise-row__icon">${ex.icon}</span>
           <span class="exercise-row__title">
             <span class="exercise-row__name">${ex.name}</span>
             <span class="exercise-row__meta">
-              <span class="lvl-pill">Lvl ${lvlIdx + 1}</span>
+              <span class="lvl-pill${
+                lvlZero ? " lvl-pill--zero" : ""
+              }">Lvl ${lvlIdx}</span>
             </span>
           </span>
           <span class="exercise-row__stat exercise-row__stat--sets">
@@ -353,7 +396,7 @@
             <span class="exercise-row__stat-label">Sets</span>
           </span>
           <span class="exercise-row__stat">
-            <span class="exercise-row__stat-value">${lvl.reps}+</span>
+            <span class="exercise-row__stat-value">${repsText}</span>
             <span class="exercise-row__stat-label">Reps</span>
           </span>
           <span class="exercise-row__stat">
@@ -386,15 +429,10 @@
         </div>
         <div class="exercise-row__menu" role="region"
              aria-label="Adjust ${ex.name}">
-          <div class="menu-row menu-row--chips">
-            <span class="menu-row__label">Sets done</span>
-            <div class="menu-row__chips">${setOpts}</div>
-          </div>
+          ${menuBody}
           <div class="menu-level">
             <span class="menu-level__caption">Current level</span>
-            <span class="menu-level__summary">
-              Lvl ${lvlIdx + 1} of ${ex.levels.length} · ${lvl.sets}×${lvl.reps}+ · ${fmtWeight(lvl.weight)} lb
-            </span>
+            <span class="menu-level__summary">${summary}</span>
           </div>
           <div class="menu-row menu-row--level">
             <button type="button" class="level-btn"
@@ -425,7 +463,8 @@
     }
     if (empty) empty.hidden = true;
     list.innerHTML = items.map((ex) => {
-      const lvl = ex.levels[defaultLevel(ex)];
+      const startIdx = defaultLevel(ex);
+      const lvl = ex.levels[startIdx];
       return `
       <button type="button" class="picker-item" data-id="${ex.id}">
         <span class="picker-item__icon">${ex.icon}</span>
@@ -434,7 +473,7 @@
           <span class="picker-item__muscles">${ex.muscles}</span>
         </span>
         <span class="picker-item__starts">
-          starts at ${lvl.sets}×${lvl.reps}+ · ${fmtWeight(lvl.weight)} lb
+          starts at Lvl ${startIdx} · ${lvl.sets}×${lvl.reps}+ · ${fmtWeight(lvl.weight)} lb
         </span>
         <span class="picker-item__add" aria-hidden="true">+</span>
       </button>`;

@@ -218,6 +218,13 @@ body {
   letter-spacing: 0.6px;
   white-space: nowrap;
 }
+.lvl-pill--zero {
+  background: var(--surface);
+  color: var(--muted);
+}
+.exercise-row.is-zero .exercise-row__stat-value {
+  color: var(--muted);
+}
 
 /* Split control: a green check button on the left, caret on the right.
    Tapping the check toggles completion; the caret opens the level menu. */
@@ -341,6 +348,15 @@ body {
   background: var(--ok-strong);
   border-color: var(--ok-strong);
   color: white;
+}
+
+.menu-zero {
+  margin: 0;
+  padding: 4px 2px 6px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+  border-bottom: 1px dashed var(--border-strong);
 }
 
 .menu-level {
