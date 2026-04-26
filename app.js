@@ -504,6 +504,37 @@
     setTimeout(() => toggle.classList.remove("snoozed-toggle--flash"), 700);
   };
 
+  // Reorder mode for the Available card. When on, action buttons swap for
+  // up/down arrows; reordering happens in state.addedIds and skips
+  // snoozed items so the user only swaps adjacent visible rows.
+  let editingOrder = false;
+
+  const setEditingOrder = (on) => {
+    editingOrder = !!on;
+    const btn = $("edit-order-btn");
+    if (btn) {
+      btn.textContent = editingOrder ? "Done" : "Edit";
+      btn.classList.toggle("card-action--active", editingOrder);
+    }
+    renderExercises();
+  };
+
+  const moveExerciseInAvailable = (exId, delta) => {
+    const visible = state.addedIds.filter((id) => {
+      const ex = exerciseById(id);
+      return ex && !isSnoozed(ex);
+    });
+    const i = visible.indexOf(exId);
+    if (i < 0) return;
+    const j = i + delta;
+    if (j < 0 || j >= visible.length) return;
+    const a = state.addedIds.indexOf(visible[i]);
+    const b = state.addedIds.indexOf(visible[j]);
+    [state.addedIds[a], state.addedIds[b]] = [state.addedIds[b], state.addedIds[a]];
+    saveState();
+    renderExercises();
+  };
+
   const closeAllMenus = (except) => {
     document.querySelectorAll(".exercise-row.is-open").forEach((row) => {
       if (row !== except) row.classList.remove("is-open");
@@ -511,7 +542,8 @@
   };
 
   // === Rendering =========================================================
-  const exerciseRowHtml = (ex) => {
+  const exerciseRowHtml = (ex, opts) => {
+    const editing = opts && opts.editing;
       const lvl = currentLevel(ex);
       const lvlIdx = state.levels[ex.id];
       const lvlZero = isLevelZero(lvl);
@@ -573,34 +605,51 @@
           ${weightStatHtml}
         </button>
         <div class="exercise-row__action" role="group"
-             aria-label="Complete ${ex.name}">
-          <button type="button" class="done-btn"
-                  data-action="toggle-done"
-                  aria-pressed="${done ? "true" : "false"}"
-                  aria-label="${done ? "Undo completion" : "Mark complete"}">
-            <svg viewBox="0 0 16 16" aria-hidden="true">
-              ${done
-                ? `<path d="M5 3 L2 6 L5 9" fill="none" stroke="currentColor"
-                          stroke-width="2.2" stroke-linecap="round"
-                          stroke-linejoin="round" />
-                   <path d="M2 6 H10 A4 4 0 0 1 10 14" fill="none"
-                         stroke="currentColor" stroke-width="2.2"
-                         stroke-linecap="round" stroke-linejoin="round" />`
-                : `<path d="M3.5 8.5 L6.8 11.8 L12.8 4.8" fill="none"
-                          stroke="currentColor" stroke-width="2.2"
-                          stroke-linecap="round" stroke-linejoin="round" />`}
-            </svg>
-          </button>
-          <button type="button" class="caret-btn"
-                  data-action="toggle-menu"
-                  aria-label="Adjust ${ex.name}"
-                  aria-expanded="false">
-            <svg viewBox="0 0 12 8" aria-hidden="true">
-              <path d="M1 1.5 L6 6.5 L11 1.5" fill="none"
-                    stroke="currentColor" stroke-width="1.8"
-                    stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </button>
+             aria-label="${editing ? `Reorder ${ex.name}` : `Complete ${ex.name}`}">
+          ${editing
+            ? `<button type="button" class="reorder-btn"
+                       data-action="move-up" aria-label="Move ${ex.name} up">
+                 <svg viewBox="0 0 16 16" aria-hidden="true">
+                   <path d="M4 10 L8 5 L12 10" fill="none"
+                         stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round" />
+                 </svg>
+               </button>
+               <button type="button" class="reorder-btn"
+                       data-action="move-down" aria-label="Move ${ex.name} down">
+                 <svg viewBox="0 0 16 16" aria-hidden="true">
+                   <path d="M4 6 L8 11 L12 6" fill="none"
+                         stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round" />
+                 </svg>
+               </button>`
+            : `<button type="button" class="done-btn"
+                       data-action="toggle-done"
+                       aria-pressed="${done ? "true" : "false"}"
+                       aria-label="${done ? "Undo completion" : "Mark complete"}">
+                 <svg viewBox="0 0 16 16" aria-hidden="true">
+                   ${done
+                     ? `<path d="M5 3 L2 6 L5 9" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        <path d="M2 6 H10 A4 4 0 0 1 10 14" fill="none"
+                              stroke="currentColor" stroke-width="2.2"
+                              stroke-linecap="round" stroke-linejoin="round" />`
+                     : `<path d="M3.5 8.5 L6.8 11.8 L12.8 4.8" fill="none"
+                                stroke="currentColor" stroke-width="2.2"
+                                stroke-linecap="round" stroke-linejoin="round" />`}
+                 </svg>
+               </button>
+               <button type="button" class="caret-btn"
+                       data-action="toggle-menu"
+                       aria-label="Adjust ${ex.name}"
+                       aria-expanded="false">
+                 <svg viewBox="0 0 12 8" aria-hidden="true">
+                   <path d="M1 1.5 L6 6.5 L11 1.5" fill="none"
+                         stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round" />
+                 </svg>
+               </button>`}
         </div>
         <div class="exercise-row__menu" role="region"
              aria-label="Adjust ${ex.name}">
@@ -647,7 +696,9 @@
       (isSnoozed(ex) ? snoozed : available).push(ex);
     }
 
-    availableGrid.innerHTML = available.map(exerciseRowHtml).join("");
+    availableGrid.innerHTML = available
+      .map((ex) => exerciseRowHtml(ex, { editing: editingOrder }))
+      .join("");
     snoozedGrid.innerHTML = snoozed.map(exerciseRowHtml).join("");
 
     if (snoozedCard) snoozedCard.hidden = snoozed.length === 0;
@@ -1373,7 +1424,12 @@
       if (action === "upgrade") return changeLevel(exId, +1);
       if (action === "downgrade") return changeLevel(exId, -1);
       if (action === "open-details") return openDetails(exId);
+      if (action === "move-up") return moveExerciseInAvailable(exId, -1);
+      if (action === "move-down") return moveExerciseInAvailable(exId, +1);
     });
+
+    $("edit-order-btn").addEventListener("click", () =>
+      setEditingOrder(!editingOrder));
 
     $("details-body").addEventListener("click", (event) => {
       const target = event.target.closest("[data-action]");
