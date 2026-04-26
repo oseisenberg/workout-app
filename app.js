@@ -334,6 +334,7 @@
                   data-action="set-sets" data-value="${n}">${n}</button>`;
         })
         .join("");
+      const setsText = done ? `${setsDone}/${lvl.sets}` : `${lvl.sets}`;
       return `
       <div class="exercise-row${done ? " is-done" : ""}${
         isPartial ? " is-partial" : ""
@@ -345,14 +346,19 @@
             <span class="exercise-row__name">${ex.name}</span>
             <span class="exercise-row__meta">
               <span class="lvl-pill">Lvl ${lvlIdx + 1}</span>
-              <span class="exercise-row__target">${
-                done ? `${setsDone}/${lvl.sets}` : lvl.sets
-              } × ${lvl.reps}+</span>
             </span>
           </span>
-          <span class="exercise-row__weight">
-            <span class="exercise-row__weight-value">${fmtWeight(lvl.weight)}</span>
-            <span class="exercise-row__weight-unit">lb</span>
+          <span class="exercise-row__stat exercise-row__stat--sets">
+            <span class="exercise-row__stat-value">${setsText}</span>
+            <span class="exercise-row__stat-label">Sets</span>
+          </span>
+          <span class="exercise-row__stat">
+            <span class="exercise-row__stat-value">${lvl.reps}+</span>
+            <span class="exercise-row__stat-label">Reps</span>
+          </span>
+          <span class="exercise-row__stat">
+            <span class="exercise-row__stat-value">${fmtWeight(lvl.weight)}</span>
+            <span class="exercise-row__stat-label">lb</span>
           </span>
         </button>
         <div class="exercise-row__action" role="group"
