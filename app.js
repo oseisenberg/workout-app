@@ -3,13 +3,21 @@
 
   // Each icon is drawn as a silhouette of the machine itself, not a person.
   // Structural lines use currentColor; the moving/loaded part uses --accent.
+  //
+  // `levels` go from easier to harder. Upgrading moves to the next level and
+  // is meant to feel like a milestone — bigger jump than just adding a couple
+  // of pounds. The middle level is the default starting point.
   const EXERCISES = [
     {
       id: "leg-press",
       name: "Leg Press",
       muscles: "Quads · Glutes",
-      sets: "3–4",
-      reps: "8–12",
+      levels: [
+        { sets: 2, reps: [6, 10] },
+        { sets: 3, reps: [8, 12] },
+        { sets: 4, reps: [10, 15] },
+        { sets: 5, reps: [12, 20] },
+      ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -25,8 +33,11 @@
       id: "lat-pulldown",
       name: "Lat Pulldown",
       muscles: "Lats · Biceps",
-      sets: "3",
-      reps: "8–12",
+      levels: [
+        { sets: 2, reps: [6, 10] },
+        { sets: 3, reps: [8, 12] },
+        { sets: 4, reps: [10, 15] },
+      ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -47,8 +58,12 @@
       id: "chest-press",
       name: "Chest Press",
       muscles: "Chest · Triceps",
-      sets: "3–4",
-      reps: "8–12",
+      levels: [
+        { sets: 2, reps: [6, 10] },
+        { sets: 3, reps: [8, 12] },
+        { sets: 4, reps: [10, 15] },
+        { sets: 5, reps: [12, 20] },
+      ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -70,8 +85,11 @@
       id: "seated-row",
       name: "Seated Row",
       muscles: "Back · Biceps",
-      sets: "3",
-      reps: "8–12",
+      levels: [
+        { sets: 2, reps: [6, 10] },
+        { sets: 3, reps: [8, 12] },
+        { sets: 4, reps: [10, 15] },
+      ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -90,8 +108,11 @@
       id: "leg-extension",
       name: "Leg Extension",
       muscles: "Quads",
-      sets: "3",
-      reps: "10–15",
+      levels: [
+        { sets: 2, reps: [8, 12] },
+        { sets: 3, reps: [10, 15] },
+        { sets: 4, reps: [12, 20] },
+      ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -113,8 +134,11 @@
       id: "leg-curl",
       name: "Leg Curl",
       muscles: "Hamstrings",
-      sets: "3",
-      reps: "10–15",
+      levels: [
+        { sets: 2, reps: [8, 12] },
+        { sets: 3, reps: [10, 15] },
+        { sets: 4, reps: [12, 20] },
+      ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -137,8 +161,11 @@
       id: "cable-crossover",
       name: "Cable Crossover",
       muscles: "Chest · Shoulders",
-      sets: "3",
-      reps: "12–15",
+      levels: [
+        { sets: 2, reps: [10, 12] },
+        { sets: 3, reps: [12, 15] },
+        { sets: 4, reps: [15, 20] },
+      ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -163,8 +190,11 @@
       id: "pec-deck",
       name: "Pec Deck",
       muscles: "Chest",
-      sets: "3",
-      reps: "10–12",
+      levels: [
+        { sets: 2, reps: [8, 10] },
+        { sets: 3, reps: [10, 12] },
+        { sets: 4, reps: [12, 15] },
+      ],
       icon: `
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
@@ -185,28 +215,271 @@
     },
   ];
 
+  const STORAGE_KEY = "workout-app:state:v1";
+  const todayKey = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${
+      String(d.getDate()).padStart(2, "0")
+    }`;
+  };
+
+  // Default to the middle level so there's always room to upgrade or
+  // downgrade right out of the gate.
+  const defaultLevel = (ex) => Math.floor((ex.levels.length - 1) / 2);
+
+  const blankState = () => ({
+    levels: Object.fromEntries(EXERCISES.map((ex) => [ex.id, defaultLevel(ex)])),
+    completed: {}, // { [date]: { [exId]: { sets, reps, level } } }
+  });
+
+  let state;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    state = raw ? { ...blankState(), ...JSON.parse(raw) } : blankState();
+    // Backfill any new exercises added after first load.
+    for (const ex of EXERCISES) {
+      if (state.levels[ex.id] == null) state.levels[ex.id] = defaultLevel(ex);
+    }
+  } catch {
+    state = blankState();
+  }
+
+  const saveState = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      // Quota or private mode — fail quietly.
+    }
+  };
+
+  const exerciseById = (id) => EXERCISES.find((ex) => ex.id === id);
+  const currentLevel = (ex) => ex.levels[state.levels[ex.id]];
+  const todaysCompletion = (exId) => (state.completed[todayKey()] || {})[exId];
+  const fmtRange = (r) => (r[0] === r[1] ? `${r[0]}` : `${r[0]}–${r[1]}`);
+
+  // Default sets/reps assumed when the user just taps "Done": the upper end
+  // of the current level's range.
+  const defaultPerformed = (ex) => {
+    const lvl = currentLevel(ex);
+    return { sets: lvl.sets, reps: lvl.reps[1], level: state.levels[ex.id] };
+  };
+
+  // Build the list of selectable values around the current level's range,
+  // padded a little so the user can record going under or over.
+  const repChoices = (ex) => {
+    const [lo, hi] = currentLevel(ex).reps;
+    const start = Math.max(1, lo - 2);
+    const end = hi + 3;
+    const out = [];
+    for (let i = start; i <= end; i++) out.push(i);
+    return out;
+  };
+  const setChoices = (ex) => {
+    const target = currentLevel(ex).sets;
+    const start = Math.max(1, target - 2);
+    const end = target + 3;
+    const out = [];
+    for (let i = start; i <= end; i++) out.push(i);
+    return out;
+  };
+
+  const markComplete = (exId, override) => {
+    const ex = exerciseById(exId);
+    const day = todayKey();
+    if (!state.completed[day]) state.completed[day] = {};
+    state.completed[day][exId] = override || defaultPerformed(ex);
+    saveState();
+    renderExercises();
+  };
+
+  const clearComplete = (exId) => {
+    const day = todayKey();
+    if (state.completed[day]) {
+      delete state.completed[day][exId];
+      saveState();
+      renderExercises();
+    }
+  };
+
+  const changeLevel = (exId, delta) => {
+    const ex = exerciseById(exId);
+    const next = state.levels[exId] + delta;
+    if (next < 0 || next >= ex.levels.length) return;
+    state.levels[exId] = next;
+    // Re-record today's entry against the new level so the completion still
+    // reflects what level they were on.
+    const today = state.completed[todayKey()];
+    if (today && today[exId]) today[exId].level = next;
+    saveState();
+    renderExercises();
+    if (delta > 0) flashUpgrade(exId);
+  };
+
+  // Brief celebration when leveling up — small but noticeable.
+  const flashUpgrade = (exId) => {
+    const row = document.querySelector(`.exercise-row[data-id="${exId}"]`);
+    if (!row) return;
+    row.classList.remove("exercise-row--upgraded");
+    // Force reflow so the animation restarts on repeat upgrades.
+    void row.offsetWidth;
+    row.classList.add("exercise-row--upgraded");
+  };
+
+  const closeAllMenus = (except) => {
+    document.querySelectorAll(".exercise-row.is-open").forEach((row) => {
+      if (row !== except) row.classList.remove("is-open");
+    });
+  };
+
   const renderExercises = () => {
     const grid = $("exercise-grid");
     if (!grid) return;
-    grid.innerHTML = EXERCISES.map((ex) => `
-      <button type="button" class="exercise-row" data-id="${ex.id}">
-        <span class="exercise-row__icon">${ex.icon}</span>
-        <span class="exercise-row__title">
-          <span class="exercise-row__name">${ex.name}</span>
-          <span class="exercise-row__muscles">${ex.muscles}</span>
-        </span>
-        <span class="exercise-row__stat">
-          <span class="exercise-row__stat-label">Sets</span>
-          <span class="exercise-row__stat-value">${ex.sets}</span>
-        </span>
-        <span class="exercise-row__stat">
-          <span class="exercise-row__stat-label">Reps</span>
-          <span class="exercise-row__stat-value">${ex.reps}</span>
-        </span>
-      </button>
-    `).join("");
+    grid.innerHTML = EXERCISES.map((ex) => {
+      const lvl = currentLevel(ex);
+      const lvlIdx = state.levels[ex.id];
+      const done = todaysCompletion(ex.id);
+      const canDown = lvlIdx > 0;
+      const canUp = lvlIdx < ex.levels.length - 1;
+      const setOpts = setChoices(ex)
+        .map((n) => {
+          const sel = done ? done.sets === n : lvl.sets === n;
+          return `<button type="button" class="chip${sel ? " chip--on" : ""}"
+                  data-action="set-sets" data-value="${n}">${n}</button>`;
+        })
+        .join("");
+      const repOpts = repChoices(ex)
+        .map((n) => {
+          const sel = done
+            ? done.reps === n
+            : n >= lvl.reps[0] && n <= lvl.reps[1];
+          return `<button type="button" class="chip${sel ? " chip--on" : ""}"
+                  data-action="set-reps" data-value="${n}">${n}</button>`;
+        })
+        .join("");
+      return `
+      <div class="exercise-row${done ? " is-done" : ""}" data-id="${ex.id}">
+        <button type="button" class="exercise-row__main"
+                data-action="open-details">
+          <span class="exercise-row__icon">${ex.icon}</span>
+          <span class="exercise-row__title">
+            <span class="exercise-row__name">${ex.name}</span>
+            <span class="exercise-row__level">Level ${lvlIdx + 1} / ${
+        ex.levels.length
+      }</span>
+          </span>
+          <span class="exercise-row__stat">
+            <span class="exercise-row__stat-label">Sets</span>
+            <span class="exercise-row__stat-value">${lvl.sets}</span>
+          </span>
+          <span class="exercise-row__stat">
+            <span class="exercise-row__stat-label">Reps</span>
+            <span class="exercise-row__stat-value">${fmtRange(lvl.reps)}</span>
+          </span>
+        </button>
+        <div class="exercise-row__action" role="group"
+             aria-label="Complete ${ex.name}">
+          <button type="button" class="done-btn"
+                  data-action="toggle-done"
+                  aria-pressed="${done ? "true" : "false"}">
+            <span class="done-btn__check" aria-hidden="true">✓</span>
+            <span class="done-btn__label">${done ? "Done" : "Mark done"}</span>
+            ${
+              done
+                ? `<span class="done-btn__detail">${done.sets}×${done.reps}</span>`
+                : ""
+            }
+          </button>
+          <button type="button" class="caret-btn"
+                  data-action="toggle-menu"
+                  aria-label="Adjust ${ex.name}"
+                  aria-expanded="false">
+            <svg viewBox="0 0 12 8" aria-hidden="true">
+              <path d="M1 1.5 L6 6.5 L11 1.5" fill="none"
+                    stroke="currentColor" stroke-width="1.8"
+                    stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+        <div class="exercise-row__menu" role="region"
+             aria-label="Adjust ${ex.name}">
+          <div class="menu-row">
+            <span class="menu-row__label">Sets</span>
+            <div class="menu-row__chips">${setOpts}</div>
+          </div>
+          <div class="menu-row">
+            <span class="menu-row__label">Reps</span>
+            <div class="menu-row__chips">${repOpts}</div>
+          </div>
+          <div class="menu-row menu-row--level">
+            <button type="button" class="level-btn"
+                    data-action="downgrade"
+                    ${canDown ? "" : "disabled"}>
+              <span aria-hidden="true">▼</span> Downgrade
+            </button>
+            <span class="menu-row__level-text">
+              Level ${lvlIdx + 1}: ${lvl.sets} × ${fmtRange(lvl.reps)}
+            </span>
+            <button type="button" class="level-btn level-btn--up"
+                    data-action="upgrade"
+                    ${canUp ? "" : "disabled"}>
+              Upgrade <span aria-hidden="true">▲</span>
+            </button>
+          </div>
+        </div>
+      </div>`;
+    }).join("");
   };
+
   renderExercises();
+
+  // Single delegated handler for all row interactions.
+  $("exercise-grid").addEventListener("click", (event) => {
+    const target = event.target.closest("[data-action]");
+    if (!target) return;
+    const row = target.closest(".exercise-row");
+    if (!row) return;
+    const exId = row.dataset.id;
+    const action = target.dataset.action;
+
+    if (action === "toggle-done") {
+      if (todaysCompletion(exId)) clearComplete(exId);
+      else markComplete(exId);
+      return;
+    }
+    if (action === "toggle-menu") {
+      const open = row.classList.toggle("is-open");
+      closeAllMenus(open ? row : null);
+      target.setAttribute("aria-expanded", open ? "true" : "false");
+      return;
+    }
+    if (action === "set-sets" || action === "set-reps") {
+      const ex = exerciseById(exId);
+      const value = Number(target.dataset.value);
+      const existing = todaysCompletion(exId) || defaultPerformed(ex);
+      const next = { ...existing };
+      if (action === "set-sets") next.sets = value;
+      else next.reps = value;
+      markComplete(exId, next);
+      return;
+    }
+    if (action === "upgrade") {
+      changeLevel(exId, +1);
+      return;
+    }
+    if (action === "downgrade") {
+      changeLevel(exId, -1);
+      return;
+    }
+    if (action === "open-details") {
+      // Details page is a future addition; ignore for now.
+      return;
+    }
+  });
+
+  // Tap outside any open menu to close it.
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".exercise-row")) closeAllMenus(null);
+  });
 
   const setNet = () => {
     const el = $("net-status");
