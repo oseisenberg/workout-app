@@ -1151,6 +1151,25 @@
     return `${months[d.getMonth()]} ${d.getDate()}`;
   };
 
+  // Round a day count to a friendlier duration label so the chart's start
+  // axis reads as "6 months" rather than a precise date that nobody cares
+  // about. Snaps to days, weeks, months, then years.
+  const roundedDuration = (days) => {
+    if (days <= 0) return "today";
+    if (days === 1) return "1 day";
+    if (days <= 6) return `${days} days`;
+    if (days < 60) {
+      const weeks = Math.round(days / 7);
+      return weeks === 1 ? "1 week" : `${weeks} weeks`;
+    }
+    if (days < 720) {
+      const months = Math.round(days / 30);
+      return months === 1 ? "1 month" : `${months} months`;
+    }
+    const years = Math.round(days / 365);
+    return years === 1 ? "1 year" : `${years} years`;
+  };
+
   const renderProgressChart = (ex, history) => {
     const points = history
       .filter((h) => h.level > 0)
@@ -1192,7 +1211,9 @@
         <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round" />
         <text x="${padX}" y="12" font-size="10" fill="var(--muted)">${maxLabel}</text>
-        <text x="${padX}" y="${H - 6}" font-size="10" fill="var(--muted)">${dateBadge(xMin)}</text>
+        <text x="${padX}" y="${H - 6}" font-size="10" fill="var(--muted)">${
+          roundedDuration(Math.round((Date.now() - xMin) / 86400000))
+        }</text>
         <text x="${W - padX}" y="${H - 6}" font-size="10" fill="var(--muted)" text-anchor="end">${dateBadge(xMax)}</text>
       </svg>`;
   };
