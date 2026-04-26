@@ -889,7 +889,51 @@
   };
   const closePicker = () => {
     $("picker").hidden = true;
-    document.body.classList.remove("modal-open");
+    if ($("details").hidden && $("settings").hidden) {
+      document.body.classList.remove("modal-open");
+    }
+  };
+
+  const openSettings = () => {
+    $("settings").hidden = false;
+    document.body.classList.add("modal-open");
+  };
+  const closeSettings = () => {
+    $("settings").hidden = true;
+    if ($("picker").hidden && $("details").hidden) {
+      document.body.classList.remove("modal-open");
+    }
+  };
+
+  // Triggers a JSON file download with the given object.
+  const downloadJson = (filename, data) => {
+    const blob = new Blob(
+      [JSON.stringify(data, null, 2)],
+      { type: "application/json" },
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
+
+  const exportData = (includeHistory) => {
+    const stamp = todayKey();
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      includesHistory: !!includeHistory,
+      addedIds: state.addedIds,
+      archivedIds: state.archivedIds,
+      levels: state.levels,
+    };
+    if (includeHistory) payload.completed = state.completed;
+    const suffix = includeHistory ? "full" : "no-history";
+    downloadJson(`workout-export-${stamp}-${suffix}.json`, payload);
   };
 
   const parseDateStr = (s) => {
@@ -1096,6 +1140,16 @@
     });
     $("details-close").addEventListener("click", closeDetails);
     $("details-backdrop").addEventListener("click", closeDetails);
+    $("settings-btn").addEventListener("click", openSettings);
+    $("settings-close").addEventListener("click", closeSettings);
+    $("settings-backdrop").addEventListener("click", closeSettings);
+    $("settings").addEventListener("click", (event) => {
+      const target = event.target.closest("[data-action]");
+      if (!target) return;
+      const action = target.dataset.action;
+      if (action === "export-all") exportData(true);
+      else if (action === "export-no-history") exportData(false);
+    });
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.addEventListener("click", () => switchTab(tab.dataset.tab));
     });
@@ -1108,7 +1162,8 @@
     });
     document.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;
-      if (!$("details").hidden) closeDetails();
+      if (!$("settings").hidden) closeSettings();
+      else if (!$("details").hidden) closeDetails();
       else if (!$("picker").hidden) closePicker();
     });
   };

@@ -23,7 +23,28 @@
 <body>
   <header class="topbar">
     <h1>Workout</h1>
-    <span id="net-status" class="badge" aria-live="polite">online</span>
+    <div class="topbar__actions">
+      <span id="net-status" class="badge" aria-live="polite">online</span>
+      <button id="settings-btn" class="icon-btn" type="button"
+              aria-label="Settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor"
+                  stroke-width="1.8" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83
+                   l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21
+                   a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33
+                   l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82
+                   1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1
+                   1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06
+                   a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0
+                   v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06
+                   a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9
+                   a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                fill="none" stroke="currentColor" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+    </div>
   </header>
 
   <main class="content">
@@ -126,6 +147,40 @@
         </button>
       </div>
       <div id="details-body" class="details__body"></div>
+    </div>
+  </div>
+
+  <div id="settings" class="picker" hidden role="dialog" aria-modal="true"
+       aria-labelledby="settings-title">
+    <div id="settings-backdrop" class="picker__backdrop"></div>
+    <div class="picker__sheet" role="document">
+      <div class="picker__header">
+        <h2 id="settings-title" class="picker__title">Settings</h2>
+        <button id="settings-close" type="button" class="picker__close"
+                aria-label="Close">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4 4 L12 12 M12 4 L4 12" fill="none"
+                  stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+      <div class="settings__body">
+        <button type="button" class="settings__option"
+                data-action="export-all">
+          <span class="settings__option-title">Export all data</span>
+          <span class="settings__option-desc">
+            Includes every exercise, level, and completion history.
+          </span>
+        </button>
+        <button type="button" class="settings__option"
+                data-action="export-no-history">
+          <span class="settings__option-title">Export without history</span>
+          <span class="settings__option-desc">
+            Just the active exercises and their current levels.
+          </span>
+        </button>
+      </div>
     </div>
   </div>
 
