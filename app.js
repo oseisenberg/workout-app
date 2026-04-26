@@ -438,6 +438,12 @@
       const pipsHtml = renderPips(lvl);
       const nextTier = canUp ? tierName(ex.levels[lvlIdx + 1]) : null;
       const weightText = fmtWeight(lvl.weight);
+      const weightStatHtml = lvlZero
+        ? `<span class="exercise-row__try" aria-label="No fixed weight">Try it</span>`
+        : `<span class="exercise-row__stat">
+             <span class="exercise-row__stat-value">${weightText}</span>
+             <span class="exercise-row__stat-label">lb</span>
+           </span>`;
 
       const setChipsHtml = `<div class="menu-row menu-row--chips">
              <span class="menu-row__label">
@@ -476,10 +482,7 @@
               }">${tier}${pipsHtml}</span>
             </span>
           </span>
-          <span class="exercise-row__stat">
-            <span class="exercise-row__stat-value">${weightText}</span>
-            <span class="exercise-row__stat-label">lb</span>
-          </span>
+          ${weightStatHtml}
         </button>
         <div class="exercise-row__action" role="group"
              aria-label="Complete ${ex.name}">
@@ -839,7 +842,9 @@
               ? `${entry.sets}/${entryLvl.sets} sets`
               : `${entry.sets} sets`;
           const partial = entryLvl && !entryZero && entry.sets < entryLvl.sets;
-          const weight = entryLvl ? fmtWeight(entryLvl.weight) : "";
+          const weight = entryLvl && !entryZero
+            ? fmtWeight(entryLvl.weight)
+            : "";
           return `
             <li class="details__entry${partial ? " is-partial" : ""}">
               <span class="details__date">${friendlyDate(entry.date)}</span>
@@ -851,7 +856,7 @@
         }).join("")}</ul>`;
 
     const summary = lvlZero
-      ? `${tier} · ${fmtWeight(lvl.weight)} lb`
+      ? `${tier} · just trying it out`
       : `${tier} · ${fmtWeight(lvl.weight)} lb · ${lvl.sets}×${lvl.reps}+`;
 
     const archived = isArchived(ex.id);
