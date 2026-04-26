@@ -7,7 +7,7 @@
       "icon": "leg-press",
       "sets": 3,
       "reps": 10,
-      "weightStart": 90,
+      "weightStart": 45,
       "weightStep": 45,
       "pipsPerLevel": 1,
       "levels": 4,
@@ -20,7 +20,7 @@
       "icon": "lat-pulldown",
       "sets": 3,
       "reps": 10,
-      "weightStart": 60,
+      "weightStart": 20,
       "weightStep": 10,
       "pipsPerLevel": 2,
       "levels": 4
@@ -32,7 +32,7 @@
       "icon": "chest-press",
       "sets": 3,
       "reps": 10,
-      "weightStart": 50,
+      "weightStart": 20,
       "weightStep": 10,
       "pipsPerLevel": 2,
       "levels": 4
@@ -44,7 +44,7 @@
       "icon": "seated-row",
       "sets": 3,
       "reps": 10,
-      "weightStart": 60,
+      "weightStart": 20,
       "weightStep": 10,
       "pipsPerLevel": 2,
       "levels": 4
@@ -56,7 +56,7 @@
       "icon": "leg-extension",
       "sets": 3,
       "reps": 12,
-      "weightStart": 40,
+      "weightStart": 10,
       "weightStep": 10,
       "pipsPerLevel": 2,
       "levels": 4
@@ -68,7 +68,7 @@
       "icon": "leg-curl",
       "sets": 3,
       "reps": 12,
-      "weightStart": 30,
+      "weightStart": 10,
       "weightStep": 10,
       "pipsPerLevel": 1,
       "levels": 4
@@ -80,7 +80,7 @@
       "icon": "cable-crossover",
       "sets": 3,
       "reps": 12,
-      "weightStart": 15,
+      "weightStart": 5,
       "weightStep": 10,
       "pipsPerLevel": 1,
       "levels": 4
@@ -92,7 +92,7 @@
       "icon": "pec-deck",
       "sets": 3,
       "reps": 12,
-      "weightStart": 40,
+      "weightStart": 10,
       "weightStep": 10,
       "pipsPerLevel": 2,
       "levels": 4
@@ -104,7 +104,7 @@
       "icon": "barbell",
       "sets": 3,
       "reps": 5,
-      "weightStart": 95,
+      "weightStart": 45,
       "weightStep": 20,
       "pipsPerLevel": 2,
       "levels": 4,
@@ -117,7 +117,7 @@
       "icon": "barbell",
       "sets": 3,
       "reps": 5,
-      "weightStart": 65,
+      "weightStart": 45,
       "weightStep": 10,
       "pipsPerLevel": 3,
       "levels": 4,
@@ -130,7 +130,7 @@
       "icon": "barbell",
       "sets": 3,
       "reps": 5,
-      "weightStart": 135,
+      "weightStart": 95,
       "weightStep": 20,
       "pipsPerLevel": 2,
       "levels": 4,
@@ -143,7 +143,7 @@
       "icon": "dumbbell",
       "sets": 3,
       "reps": 10,
-      "weightStart": 10,
+      "weightStart": 5,
       "weightStep": 5,
       "pipsPerLevel": 1,
       "levels": 4
@@ -155,7 +155,7 @@
       "icon": "dumbbell",
       "sets": 3,
       "reps": 8,
-      "weightStart": 15,
+      "weightStart": 5,
       "weightStep": 5,
       "pipsPerLevel": 1,
       "levels": 4
@@ -167,7 +167,7 @@
       "icon": "pushup",
       "bodyweight": true,
       "sets": 3,
-      "repsStart": 5,
+      "repsStart": 1,
       "repsStep": 5,
       "pipsPerLevel": 1,
       "levels": 4
@@ -191,7 +191,7 @@
       "icon": "situp",
       "bodyweight": true,
       "sets": 3,
-      "repsStart": 10,
+      "repsStart": 1,
       "repsStep": 5,
       "pipsPerLevel": 1,
       "levels": 4
@@ -203,7 +203,7 @@
       "icon": "lat-pulldown",
       "sets": 3,
       "reps": 12,
-      "weightStart": 25,
+      "weightStart": 5,
       "weightStep": 10,
       "pipsPerLevel": 1,
       "levels": 4
