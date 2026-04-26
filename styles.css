@@ -711,22 +711,29 @@ body {
   margin: 8px 0 0;
 }
 
+/* Daily wrap-up: a sunrise that spans the column rather than a checkmark
+   in a circle (which already lives on each row). Colors are intentionally
+   soft amber, not the saturated green of the per-row check. */
 .all-done {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 28px 0 22px;
-  color: var(--ok);
+  align-items: stretch;
+  gap: 6px;
+  padding: 24px 0 18px;
 }
 .all-done[hidden] { display: none; }
-.all-done__icon { width: 72px; height: 72px; display: block; }
+.all-done__sunrise {
+  width: 100%;
+  height: auto;
+  display: block;
+}
 .all-done__label {
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.7px;
   color: var(--muted);
+  text-align: center;
 }
 
 /* Floating action button — adds an exercise from the catalog. */
