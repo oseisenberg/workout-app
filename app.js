@@ -476,6 +476,21 @@
     row.classList.add("exercise-row--upgraded");
   };
 
+  // Small ripple + check bounce when an exercise transitions from "not
+  // started today" to "done". Re-renders happen before this runs so we
+  // look up the row in whichever card it ended up in.
+  const flashComplete = (exId) => {
+    const row = document.querySelector(`.exercise-row[data-id="${exId}"]`);
+    if (!row) return;
+    row.classList.remove("exercise-row--just-completed");
+    void row.offsetWidth;
+    row.classList.add("exercise-row--just-completed");
+    setTimeout(
+      () => row.classList.remove("exercise-row--just-completed"),
+      600,
+    );
+  };
+
   const closeAllMenus = (except) => {
     document.querySelectorAll(".exercise-row.is-open").forEach((row) => {
       if (row !== except) row.classList.remove("is-open");
@@ -1094,8 +1109,12 @@
       const action = target.dataset.action;
 
       if (action === "toggle-done") {
-        if (todaysCompletion(exId)) clearComplete(exId);
-        else markComplete(exId);
+        if (todaysCompletion(exId)) {
+          clearComplete(exId);
+        } else {
+          markComplete(exId);
+          flashComplete(exId);
+        }
         return;
       }
       if (action === "toggle-menu") {
@@ -1105,7 +1124,9 @@
         return;
       }
       if (action === "set-sets") {
+        const wasDone = !!todaysCompletion(exId);
         markComplete(exId, Number(target.dataset.value));
+        if (!wasDone) flashComplete(exId);
         return;
       }
       if (action === "upgrade") return changeLevel(exId, +1);
