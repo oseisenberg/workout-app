@@ -220,7 +220,12 @@
       pipsPerLevel: 0,
     }];
     for (let i = 0; i < totalPrescriptive; i++) {
-      const reps = bw ? t.repsStart + i * t.repsStep : t.reps;
+      // Bodyweight reps are a [min, max] range that scales with the tier,
+      // matching how weight ranges work for weighted exercises. Weighted
+      // exercises keep reps as a constant number.
+      const reps = bw
+        ? [t.repsStart + i * t.repsStep, t.repsStart + (i + 1) * t.repsStep]
+        : t.reps;
       const weight = bw
         ? null
         : [t.weightStart + i * t.weightStep,
@@ -320,6 +325,11 @@
   const isLevelZero = (lvl) => lvl.sets === 0;
   const todaysCompletion = (exId) => (state.completed[todayKey()] || {})[exId];
   const fmtWeight = (w) => (w[0] === w[1] ? `${w[0]}` : `${w[0]}–${w[1]}`);
+  // Bodyweight reps are a range; weighted exercises store a single rep
+  // number that's treated as a minimum target (rendered with a "+" suffix).
+  const fmtReps = (r) =>
+    Array.isArray(r) ? `${r[0]}–${r[1]}` : `${r}+`;
+  const repsLow = (r) => (Array.isArray(r) ? r[0] : r);
 
   const lastCompletionDate = (exId) => {
     let max = null;
@@ -486,7 +496,7 @@
       const pipsHtml = renderPips(lvl);
       const nextTier = canUp ? tierName(ex.levels[lvlIdx + 1]) : null;
       const isBw = !!lvl.bodyweight;
-      const weightText = isBw ? `${lvl.reps}+` : fmtWeight(lvl.weight);
+      const weightText = isBw ? fmtReps(lvl.reps) : fmtWeight(lvl.weight);
       const weightStatHtml = lvlZero
         ? `<span class="exercise-row__try" aria-label="No fixed prescription">Try it</span>`
         : `<span class="exercise-row__stat">
@@ -496,7 +506,7 @@
 
       const setChipsHtml = `<div class="menu-row menu-row--chips">
              <span class="menu-row__label">
-               Sets done <span class="menu-row__hint">target ${lvl.sets}×${lvl.reps}+</span>
+               Sets done <span class="menu-row__hint">target ${lvl.sets}×${fmtReps(lvl.reps)}</span>
              </span>
              <div class="menu-row__chips">${setChoices(ex)
                .map((n) => {
@@ -812,7 +822,7 @@
   // aren't enough data points to draw a line.
   const renderProgressChart = (ex, history) => {
     const metric = (lvl) =>
-      lvl.bodyweight ? lvl.reps : lvl.weight[0];
+      lvl.bodyweight ? repsLow(lvl.reps) : lvl.weight[0];
     const unit = ex.levels.some((l) => l.bodyweight) ? "reps" : "lb";
     const points = history
       .filter((h) => {
@@ -897,7 +907,7 @@
           const isBw = entryLvl && entryLvl.bodyweight;
           const detail = entryLvl && !entryZero
             ? isBw
-              ? `${entryLvl.reps}+ reps`
+              ? `${fmtReps(entryLvl.reps)} reps`
               : `${fmtWeight(entryLvl.weight)} lb`
             : "";
           return `
@@ -913,8 +923,8 @@
     const summary = lvlZero
       ? `${tier} · just trying it out`
       : lvl.bodyweight
-        ? `${tier} · ${lvl.sets}×${lvl.reps}+ reps`
-        : `${tier} · ${fmtWeight(lvl.weight)} lb · ${lvl.sets}×${lvl.reps}+`;
+        ? `${tier} · ${lvl.sets}×${fmtReps(lvl.reps)} reps`
+        : `${tier} · ${fmtWeight(lvl.weight)} lb · ${lvl.sets}×${fmtReps(lvl.reps)}`;
 
     const archived = isArchived(ex.id);
     const archiveBtnHtml = `
