@@ -691,10 +691,7 @@
                  <path d="M 8 2 A 6 6 0 0 1 8 14 Z" fill="currentColor" />
                </svg>
              </span>
-             <span class="menu-action__text">
-               <span class="menu-action__title">Mark partial</span>
-               <span class="menu-action__hint">Counted, just not a full session</span>
-             </span>
+             <span class="menu-action__title">Partial</span>
            </button>`;
       const skipBtnHtml = `<button type="button" class="menu-action${
         isSkipped ? " menu-action--on" : ""
@@ -706,17 +703,12 @@
                        stroke-linecap="round" stroke-linejoin="round" />
                </svg>
              </span>
-             <span class="menu-action__text">
-               <span class="menu-action__title">Snooze today</span>
-               <span class="menu-action__hint">Not done — skip until tomorrow</span>
-             </span>
+             <span class="menu-action__title">Snooze</span>
            </button>`;
       const menuBody = lvlZero
         ? `<p class="menu-zero">
-             <strong>Lvl 0</strong> is binary — no target sets or reps.
-             Just tap done when you've done what you can. Upgrade to
-             <strong>${nextTier}</strong> once you're ready to start
-             counting sets.
+             <strong>Lvl 0</strong> is binary — just tap done when
+             you've done what you can.
            </p>
            <div class="menu-row menu-row--actions">${skipBtnHtml}</div>`
         : `<div class="menu-row menu-row--actions">
