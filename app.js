@@ -405,6 +405,17 @@
     renderPicker();
   };
 
+  const deleteExerciseHistory = (exId) => {
+    for (const date of Object.keys(state.completed)) {
+      const day = state.completed[date];
+      if (!day || !day[exId]) continue;
+      delete day[exId];
+      if (Object.keys(day).length === 0) delete state.completed[date];
+    }
+    saveState();
+    renderExercises();
+  };
+
   const unarchiveExercise = (id) => {
     if (!state.archivedIds.includes(id)) return;
     state.archivedIds = state.archivedIds.filter((x) => x !== id);
@@ -1214,10 +1225,28 @@
 
     const archived = isArchived(ex.id);
     const archiveBtnHtml = `
-      <button type="button" class="details__archive"
-              data-action="${archived ? "unarchive" : "archive"}">
-        ${archived ? "Unarchive" : "Archive"}
-      </button>`;
+      <div class="details__actions">
+        <button type="button" class="details__archive"
+                data-action="${archived ? "unarchive" : "archive"}">
+          ${archived ? "Unarchive" : "Archive"}
+        </button>
+        <div class="details__more-wrap">
+          <button type="button" class="details__more-btn"
+                  data-action="toggle-more" aria-label="More options">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="6" r="1.6" fill="currentColor" />
+              <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+              <circle cx="12" cy="18" r="1.6" fill="currentColor" />
+            </svg>
+          </button>
+          <div class="details__more-menu" hidden>
+            <button type="button" class="details__more-item"
+                    data-action="delete-history">
+              Delete all history
+            </button>
+          </div>
+        </div>
+      </div>`;
 
     $("details-body").innerHTML = `
       <div class="details__hero">
@@ -1277,7 +1306,14 @@
 
     $("details-body").addEventListener("click", (event) => {
       const target = event.target.closest("[data-action]");
-      if (!target || openDetailsId == null) return;
+      if (!target || openDetailsId == null) {
+        // Close any open kebab menu when clicking outside it.
+        const open = $("details-body").querySelector(
+          ".details__more-menu:not([hidden])",
+        );
+        if (open) open.hidden = true;
+        return;
+      }
       const action = target.dataset.action;
       if (action === "archive") {
         archiveExercise(openDetailsId);
@@ -1285,6 +1321,18 @@
       } else if (action === "unarchive") {
         unarchiveExercise(openDetailsId);
         closeDetails();
+      } else if (action === "toggle-more") {
+        const wrap = target.parentElement;
+        const menu = wrap && wrap.querySelector(".details__more-menu");
+        if (menu) menu.hidden = !menu.hidden;
+      } else if (action === "delete-history") {
+        const ex = exerciseById(openDetailsId);
+        const name = ex ? ex.name : "this exercise";
+        if (confirm(
+          `Delete all history for ${name}? This can't be undone.`,
+        )) {
+          deleteExerciseHistory(openDetailsId);
+        }
       }
     });
 
