@@ -1064,28 +1064,18 @@ body.modal-open { overflow: hidden; }
   stroke: var(--border-strong);
   stroke-width: 1;
 }
+/* Muscles share a grey outline; only the fill shades with activity. */
 .muscle {
   fill: var(--surface);
   stroke: var(--border-strong);
-  stroke-width: 0.7;
+  stroke-width: 0.8;
+  stroke-linejoin: round;
   transition: fill 0.18s ease;
 }
-.muscle--lvl1 {
-  fill: rgba(59, 130, 246, 0.28);
-  stroke: rgba(59, 130, 246, 0.55);
-}
-.muscle--lvl2 {
-  fill: rgba(59, 130, 246, 0.5);
-  stroke: rgba(59, 130, 246, 0.75);
-}
-.muscle--lvl3 {
-  fill: rgba(59, 130, 246, 0.75);
-  stroke: var(--accent);
-}
-.muscle--lvl4 {
-  fill: var(--accent);
-  stroke: var(--accent);
-}
+.muscle--lvl1 { fill: rgba(59, 130, 246, 0.3); }
+.muscle--lvl2 { fill: rgba(59, 130, 246, 0.55); }
+.muscle--lvl3 { fill: rgba(59, 130, 246, 0.78); }
+.muscle--lvl4 { fill: var(--accent); }
 
 /* Exercise details modal — same sheet chrome as the picker, different body. */
 .details__body {

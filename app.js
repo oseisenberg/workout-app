@@ -798,9 +798,10 @@
     return "muscle muscle--lvl4";
   };
 
-  // Two simple stylized body diagrams (front + back) with muscle regions
-  // colored by `counts`. Each region is an ellipse layered over a rounded
-  // body silhouette so the figure stays simple and readable on a phone.
+  // Two stylized body diagrams (front + back) with muscle regions painted
+  // as anatomically-shaped paths over a simple silhouette. Each path's
+  // fill changes with `counts`; the border stays grey across all states
+  // (see .muscle CSS).
   const renderBodyDiagram = (counts) => {
     const c = (k) => muscleClass(counts[k] || 0);
     const silhouette = `
@@ -812,45 +813,75 @@
         <rect x="40" y="124" width="18" height="100" rx="8" />
         <rect x="62" y="124" width="18" height="100" rx="8" />
       </g>`;
+
+    // Reusable per-side muscle paths. Coordinates are tuned to sit inside
+    // the silhouette rectangles above.
     const front = `
       <div class="body-figure">
         <span class="body-figure__label">Front</span>
-      <svg class="body" viewBox="0 0 120 232" aria-label="Front body"
-           role="img">
-        ${silhouette}
-        <ellipse class="${c("shoulders")}" cx="27" cy="50" rx="8" ry="6" />
-        <ellipse class="${c("shoulders")}" cx="93" cy="50" rx="8" ry="6" />
-        <ellipse class="${c("chest")}" cx="60" cy="58" rx="18" ry="8" />
-        <ellipse class="${c("biceps")}" cx="27" cy="72" rx="5" ry="13" />
-        <ellipse class="${c("biceps")}" cx="93" cy="72" rx="5" ry="13" />
-        <ellipse class="${c("core")}" cx="60" cy="96" rx="14" ry="18" />
-        <ellipse class="${c("quads")}" cx="49" cy="158" rx="8" ry="22" />
-        <ellipse class="${c("quads")}" cx="71" cy="158" rx="8" ry="22" />
-        <ellipse class="${c("calves")}" cx="49" cy="206" rx="6" ry="14" />
-        <ellipse class="${c("calves")}" cx="71" cy="206" rx="6" ry="14" />
-      </svg>
+        <svg class="body" viewBox="0 0 120 232" aria-label="Front body"
+             role="img">
+          ${silhouette}
+          <path class="${c("shoulders")}"
+                d="M 22 48 Q 28 42 36 46 L 38 60 Q 30 62 22 58 Z" />
+          <path class="${c("shoulders")}"
+                d="M 98 48 Q 92 42 84 46 L 82 60 Q 90 62 98 58 Z" />
+          <path class="${c("chest")}"
+                d="M 41 48 Q 56 46 58 50 L 58 68 Q 50 72 42 68 Q 38 60 41 48 Z" />
+          <path class="${c("chest")}"
+                d="M 79 48 Q 64 46 62 50 L 62 68 Q 70 72 78 68 Q 82 60 79 48 Z" />
+          <rect class="${c("biceps")}" x="22" y="62" width="11" height="22"
+                rx="5" />
+          <rect class="${c("biceps")}" x="87" y="62" width="11" height="22"
+                rx="5" />
+          <path class="${c("core")}"
+                d="M 50 78 Q 60 76 70 78 L 70 116 Q 60 120 50 116 Z" />
+          <path class="${c("quads")}"
+                d="M 42 128 L 58 128 L 56 178 Q 49 184 42 178 Z" />
+          <path class="${c("quads")}"
+                d="M 78 128 L 62 128 L 64 178 Q 71 184 78 178 Z" />
+          <rect class="${c("calves")}" x="44" y="190" width="10" height="22"
+                rx="4" />
+          <rect class="${c("calves")}" x="66" y="190" width="10" height="22"
+                rx="4" />
+        </svg>
       </div>`;
+
     const back = `
       <div class="body-figure">
         <span class="body-figure__label">Back</span>
-      <svg class="body" viewBox="0 0 120 232" aria-label="Back body"
-           role="img">
-        ${silhouette}
-        <ellipse class="${c("shoulders")}" cx="27" cy="50" rx="8" ry="6" />
-        <ellipse class="${c("shoulders")}" cx="93" cy="50" rx="8" ry="6" />
-        <ellipse class="${c("back")}" cx="60" cy="62" rx="20" ry="14" />
-        <ellipse class="${c("lats")}" cx="44" cy="80" rx="6" ry="12" />
-        <ellipse class="${c("lats")}" cx="76" cy="80" rx="6" ry="12" />
-        <ellipse class="${c("triceps")}" cx="27" cy="72" rx="5" ry="13" />
-        <ellipse class="${c("triceps")}" cx="93" cy="72" rx="5" ry="13" />
-        <ellipse class="${c("glutes")}" cx="49" cy="130" rx="8" ry="8" />
-        <ellipse class="${c("glutes")}" cx="71" cy="130" rx="8" ry="8" />
-        <ellipse class="${c("hamstrings")}" cx="49" cy="162" rx="8" ry="20" />
-        <ellipse class="${c("hamstrings")}" cx="71" cy="162" rx="8" ry="20" />
-        <ellipse class="${c("calves")}" cx="49" cy="206" rx="6" ry="14" />
-        <ellipse class="${c("calves")}" cx="71" cy="206" rx="6" ry="14" />
-      </svg>
+        <svg class="body" viewBox="0 0 120 232" aria-label="Back body"
+             role="img">
+          ${silhouette}
+          <path class="${c("shoulders")}"
+                d="M 22 48 Q 28 42 36 46 L 38 60 Q 30 62 22 58 Z" />
+          <path class="${c("shoulders")}"
+                d="M 98 48 Q 92 42 84 46 L 82 60 Q 90 62 98 58 Z" />
+          <path class="${c("back")}"
+                d="M 50 46 Q 60 44 70 46 L 76 80 Q 60 84 44 80 Z" />
+          <path class="${c("lats")}"
+                d="M 38 64 L 56 90 L 50 104 L 38 88 Z" />
+          <path class="${c("lats")}"
+                d="M 82 64 L 64 90 L 70 104 L 82 88 Z" />
+          <rect class="${c("triceps")}" x="22" y="62" width="11" height="22"
+                rx="5" />
+          <rect class="${c("triceps")}" x="87" y="62" width="11" height="22"
+                rx="5" />
+          <path class="${c("glutes")}"
+                d="M 42 126 Q 50 124 58 128 L 58 142 Q 50 148 42 142 Z" />
+          <path class="${c("glutes")}"
+                d="M 78 126 Q 70 124 62 128 L 62 142 Q 70 148 78 142 Z" />
+          <path class="${c("hamstrings")}"
+                d="M 42 152 L 58 152 L 56 196 Q 49 200 42 196 Z" />
+          <path class="${c("hamstrings")}"
+                d="M 78 152 L 62 152 L 64 196 Q 71 200 78 196 Z" />
+          <rect class="${c("calves")}" x="44" y="200" width="10" height="22"
+                rx="4" />
+          <rect class="${c("calves")}" x="66" y="200" width="10" height="22"
+                rx="4" />
+        </svg>
       </div>`;
+
     return `<div class="bodies">${front}${back}</div>`;
   };
 
