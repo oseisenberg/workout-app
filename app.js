@@ -345,18 +345,14 @@
       const canUp = lvlIdx < ex.levels.length - 1;
       const setsDone = done ? done.sets : 0;
       const isPartial = done && !lvlZero && setsDone < lvl.sets;
-      const setsText = lvlZero
-        ? "—"
-        : done
-          ? `${setsDone}/${lvl.sets}`
-          : `${lvl.sets}`;
-      const volumeText = lvlZero ? "—" : `${setsText}×${lvl.reps}+`;
       const tier = tierName(lvlIdx);
       const nextTier = canUp ? tierName(lvlIdx + 1) : null;
       const weightText = fmtWeight(lvl.weight);
 
       const setChipsHtml = `<div class="menu-row menu-row--chips">
-             <span class="menu-row__label">Sets done</span>
+             <span class="menu-row__label">
+               Sets done <span class="menu-row__hint">target ${lvl.sets}×${lvl.reps}+</span>
+             </span>
              <div class="menu-row__chips">${setChoices(ex)
                .map((n) => {
                  const sel = setsDone === n;
@@ -389,9 +385,6 @@
               }">${tier}</span>
             </span>
           </span>
-          <span class="exercise-row__volume${
-            isPartial ? " exercise-row__volume--partial" : ""
-          }">${volumeText}</span>
           <span class="exercise-row__stat">
             <span class="exercise-row__stat-value">${weightText}</span>
             <span class="exercise-row__stat-label">lb</span>
