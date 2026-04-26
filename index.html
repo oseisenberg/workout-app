@@ -42,9 +42,15 @@
       <section id="available-card" class="card">
         <h2>Available</h2>
         <div id="available-grid" class="exercise-grid"></div>
-        <p id="all-done-state" class="empty-state" hidden>
-          Nice — every exercise is done. They'll come back tomorrow.
-        </p>
+        <div id="all-done-state" class="all-done" hidden aria-label="All done">
+          <svg class="all-done__icon" viewBox="0 0 48 48" aria-hidden="true">
+            <circle cx="24" cy="24" r="20" fill="none"
+                    stroke="currentColor" stroke-width="2.5" />
+            <path d="M14 25 L21 32 L34 18" fill="none"
+                  stroke="currentColor" stroke-width="3.2"
+                  stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </div>
         <p id="empty-state" class="empty-state" hidden>
           No exercises yet. Tap <span aria-hidden="true">+</span>
           to add one from the catalog.
