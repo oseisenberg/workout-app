@@ -577,11 +577,18 @@
           <button type="button" class="done-btn"
                   data-action="toggle-done"
                   aria-pressed="${done ? "true" : "false"}"
-                  aria-label="${done ? "Mark incomplete" : "Mark complete"}">
+                  aria-label="${done ? "Undo completion" : "Mark complete"}">
             <svg viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M3.5 8.5 L6.8 11.8 L12.8 4.8" fill="none"
-                    stroke="currentColor" stroke-width="2.2"
-                    stroke-linecap="round" stroke-linejoin="round" />
+              ${done
+                ? `<path d="M5 3 L2 6 L5 9" fill="none" stroke="currentColor"
+                          stroke-width="2.2" stroke-linecap="round"
+                          stroke-linejoin="round" />
+                   <path d="M2 6 H10 A4 4 0 0 1 10 14" fill="none"
+                         stroke="currentColor" stroke-width="2.2"
+                         stroke-linecap="round" stroke-linejoin="round" />`
+                : `<path d="M3.5 8.5 L6.8 11.8 L12.8 4.8" fill="none"
+                          stroke="currentColor" stroke-width="2.2"
+                          stroke-linecap="round" stroke-linejoin="round" />`}
             </svg>
           </button>
           <button type="button" class="caret-btn"
