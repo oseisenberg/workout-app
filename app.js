@@ -396,7 +396,7 @@
         : done
           ? `${setsDone}/${lvl.sets}`
           : `${lvl.sets}`;
-      const repsText = lvlZero ? "—" : `${lvl.reps}+`;
+      const volumeText = lvlZero ? "—" : `${setsText}×${lvl.reps}+`;
       const tier = tierName(lvlIdx);
       const nextTier = canUp ? tierName(lvlIdx + 1) : null;
       const workingWeight = currentWeight(ex);
@@ -451,14 +451,9 @@
               }">${tier}</span>
             </span>
           </span>
-          <span class="exercise-row__stat exercise-row__stat--sets">
-            <span class="exercise-row__stat-value">${setsText}</span>
-            <span class="exercise-row__stat-label">Sets</span>
-          </span>
-          <span class="exercise-row__stat">
-            <span class="exercise-row__stat-value">${repsText}</span>
-            <span class="exercise-row__stat-label">Reps</span>
-          </span>
+          <span class="exercise-row__volume${
+            isPartial ? " exercise-row__volume--partial" : ""
+          }">${volumeText}</span>
           <span class="exercise-row__stat">
             <span class="exercise-row__stat-value">${weightText}</span>
             <span class="exercise-row__stat-label">lb</span>
