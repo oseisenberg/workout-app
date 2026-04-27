@@ -627,7 +627,6 @@ body {
   gap: 6px;
 }
 .menu-row--level {
-  justify-content: flex-end;
   gap: 6px;
 }
 .level-btn {
@@ -635,13 +634,14 @@ body {
   color: var(--text);
   border: 0;
   border-radius: 8px;
-  padding: 4px 10px;
+  padding: 8px 10px;
   font: inherit;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   letter-spacing: 0.3px;
+  flex: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
