@@ -1223,6 +1223,7 @@
 
   let muscleRange = "today";
   let muscleSelected = null;
+  let climbedExpanded = false;
   const renderAnalysis = () => {
     const view = $("analysis-view");
     if (!view) return;
@@ -1303,11 +1304,13 @@
               stroke="currentColor" stroke-width="1.5"
               stroke-linecap="round" stroke-linejoin="round" />
       </svg>`;
+    const visibleClimbed = climbedExpanded ? climbed : climbed.slice(0, 3);
+    const hiddenClimbedCount = climbed.length - visibleClimbed.length;
     const climbedCard = climbed.length === 0 ? "" : `
       <section class="card">
         <h2>Climbed</h2>
         <ul class="climbed">
-          ${climbed.map((c) => `
+          ${visibleClimbed.map((c) => `
             <li class="climbed__row">
               <span class="climbed__icon">${c.ex.icon}</span>
               <span class="climbed__name">${c.ex.name}</span>
@@ -1322,6 +1325,13 @@
               </span>
             </li>`).join("")}
         </ul>
+        ${climbed.length > 3 ? `
+          <button type="button" class="climbed__toggle"
+                  data-action="climbed-toggle">
+            ${climbedExpanded
+              ? "Show less"
+              : `Show all (${hiddenClimbedCount} more)`}
+          </button>` : ""}
       </section>`;
 
     view.innerHTML = activityCard + musclesCard + climbedCard + empty;
@@ -2436,6 +2446,11 @@
         muscleRange = btn.dataset.range;
         renderAnalysis();
         if (muscleSelected) renderMusclePopover();
+        return;
+      }
+      if (event.target.closest("[data-action=\"climbed-toggle\"]")) {
+        climbedExpanded = !climbedExpanded;
+        renderAnalysis();
         return;
       }
       const region = event.target.closest("[data-region]");
