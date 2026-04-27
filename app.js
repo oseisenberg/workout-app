@@ -1244,61 +1244,6 @@
         </div>
       </section>`;
 
-    let detailHtml = "";
-    if (muscleSelected) {
-      const exs = exercisesForRegionSince(
-        muscleSelected, rangeSinceDate(muscleRange));
-      const lifetime = regionLifetimeStats(muscleSelected);
-      const label = REGION_LABELS[muscleSelected] || muscleSelected;
-      const rangeLbl = rangeShortLabel(muscleRange);
-      const rangeSessions = exs.reduce((s, e) => s + e.count, 0);
-      const lastBadge = lifetime.lastDate
-        ? dateBadge(parseDateStr(lifetime.lastDate))
-        : null;
-      const statRow = `
-        <div class="muscle-detail__stats">
-          <div class="muscle-detail__stat">
-            <span class="muscle-detail__stat-value">${
-              lastBadge || "—"
-            }</span>
-            <span class="muscle-detail__stat-label">Last hit</span>
-          </div>
-          <div class="muscle-detail__stat">
-            <span class="muscle-detail__stat-value">${rangeSessions}</span>
-            <span class="muscle-detail__stat-label">In ${rangeLbl}</span>
-          </div>
-          <div class="muscle-detail__stat">
-            <span class="muscle-detail__stat-value">${lifetime.allTime}</span>
-            <span class="muscle-detail__stat-label">All-time</span>
-          </div>
-        </div>`;
-      detailHtml = `
-        <div class="muscle-detail">
-          <div class="muscle-detail__head">
-            <span class="muscle-detail__title">${label}</span>
-            <button type="button" class="muscle-detail__close"
-                    data-action="muscle-clear" aria-label="Close detail">
-              <svg viewBox="0 0 16 16" aria-hidden="true">
-                <path d="M4 4 L12 12 M12 4 L4 12" fill="none"
-                      stroke="currentColor" stroke-width="2"
-                      stroke-linecap="round" />
-              </svg>
-            </button>
-          </div>
-          ${statRow}
-          ${exs.length === 0
-            ? `<p class="muscle-detail__empty">
-                 No work for ${label.toLowerCase()} in ${rangeLbl}.
-               </p>`
-            : `<ul class="muscle-detail__list">
-                 ${exs.map((e) => `
-                   <li>
-                     <span class="muscle-detail__name">${e.name}</span>
-                     <span class="muscle-detail__hits">${e.count}×</span>
-                   </li>`).join("")}
-               </ul>`}
-        </div>`;
-    }
     const toggleHtml = RANGE_OPTIONS.map((o) => `
       <button type="button" role="tab"
               class="muscle-toggle__btn${
@@ -1315,7 +1260,6 @@
         ${hasData
           ? renderBodyDiagram(counts, muscleSelected)
           : `<p class="empty-state">${emptyMsg}</p>`}
-        ${detailHtml}
       </section>`;
 
     const empty = activity.workouts === 0 && exercises.length === 0
@@ -1326,6 +1270,59 @@
       : "";
 
     view.innerHTML = activityCard + musclesCard + empty;
+  };
+
+  // Floating per-muscle popover. Lives in its own modal so opening it
+  // doesn't push the analysis card around. Content updates whenever
+  // the range toggle changes while the popover is open.
+  const renderMusclePopover = () => {
+    if (!muscleSelected) return;
+    const label = REGION_LABELS[muscleSelected] || muscleSelected;
+    const rangeLbl = rangeShortLabel(muscleRange);
+    const exs = exercisesForRegionSince(
+      muscleSelected, rangeSinceDate(muscleRange));
+    const lifetime = regionLifetimeStats(muscleSelected);
+    const rangeSessions = exs.reduce((s, e) => s + e.count, 0);
+    const lastDays = lifetime.lastDate
+      ? daysBetweenTodayAnd(lifetime.lastDate)
+      : null;
+    const lastLine = lastDays == null
+      ? "Never worked yet."
+      : lastDays === 0
+        ? "Last worked today."
+        : lastDays === 1
+          ? "Last worked yesterday."
+          : `Last worked ${lastDays} days ago.`;
+    $("muscle-popover-title").textContent = label;
+    $("muscle-popover-body").innerHTML = `
+      <div class="muscle-popover__stat">
+        <span class="muscle-popover__value">${rangeSessions}</span>
+        <span class="muscle-popover__label">session${
+          rangeSessions === 1 ? "" : "s"} in ${rangeLbl}</span>
+      </div>
+      <p class="muscle-popover__last">${lastLine}</p>
+      ${exs.length === 0 ? "" : `
+        <ul class="muscle-popover__list">
+          ${exs.map((e) => `
+            <li>
+              <span class="muscle-popover__name">${e.name}</span>
+              <span class="muscle-popover__hits">${e.count}×</span>
+            </li>`).join("")}
+        </ul>`}`;
+  };
+  const openMusclePopover = () => {
+    renderMusclePopover();
+    $("muscle-popover").hidden = false;
+    document.body.classList.add("modal-open");
+    adjustModalsForViewport();
+  };
+  const closeMusclePopover = () => {
+    muscleSelected = null;
+    $("muscle-popover").hidden = true;
+    if ($("picker").hidden && $("details").hidden && $("settings").hidden) {
+      document.body.classList.remove("modal-open");
+    }
+    renderAnalysis();
   };
 
   // === Tab switching =====================================================
@@ -2383,20 +2380,18 @@
       if (btn && btn.dataset.range) {
         muscleRange = btn.dataset.range;
         renderAnalysis();
-        return;
-      }
-      if (event.target.closest("[data-action=\"muscle-clear\"]")) {
-        muscleSelected = null;
-        renderAnalysis();
+        if (muscleSelected) renderMusclePopover();
         return;
       }
       const region = event.target.closest("[data-region]");
       if (region) {
-        const key = region.dataset.region;
-        muscleSelected = muscleSelected === key ? null : key;
-        renderAnalysis();
+        muscleSelected = region.dataset.region;
+        openMusclePopover();
       }
     });
+    $("muscle-popover-close").addEventListener("click", closeMusclePopover);
+    $("muscle-popover-backdrop").addEventListener("click", closeMusclePopover);
+    attachSwipeDownClose($("muscle-popover"), closeMusclePopover);
     $("snoozed-toggle").addEventListener("click", () => {
       const card = $("snoozed-card");
       const collapsed = card.classList.toggle("card--collapsed");

@@ -190,6 +190,25 @@
     </div>
   </div>
 
+  <div id="muscle-popover" class="picker" hidden role="dialog"
+       aria-modal="true" aria-labelledby="muscle-popover-title">
+    <div id="muscle-popover-backdrop" class="picker__backdrop"></div>
+    <div class="picker__sheet picker__sheet--compact" role="document">
+      <div class="picker__header">
+        <h2 id="muscle-popover-title" class="picker__title">Muscle</h2>
+        <button id="muscle-popover-close" type="button" class="picker__close"
+                aria-label="Close">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4 4 L12 12 M12 4 L4 12" fill="none"
+                  stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+      <div id="muscle-popover-body" class="muscle-popover__body"></div>
+    </div>
+  </div>
+
   <div id="settings" class="picker" hidden role="dialog" aria-modal="true"
        aria-labelledby="settings-title">
     <div id="settings-backdrop" class="picker__backdrop"></div>

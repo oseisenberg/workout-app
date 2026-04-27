@@ -801,6 +801,19 @@ body {
   .picker { align-items: center; }
   .picker__sheet { border-radius: 16px; max-height: 70vh; }
 }
+/* Compact variant for small focused popovers (per-muscle, etc.).
+   Stays a centered floating card on mobile too rather than a full
+   bottom sheet, since the content is small enough not to need it. */
+#muscle-popover { align-items: center; padding: 0 16px; }
+.picker__sheet--compact {
+  max-width: 360px;
+  max-height: 70vh;
+  border-radius: 16px;
+  padding: 14px 14px;
+}
+@media (min-width: 540px) {
+  .picker__sheet--compact { max-height: 60vh; }
+}
 
 .picker__header {
   display: flex;
@@ -1116,87 +1129,61 @@ body.modal-open { overflow: hidden; }
   stroke-width: 1.6;
 }
 
-/* Per-muscle detail panel below the body diagrams. Surfaces which
-   exercises hit the selected region within the active range. */
-.muscle-detail {
-  margin-top: 12px;
-  padding: 10px 12px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-}
-.muscle-detail__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.muscle-detail__title {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-}
-.muscle-detail__close {
-  background: transparent;
-  border: 0;
-  padding: 4px;
-  color: var(--muted);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.muscle-detail__close svg { width: 14px; height: 14px; display: block; }
-.muscle-detail__stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  margin: 8px 0;
-}
-.muscle-detail__stat {
+/* Per-muscle popover — its own modal sheet so opening it doesn't push
+   the analysis card around. Re-uses .picker__sheet chrome via the
+   --compact variant; body is a single big stat plus a "last worked"
+   line and the contributing exercise list. */
+.muscle-popover__body {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  padding: 6px 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  gap: 10px;
+  padding: 4px 6px 2px;
 }
-.muscle-detail__stat-value {
-  font-size: 13px;
+.muscle-popover__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.muscle-popover__value {
+  font-size: 32px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
-.muscle-detail__stat-label {
-  font-size: 10px;
+.muscle-popover__label {
+  font-size: 12px;
+  color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--muted);
+  letter-spacing: 0.5px;
 }
-.muscle-detail__empty {
-  margin: 6px 0 0;
-  font-size: 12.5px;
-  color: var(--muted);
-}
-.muscle-detail__list {
-  list-style: none;
+.muscle-popover__last {
   margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+.muscle-popover__list {
+  list-style: none;
+  margin: 4px 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
-.muscle-detail__list li {
+.muscle-popover__list li {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  padding: 4px 0;
+  padding: 8px 4px;
   font-size: 13px;
   border-top: 1px dashed var(--border);
 }
-.muscle-detail__list li:first-child { border-top: 0; }
-.muscle-detail__hits {
+.muscle-popover__list li:first-child { border-top: 0; }
+.muscle-popover__hits {
   font-variant-numeric: tabular-nums;
   color: var(--muted);
 }
