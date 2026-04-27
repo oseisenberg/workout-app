@@ -473,6 +473,156 @@
       "levels": 4,
       "snoozeDays": 1,
       "purpose": "cardio"
+    },
+    {
+      "id": "plank",
+      "name": "Plank",
+      "muscles": "Core",
+      "icon": "pushup",
+      "category": "bodyweight",
+      "description": "Hold a straight-line plank from forearms or hands. Tracked by how long you can hold it.",
+      "mistakes": [
+        "Don't let your hips sag toward the ground",
+        "Don't pike your hips up either — keep one straight line",
+        "Brace your core; don't just hang in the position"
+      ],
+      "durationStart": 1,
+      "durationStep": 1,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "hip-thrust",
+      "name": "Hip Thrust",
+      "muscles": "Glutes · Hamstrings",
+      "icon": "barbell",
+      "description": "Drive your hips up against a load while your upper back rests on a bench. The big direct glute lift.",
+      "mistakes": [
+        "Don't hyperextend your lower back at the top",
+        "Tuck your chin and ribs — keep a neutral spine",
+        "Drive through your heels, not your toes"
+      ],
+      "sets": 3,
+      "reps": 8,
+      "weightStart": 45,
+      "weightStep": 25,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "romanian-deadlift",
+      "name": "Romanian Deadlift",
+      "muscles": "Hamstrings · Glutes · Back",
+      "icon": "barbell",
+      "description": "Hinge at the hips with a slight knee bend, lowering a barbell along your legs to mid-shin or so.",
+      "mistakes": [
+        "Don't round your lower back — keep it flat",
+        "Hinge at the hips, don't squat the weight down",
+        "Don't bounce or jerk at the bottom"
+      ],
+      "sets": 3,
+      "reps": 8,
+      "weightStart": 45,
+      "weightStep": 20,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "calf-raise",
+      "name": "Calf Raise",
+      "muscles": "Calves",
+      "icon": "leg-curl",
+      "description": "Push up onto the balls of your feet against a load — standing or seated. Direct calf work.",
+      "mistakes": [
+        "Use full range — drop the heel below level, rise all the way up",
+        "Don't bounce — pause briefly at the top",
+        "Don't bend the knee mid-rep on a standing variant"
+      ],
+      "sets": 3,
+      "reps": 12,
+      "weightStart": 25,
+      "weightStep": 25,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "common": true
+    },
+    {
+      "id": "lateral-raise",
+      "name": "Lateral Raise",
+      "muscles": "Shoulders",
+      "icon": "dumbbell",
+      "description": "Raise dumbbells out to your sides up to shoulder height. Side-delt isolation.",
+      "mistakes": [
+        "Don't shrug — keep your traps relaxed",
+        "Lead with the elbow, not the hand",
+        "Don't swing the weights up with momentum"
+      ],
+      "sets": 3,
+      "reps": 12,
+      "weightStart": 5,
+      "weightStep": 5,
+      "pipsPerLevel": 2,
+      "levels": 4
+    },
+    {
+      "id": "face-pull",
+      "name": "Face Pull",
+      "muscles": "Shoulders · Back",
+      "icon": "cable",
+      "description": "Pull a rope toward your face at eye level, flaring your elbows out. Hits rear delts and upper back.",
+      "mistakes": [
+        "Lead with the elbows, not the hands",
+        "Pull to your face, not your chest",
+        "Keep the weight light — form first"
+      ],
+      "sets": 3,
+      "reps": 15,
+      "weightStart": 10,
+      "weightStep": 5,
+      "pipsPerLevel": 2,
+      "levels": 4
+    },
+    {
+      "id": "hanging-leg-raise",
+      "name": "Hanging Leg Raise",
+      "muscles": "Core",
+      "icon": "pullup",
+      "description": "Hang from a bar and raise your legs to parallel (or higher). Lower-ab focused.",
+      "mistakes": [
+        "Don't swing — control both the up and the down",
+        "Engage your shoulders before each rep",
+        "Lift with your core, not by kicking your legs"
+      ],
+      "bodyweight": true,
+      "sets": 3,
+      "repsStart": 3,
+      "repsStep": 3,
+      "pipsPerLevel": 2,
+      "levels": 4
+    },
+    {
+      "id": "jump-rope",
+      "name": "Jump Rope",
+      "muscles": "Calves · Shoulders · Core",
+      "icon": "running",
+      "category": "cardio",
+      "description": "Steady jump rope. Tracked by minutes of continuous skipping (or by skip count if you prefer).",
+      "mistakes": [
+        "Stay light on your feet — small bounces, not big jumps",
+        "Turn the rope with your wrists, not your shoulders",
+        "Keep your elbows close to your body"
+      ],
+      "durationStart": 1,
+      "durationStep": 1,
+      "repsStart": 30,
+      "repsStep": 30,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "snoozeDays": 1,
+      "purpose": "cardio"
     }
   ]
 }

@@ -288,8 +288,8 @@
   // switch back to that metric.
   const CATEGORY_INFO = {
     strength:   { default: "weight",   allowed: ["weight"] },
-    bodyweight: { default: "reps",     allowed: ["reps"] },
-    cardio:     { default: "distance", allowed: ["distance", "duration"] },
+    bodyweight: { default: "reps",     allowed: ["reps", "duration"] },
+    cardio:     { default: "distance", allowed: ["distance", "duration", "reps"] },
   };
   const METRIC_INFO = {
     weight:   { unit: "lb",  start: "weightStart",   step: "weightStep" },
@@ -307,6 +307,12 @@
     const want = t.metric || info.default;
     if (info.allowed.includes(want) && t[METRIC_INFO[want].start] != null) {
       return want;
+    }
+    // The category default may not be present on every template (e.g. a
+    // jump rope template has no `distanceStart`); fall back to the first
+    // allowed metric the template actually carries.
+    for (const m of info.allowed) {
+      if (t[METRIC_INFO[m].start] != null) return m;
     }
     return info.default;
   };
