@@ -626,22 +626,27 @@ body {
   align-items: center;
   gap: 6px;
 }
+/* The level buttons are secondary controls (just chevrons), so the pair
+   takes only as much horizontal room as one Partial/Snooze button above
+   — i.e., each is roughly a quarter of the popover width — and they sit
+   centered in the row. */
 .menu-row--level {
   gap: 6px;
+  justify-content: center;
 }
 .level-btn {
   background: var(--surface-2);
   color: var(--text);
   border: 0;
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 8px 0;
   font: inherit;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   letter-spacing: 0.3px;
-  flex: 1;
+  flex: 0 0 calc((100% - 6px) / 4);
   display: inline-flex;
   align-items: center;
   justify-content: center;
