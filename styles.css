@@ -1368,8 +1368,39 @@ body.modal-open { overflow: hidden; }
   gap: 10px;
   font-size: 13px;
 }
+/* Metric chooser spans the input + unit columns so it can sit side-by-
+   side with its label, the same shape as the numeric edit rows. */
+.details__edit-row--metric {
+  grid-template-columns: 1fr auto;
+}
+.details__edit-row--metric .metric-chooser { grid-column: 2; }
 .details__edit-label {
   color: var(--muted);
+}
+.metric-chooser {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+}
+.metric-chooser__btn {
+  padding: 5px 12px;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.metric-chooser__btn--active {
+  background: var(--accent);
+  color: white;
 }
 .details__edit-input {
   display: contents;

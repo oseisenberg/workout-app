@@ -192,6 +192,42 @@
         <line x1="32" y1="36" x2="16" y2="58"
               stroke="var(--accent)" />
       </svg>`,
+    "running": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="58" x2="58" y2="58" />
+        <circle cx="40" cy="14" r="4" />
+        <polyline points="40,18 32,28 38,38 30,52" />
+        <line x1="32" y1="28" x2="22" y2="32"
+              stroke="var(--accent)" />
+        <line x1="38" y1="38" x2="50" y2="34"
+              stroke="var(--accent)" />
+        <line x1="30" y1="52" x2="22" y2="58"
+              stroke="var(--accent)" />
+      </svg>`,
+    "cycling": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <circle cx="16" cy="46" r="10" stroke="var(--accent)" />
+        <circle cx="48" cy="46" r="10" stroke="var(--accent)" />
+        <polyline points="16,46 28,28 40,28 48,46" />
+        <line x1="28" y1="28" x2="36" y2="14" />
+        <circle cx="38" cy="12" r="3" />
+      </svg>`,
+    "rowing": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="56" x2="58" y2="56" />
+        <circle cx="40" cy="20" r="4" />
+        <polyline points="40,24 32,34 18,40" />
+        <line x1="32" y1="34" x2="48" y2="44"
+              stroke="var(--accent)" />
+        <line x1="10" y1="38" x2="50" y2="46"
+              stroke="var(--accent)" />
+      </svg>`,
   };
 
   // Purpose icons sit beside the level pill on a row when an exercise's
@@ -242,41 +278,76 @@
   };
 
   // === Catalog ===========================================================
-  // Sets and reps are constant across an exercise — only the weight changes
-  // between tiers. Each upgrade fills one pip; once all pips for a level are
-  // full, the next upgrade rolls over into the next level. So with
-  // pipsPerLevel = 2, going from Lvl 1 (●●○) to Lvl 2 (○○○) takes 3 upgrades.
-  // A Starter (Lvl 0) entry is prepended for everyone with sets/reps of 0
-  // (sentinel for "no prescription"). Completion at Starter is binary.
-  const buildLevels = (t) => {
+  // Each exercise belongs to a category, which determines the **default**
+  // tracked metric. The user can override the tracked metric per exercise
+  // (via Customize) so long as the new metric is in the category's allowed
+  // list and the template carries the corresponding *Start/*Step fields.
+  // Switching metric on an exercise re-derives its tier ladder; history
+  // entries carry their own `metric` so old entries don't get re-painted
+  // against a different ruler — they simply hide from the chart until you
+  // switch back to that metric.
+  const CATEGORY_INFO = {
+    strength:   { default: "weight",   allowed: ["weight"] },
+    bodyweight: { default: "reps",     allowed: ["reps"] },
+    cardio:     { default: "distance", allowed: ["distance", "duration"] },
+  };
+  const METRIC_INFO = {
+    weight:   { unit: "lb",  start: "weightStart",   step: "weightStep" },
+    reps:     { unit: "reps", start: "repsStart",     step: "repsStep" },
+    distance: { unit: "km",   start: "distanceStart", step: "distanceStep" },
+    duration: { unit: "min",  start: "durationStart", step: "durationStep" },
+  };
+  // Category default; falls back to legacy "bodyweight" flag for templates
+  // that haven't been retrofitted with a category field.
+  const templateCategory = (t) =>
+    t.category || (t.bodyweight ? "bodyweight" : "strength");
+  const templateMetric = (t) => {
+    const cat = templateCategory(t);
+    const info = CATEGORY_INFO[cat];
+    const want = t.metric || info.default;
+    if (info.allowed.includes(want) && t[METRIC_INFO[want].start] != null) {
+      return want;
+    }
+    return info.default;
+  };
+
+  // Builds the full tier ladder for a template under a chosen metric. Each
+  // upgrade fills one pip; once all pips for a level are full, the next
+  // upgrade rolls into the next level. Lvl 0 is a binary "I tried it but
+  // couldn't do the full thing" sentinel — no prescription, completion is
+  // just a checkmark.
+  const buildLevels = (t, metric) => {
+    const cat = templateCategory(t);
     const pipsPerLevel = t.pipsPerLevel || 2;
     const tiersPerLevel = pipsPerLevel + 1;
-    const levelCount = t.levels || 0;
-    const totalPrescriptive = levelCount * tiersPerLevel;
-    const bw = !!t.bodyweight;
-    // Lvl 0 is binary with no weight or rep prescription — represents "I
-    // did the exercise but couldn't do the full sets at any weight". Lvl 1
-    // pip 0 then owns the [0, weightStart] band as the first tier where
-    // full sets are expected; subsequent pips step up by weightStep.
+    const totalPrescriptive = (t.levels || 0) * tiersPerLevel;
+    const info = METRIC_INFO[metric];
+    const startVal = t[info.start];
+    const stepVal = t[info.step];
+    const unit = info.unit;
+    const isBw = cat === "bodyweight";
+    // Reps suggestion only applies when the tracked metric isn't reps and
+    // the template carries one (strength exercises do, cardio doesn't).
+    const suggestReps = metric !== "reps" && t.reps;
+    const suggestSets = metric !== "duration" && t.sets;
     const out = [{
-      sets: 0,
-      reps: 0,
-      weight: null,
-      bodyweight: bw,
-      level: 0,
-      pip: 0,
-      pipsPerLevel: 0,
+      metric, unit,
+      value: null,
+      sets: 0, reps: 0,
+      bodyweight: isBw,
+      category: cat,
+      level: 0, pip: 0, pipsPerLevel: 0,
     }];
     for (let i = 0; i < totalPrescriptive; i++) {
-      const wLo = i === 0 ? 0 : t.weightStart + (i - 1) * t.weightStep;
-      const wHi = i === 0 ? t.weightStart : t.weightStart + i * t.weightStep;
-      const rLo = i === 0 ? 0 : t.repsStart + (i - 1) * t.repsStep;
-      const rHi = i === 0 ? t.repsStart : t.repsStart + i * t.repsStep;
+      const lo = i === 0 ? 0 : startVal + (i - 1) * stepVal;
+      const hi = i === 0 ? startVal : startVal + i * stepVal;
       out.push({
-        sets: t.sets,
-        reps: bw ? [rLo, rHi] : t.reps,
-        weight: bw ? null : [wLo, wHi],
-        bodyweight: bw,
+        metric, unit,
+        value: [lo, hi],
+        sets: suggestSets ? t.sets : null,
+        reps: suggestReps ? t.reps : null,
+        bodyweight: isBw,
+        category: cat,
         level: Math.floor(i / tiersPerLevel) + 1,
         pip: i % tiersPerLevel,
         pipsPerLevel,
@@ -285,20 +356,28 @@
     return out;
   };
 
-  const templateToExercise = (t) => ({
-    id: t.id,
-    name: t.name,
-    muscles: t.muscles,
-    icon: ICONS[t.icon] || ICONS.barbell,
-    levels: buildLevels(t),
-    snoozeDays: t.snoozeDays != null ? t.snoozeDays : 1,
-    common: !!t.common,
-    description: t.description || "",
-    mistakes: Array.isArray(t.mistakes) ? t.mistakes : [],
-    // "muscle" (default, no icon shown) | "tendon" | "mobility"
-    // | "cardio" | "skill" | "balance"
-    purpose: t.purpose || "muscle",
-  });
+  const templateToExercise = (t) => {
+    const cat = templateCategory(t);
+    const metric = templateMetric(t);
+    return {
+      id: t.id,
+      name: t.name,
+      muscles: t.muscles,
+      icon: ICONS[t.icon] || ICONS.barbell,
+      levels: buildLevels(t, metric),
+      category: cat,
+      metric,
+      allowedMetrics: CATEGORY_INFO[cat].allowed.filter(
+        (m) => t[METRIC_INFO[m].start] != null),
+      snoozeDays: t.snoozeDays != null ? t.snoozeDays : 1,
+      common: !!t.common,
+      description: t.description || "",
+      mistakes: Array.isArray(t.mistakes) ? t.mistakes : [],
+      // "muscle" (default, no icon shown) | "tendon" | "mobility"
+      // | "cardio" | "skill" | "balance"
+      purpose: t.purpose || "muscle",
+    };
+  };
 
   // Raw exercises.json templates and the in-memory catalog derived from
   // them. Customizations stored on state get merged into the templates
@@ -309,10 +388,13 @@
 
   // Fields the user is allowed to override per exercise. pipsPerLevel and
   // levels are deliberately NOT here — letting the user touch them would
-  // re-shape the leveling system, which we want kept stable.
+  // re-shape the leveling system, which we want kept stable. `metric`
+  // selects which tracked metric the tier ladder is built from (within
+  // the category's allowed list).
   const CUSTOMIZABLE_FIELDS = [
     "weightStart", "weightStep", "repsStart", "repsStep",
-    "sets", "reps", "snoozeDays",
+    "distanceStart", "distanceStep", "durationStart", "durationStep",
+    "sets", "reps", "snoozeDays", "metric",
   ];
 
   const mergeCustomization = (t) => {
@@ -404,13 +486,17 @@
   // upgrade as they go.
   const defaultLevel = (ex) => (ex.levels.length > 1 ? 1 : 0);
   const currentLevel = (ex) => ex.levels[state.levels[ex.id]];
-  const isLevelZero = (lvl) => lvl.sets === 0;
+  const isLevelZero = (lvl) => lvl.level === 0;
   const todaysCompletion = (exId) => (state.completed[todayKey()] || {})[exId];
-  const fmtWeight = (w) => (w[0] === w[1] ? `${w[0]}` : `${w[0]}–${w[1]}`);
-  // Bodyweight reps are a range; weighted exercises store a single rep
-  // number that's treated as a minimum target (rendered with a "+" suffix).
+  // Tier ranges (weight, distance, duration) are stored as [lo, hi] arrays.
+  // Suggested-rep targets on weighted exercises are a single number that's
+  // treated as a minimum target (rendered with a "+" suffix).
+  const fmtRange = (r) =>
+    r[0] === r[1] ? `${r[0]}` : `${r[0]}–${r[1]}`;
   const fmtReps = (r) =>
-    Array.isArray(r) ? `${r[0]}–${r[1]}` : `${r}+`;
+    Array.isArray(r) ? fmtRange(r) : `${r}+`;
+  const fmtTierValue = (lvl) =>
+    lvl.value == null ? null : fmtRange(lvl.value);
   const repsLow = (r) => (Array.isArray(r) ? r[0] : r);
 
   const lastCompletionDate = (exId) => {
@@ -474,12 +560,20 @@
   // input — e.g., a 0 or negative weightStep would collapse the whole
   // ladder. Returns null if the value should be ignored.
   const sanitizeCustomization = (field, raw) => {
+    if (field === "metric") {
+      const v = String(raw || "");
+      return Object.prototype.hasOwnProperty.call(METRIC_INFO, v) ? v : null;
+    }
     const n = Number(raw);
     if (!Number.isFinite(n)) return null;
     if (field === "weightStart") return Math.max(0, Math.round(n));
     if (field === "repsStart") return Math.max(0, Math.round(n));
+    if (field === "distanceStart") return Math.max(0, Math.round(n));
+    if (field === "durationStart") return Math.max(0, Math.round(n));
     if (field === "weightStep") return Math.max(1, Math.round(n));
     if (field === "repsStep") return Math.max(1, Math.round(n));
+    if (field === "distanceStep") return Math.max(1, Math.round(n));
+    if (field === "durationStep") return Math.max(1, Math.round(n));
     if (field === "sets") return Math.max(1, Math.min(10, Math.round(n)));
     if (field === "reps") return Math.max(1, Math.min(50, Math.round(n)));
     if (field === "snoozeDays") return Math.max(0, Math.min(14, Math.round(n)));
@@ -541,7 +635,11 @@
     const finalKind = isLevelZero(lvl) && kind === "partial"
       ? "full"
       : kind || "full";
-    state.completed[day][exId] = { level: state.levels[exId], kind: finalKind };
+    state.completed[day][exId] = {
+      level: state.levels[exId],
+      kind: finalKind,
+      metric: ex.metric,
+    };
     saveState();
     renderExercises();
   };
@@ -665,14 +763,11 @@
       const tier = tierName(lvl);
       const pipsHtml = renderPips(lvl);
       const nextTier = canUp ? tierName(ex.levels[lvlIdx + 1]) : null;
-      const isBw = !!lvl.bodyweight;
       const weightStatHtml = lvlZero
         ? `<span class="exercise-row__try" aria-label="No fixed prescription">Try it</span>`
         : `<span class="exercise-row__stat">
-             <span class="exercise-row__stat-value">${
-               isBw ? fmtReps(lvl.reps) : fmtWeight(lvl.weight)
-             }</span>
-             <span class="exercise-row__stat-label">${isBw ? "reps" : "lb"}</span>
+             <span class="exercise-row__stat-value">${fmtTierValue(lvl)}</span>
+             <span class="exercise-row__stat-label">${lvl.unit}</span>
            </span>`;
 
       // Two completion alternates to the green check: "partial" credits the
@@ -1450,7 +1545,7 @@
               : "full";
         const dateKey = fmt(d);
         if (!completed[dateKey]) completed[dateKey] = {};
-        completed[dateKey][exId] = { level: curTier, kind };
+        completed[dateKey][exId] = { level: curTier, kind, metric: ex.metric };
         lastTs = d;
       }
     }
@@ -1588,7 +1683,8 @@
 
   const renderProgressChart = (ex, history) => {
     const points = history
-      .filter((h) => h.level > 0 && (h.kind || "full") !== "skipped")
+      .filter((h) => h.level > 0 && (h.kind || "full") !== "skipped"
+        && (h.metric || ex.metric) === ex.metric)
       .map((h) => ({ ts: parseDateStr(h.date), tier: h.level }))
       .sort((a, b) => a.ts - b.ts);
     if (points.length === 0) { chartCtx = null; return ""; }
@@ -1708,12 +1804,14 @@
   // the number stays meaningful as the user moves up.
   const computeProgressSummary = (ex, history) => {
     const cur = state.levels[ex.id];
-    if (!history || history.length === 0) return null;
+    const filtered = (history || []).filter(
+      (h) => (h.metric || ex.metric) === ex.metric);
+    if (filtered.length === 0) return null;
     // history is sorted newest-first.
-    const oldest = history[history.length - 1];
+    const oldest = filtered[filtered.length - 1];
     const cutoff = dateNDaysAgo(30);
     let baseline30 = null;
-    for (const h of history) {
+    for (const h of filtered) {
       if (h.date <= cutoff) { baseline30 = h; break; }
     }
     const daysSinceStart = Math.max(1, Math.round(
@@ -1794,22 +1892,25 @@
       : `<p class="details__empty">No completions yet — your progression chart will start filling in as you log this exercise.</p>`;
 
     // Each exercise has one tracked metric (the one progression is built
-    // from): weight for weighted exercises, reps for bodyweight. Sets are
-    // always just a suggestion. Surface that distinction explicitly.
+    // from). Surface the tracked value plus any suggested-only auxiliary
+    // values (sets/reps for weighted, sets for bodyweight, nothing for
+    // cardio — its tier is already the prescription).
     const trackedMetric = lvlZero
       ? null
-      : lvl.bodyweight
-        ? `${fmtReps(lvl.reps)} reps`
-        : `${fmtWeight(lvl.weight)} lb`;
-    const suggested = lvlZero
-      ? null
-      : lvl.bodyweight
-        ? `${lvl.sets} sets`
-        : `${lvl.sets} sets · ${fmtReps(lvl.reps)} reps`;
+      : `${fmtTierValue(lvl)} ${lvl.unit}`;
+    const suggestedParts = lvlZero
+      ? []
+      : [
+          lvl.sets ? `${lvl.sets} sets` : null,
+          lvl.reps ? `${fmtReps(lvl.reps)} reps` : null,
+        ].filter(Boolean);
+    const suggested = suggestedParts.length ? suggestedParts.join(" · ") : null;
     const summaryHtml = lvlZero
       ? `<span class="details__hero-summary">${tier} · just trying it out</span>`
       : `<span class="details__hero-summary">${tier} · ${trackedMetric}</span>
-         <span class="details__hero-suggested">Suggested: ${suggested}</span>`;
+         ${suggested
+           ? `<span class="details__hero-suggested">Suggested: ${suggested}</span>`
+           : ""}`;
 
     const archived = isArchived(ex.id);
     const archiveBtnHtml = `
@@ -1868,22 +1969,59 @@
           </span>
         </label>`;
     };
+    // Per-metric ladder editor — only the fields for the active metric are
+    // shown, since switching metric is itself an option above. Each metric
+    // has its own start/step pair stored on the template, so flipping the
+    // metric chooser swaps which two inputs are visible.
+    const ladderFields = (m) => {
+      if (m === "weight") return (
+        customField("Weight per tier", "weightStep", "lb",
+          `min="1" max="100" step="1"`) +
+        customField("Starting weight", "weightStart", "lb",
+          `min="0" max="500" step="1"`));
+      if (m === "reps") return (
+        customField("Reps per tier", "repsStep", "reps",
+          `min="1" max="20" step="1"`) +
+        customField("Starting reps", "repsStart", "reps",
+          `min="0" max="50" step="1"`));
+      if (m === "distance") return (
+        customField("Distance per tier", "distanceStep", "km",
+          `min="1" max="20" step="1"`) +
+        customField("Starting distance", "distanceStart", "km",
+          `min="0" max="50" step="1"`));
+      if (m === "duration") return (
+        customField("Minutes per tier", "durationStep", "min",
+          `min="1" max="30" step="1"`) +
+        customField("Starting minutes", "durationStart", "min",
+          `min="0" max="120" step="1"`));
+      return "";
+    };
+    const metricChooserHtml = ex.allowedMetrics.length > 1 ? `
+      <div class="details__edit-row details__edit-row--metric">
+        <span class="details__edit-label">Tracked metric</span>
+        <div class="metric-chooser" role="radiogroup" aria-label="Tracked metric">
+          ${ex.allowedMetrics.map((m) => `
+            <button type="button" role="radio"
+                    class="metric-chooser__btn${
+                      ex.metric === m ? " metric-chooser__btn--active" : ""
+                    }"
+                    aria-checked="${ex.metric === m ? "true" : "false"}"
+                    data-action="set-metric" data-metric="${m}">
+              ${m[0].toUpperCase() + m.slice(1)}
+            </button>`).join("")}
+        </div>
+      </div>` : "";
     const customizeHtml = `
       <h3 class="details__section">Customize</h3>
       <div class="details__edit">
-        ${t.bodyweight
-          ? customField("Reps per tier", "repsStep", "reps",
-              `min="1" max="20" step="1"`) +
-            customField("Starting reps", "repsStart", "reps",
-              `min="0" max="50" step="1"`)
-          : customField("Weight per tier", "weightStep", "lb",
-              `min="1" max="100" step="1"`) +
-            customField("Starting weight", "weightStart", "lb",
-              `min="0" max="500" step="1"`)}
-        ${customField("Suggested sets", "sets", "",
-          `min="1" max="10" step="1"`)}
-        ${t.bodyweight ? "" : customField("Suggested reps", "reps", "",
-          `min="1" max="50" step="1"`)}
+        ${metricChooserHtml}
+        ${ladderFields(ex.metric)}
+        ${ex.metric !== "duration" && t.sets != null
+          ? customField("Suggested sets", "sets", "",
+              `min="1" max="10" step="1"`) : ""}
+        ${ex.metric === "weight"
+          ? customField("Suggested reps", "reps", "",
+              `min="1" max="50" step="1"`) : ""}
         ${customField("Snooze for", "snoozeDays", "days",
           `min="0" max="14" step="1"`)}
         ${isCustomized
@@ -2031,6 +2169,9 @@
       } else if (action === "toggle-chart") {
         chartExpanded = !chartExpanded;
         renderDetails();
+      } else if (action === "set-metric") {
+        setCustomization(openDetailsId, "metric", target.dataset.metric);
+        renderDetails();
       }
     });
 
@@ -2063,9 +2204,8 @@
       const px = xOf(nearest.ts);
       const py = yOf(nearest.tier);
       const lvl = ctx.ex.levels[nearest.tier];
-      const value = lvl
-        ? (lvl.bodyweight ? `${fmtReps(lvl.reps)} reps`
-                          : `${fmtWeight(lvl.weight)} lb`)
+      const value = lvl && lvl.value != null
+        ? `${fmtTierValue(lvl)} ${lvl.unit}`
         : "";
       const label = `${dateBadge(nearest.ts)} · Lvl ${lvl ? lvl.level : "?"}${
         value ? ` · ${value}` : ""}`;
@@ -2280,6 +2420,24 @@
         }
       }
       state.completionKindV9 = true;
+      saveState();
+    }
+    // One-time migration: completion entries gain a `metric` field so
+    // metric switches don't repaint old data against the new ruler.
+    // Existing entries are tagged with the exercise's currently-active
+    // metric, since that's what they were originally recorded against.
+    if (!state.completionMetricV10) {
+      for (const date in state.completed) {
+        const day = state.completed[date];
+        if (!day) continue;
+        for (const exId in day) {
+          const entry = day[exId];
+          if (!entry || entry.metric) continue;
+          const ex = exerciseById(exId);
+          entry.metric = ex ? ex.metric : "weight";
+        }
+      }
+      state.completionMetricV10 = true;
       saveState();
     }
 

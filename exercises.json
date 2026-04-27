@@ -409,6 +409,70 @@
       "weightStep": 10,
       "pipsPerLevel": 1,
       "levels": 4
+    },
+    {
+      "id": "running",
+      "name": "Running",
+      "muscles": "Quads · Glutes · Hamstrings · Calves",
+      "icon": "running",
+      "category": "cardio",
+      "description": "Outdoor or treadmill running at a sustainable pace.",
+      "mistakes": [
+        "Don't sprint out the gate — settle into a pace you can hold",
+        "Land mid-foot, not on your heel",
+        "Keep your shoulders relaxed; don't hunch"
+      ],
+      "distanceStart": 1,
+      "distanceStep": 1,
+      "durationStart": 10,
+      "durationStep": 5,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "snoozeDays": 1,
+      "purpose": "cardio",
+      "common": true
+    },
+    {
+      "id": "cycling",
+      "name": "Cycling",
+      "muscles": "Quads · Glutes · Calves",
+      "icon": "cycling",
+      "category": "cardio",
+      "description": "Steady cycling outdoors or on a stationary bike.",
+      "mistakes": [
+        "Set saddle height so your knee bends slightly at the bottom",
+        "Don't grip the bars too hard — keep arms relaxed",
+        "Maintain a steady cadence rather than mashing the pedals"
+      ],
+      "distanceStart": 3,
+      "distanceStep": 3,
+      "durationStart": 15,
+      "durationStep": 10,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "snoozeDays": 1,
+      "purpose": "cardio"
+    },
+    {
+      "id": "rowing",
+      "name": "Rowing",
+      "muscles": "Back · Lats · Quads · Hamstrings · Core",
+      "icon": "rowing",
+      "category": "cardio",
+      "description": "Indoor rowing machine — full-body steady cardio.",
+      "mistakes": [
+        "Drive with your legs first, then hinge, then pull",
+        "Don't yank with the arms; the legs do most of the work",
+        "Keep your back tall, not rounded"
+      ],
+      "distanceStart": 1,
+      "distanceStep": 1,
+      "durationStart": 10,
+      "durationStep": 5,
+      "pipsPerLevel": 2,
+      "levels": 4,
+      "snoozeDays": 1,
+      "purpose": "cardio"
     }
   ]
 }
