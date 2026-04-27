@@ -1176,6 +1176,32 @@
       .sort((a, b) => b.count - a.count);
   };
 
+  // All-time tally for a region: most-recent date the region was worked
+  // and total counted sessions ever. Powers the contextual stats above
+  // the per-range exercise list in the muscle-detail panel.
+  const regionLifetimeStats = (region) => {
+    let lastDate = null;
+    let allTime = 0;
+    for (const date in state.completed) {
+      const day = state.completed[date];
+      if (!day) continue;
+      for (const exId in day) {
+        if (!isCounted(day[exId])) continue;
+        const ex = exerciseById(exId);
+        if (!ex || !ex.muscles) continue;
+        const regions = new Set();
+        for (const m of ex.muscles.split("·").map((s) => s.trim())) {
+          for (const r of muscleRegions(m)) regions.add(r);
+        }
+        if (regions.has(region)) {
+          allTime++;
+          if (!lastDate || date > lastDate) lastDate = date;
+        }
+      }
+    }
+    return { lastDate, allTime };
+  };
+
   const RANGE_OPTIONS = [
     { key: "today", label: "Today",        days: 0  },
     { key: "month", label: "Last 30 days", days: 30 },
@@ -1222,8 +1248,30 @@
     if (muscleSelected) {
       const exs = exercisesForRegionSince(
         muscleSelected, rangeSinceDate(muscleRange));
+      const lifetime = regionLifetimeStats(muscleSelected);
       const label = REGION_LABELS[muscleSelected] || muscleSelected;
       const rangeLbl = rangeShortLabel(muscleRange);
+      const rangeSessions = exs.reduce((s, e) => s + e.count, 0);
+      const lastBadge = lifetime.lastDate
+        ? dateBadge(parseDateStr(lifetime.lastDate))
+        : null;
+      const statRow = `
+        <div class="muscle-detail__stats">
+          <div class="muscle-detail__stat">
+            <span class="muscle-detail__stat-value">${
+              lastBadge || "—"
+            }</span>
+            <span class="muscle-detail__stat-label">Last hit</span>
+          </div>
+          <div class="muscle-detail__stat">
+            <span class="muscle-detail__stat-value">${rangeSessions}</span>
+            <span class="muscle-detail__stat-label">In ${rangeLbl}</span>
+          </div>
+          <div class="muscle-detail__stat">
+            <span class="muscle-detail__stat-value">${lifetime.allTime}</span>
+            <span class="muscle-detail__stat-label">All-time</span>
+          </div>
+        </div>`;
       detailHtml = `
         <div class="muscle-detail">
           <div class="muscle-detail__head">
@@ -1237,18 +1285,12 @@
               </svg>
             </button>
           </div>
+          ${statRow}
           ${exs.length === 0
             ? `<p class="muscle-detail__empty">
                  No work for ${label.toLowerCase()} in ${rangeLbl}.
                </p>`
-            : `<p class="muscle-detail__count">
-                 ${exs.reduce((s, e) => s + e.count, 0)} session${
-                  exs.reduce((s, e) => s + e.count, 0) === 1 ? "" : "s"
-                } across ${exs.length} exercise${
-                  exs.length === 1 ? "" : "s"
-                } in ${rangeLbl}
-               </p>
-               <ul class="muscle-detail__list">
+            : `<ul class="muscle-detail__list">
                  ${exs.map((e) => `
                    <li>
                      <span class="muscle-detail__name">${e.name}</span>
@@ -1312,10 +1354,12 @@
     { key: "shoulders", label: "Shoulders", keys: ["shoulders", "traps"] },
     { key: "arms",      label: "Arms",      keys: ["biceps", "triceps"] },
     { key: "core",      label: "Core",      keys: ["core"] },
+    { key: "cardio",    label: "Cardio",    category: "cardio" },
   ];
   const exerciseMatchesGroup = (ex, groupKey) => {
     const group = MUSCLE_GROUPS.find((g) => g.key === groupKey);
     if (!group) return true;
+    if (group.category) return ex.category === group.category;
     const muscles = (ex.muscles || "").toLowerCase();
     return group.keys.some((k) => muscles.includes(k));
   };

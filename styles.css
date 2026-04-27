@@ -1153,9 +1153,30 @@ body.modal-open { overflow: hidden; }
   justify-content: center;
 }
 .muscle-detail__close svg { width: 14px; height: 14px; display: block; }
-.muscle-detail__count {
-  margin: 4px 0 8px;
-  font-size: 12px;
+.muscle-detail__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 8px 0;
+}
+.muscle-detail__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.muscle-detail__stat-value {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.muscle-detail__stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
   color: var(--muted);
 }
 .muscle-detail__empty {
