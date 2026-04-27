@@ -318,6 +318,12 @@ body {
     rgba(234, 179, 8, 0.02)
   ), var(--surface-2);
 }
+/* Skipped today — neutral grey, no celebratory tint. The row is in Snoozed
+   so the user can still see it, just dimmer than a real completion. */
+.exercise-row.is-skipped {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
 .exercise-row.is-open { z-index: 10; }
 
 .exercise-row__main {
@@ -505,6 +511,10 @@ body {
 .exercise-row.is-partial .done-btn[aria-pressed="true"] {
   background: #ca8a04;
 }
+.exercise-row.is-skipped .done-btn[aria-pressed="true"] {
+  background: #3a3a40;
+  color: var(--muted);
+}
 .done-btn svg { width: 18px; height: 18px; display: block; }
 
 .caret-btn {
@@ -515,21 +525,24 @@ body {
 }
 .exercise-row:not(.is-done) .caret-btn { background: #2a3a30; }
 .exercise-row.is-partial .caret-btn { background: #854d0e; }
+.exercise-row.is-skipped .caret-btn { background: #3a3a40; }
 .caret-btn svg { width: 12px; height: 8px; transition: transform 0.18s ease; }
 .exercise-row.is-open .caret-btn svg { transform: rotate(180deg); }
 
 /* Adjustment menu — floats as a popover anchored to the caret button so the
-   row itself never grows when it opens. */
+   row itself never grows when it opens. Buttons inside extend to the popover
+   border via negative horizontal margin, so the popover frame *is* their
+   container. */
 .exercise-row__menu {
   position: absolute;
   top: calc(100% + 6px);
   right: 8px;
   left: auto;
-  width: min(320px, calc(100vw - 28px));
+  width: min(220px, calc(100vw - 28px));
   display: none;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px;
+  gap: 4px;
+  padding: 6px;
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: 12px;
@@ -537,6 +550,7 @@ body {
               0 2px 6px rgba(0, 0, 0, 0.35);
   z-index: 20;
   transform-origin: top right;
+  overflow: hidden;
 }
 .exercise-row.is-open .exercise-row__menu {
   display: flex;
@@ -547,82 +561,80 @@ body {
   to   { transform: translateY(0) scale(1); }
 }
 
-.menu-row--chips {
-  flex-wrap: wrap;
-  padding-bottom: 6px;
-  border-bottom: 1px dashed var(--border-strong);
-}
-.menu-row__label {
-  display: flex;
+/* Alternate completion actions — partial / skipped — each on their own
+   row so the labels can stay full-text. The level buttons below are
+   icon-only and split the same width. */
+.menu-row--actions {
   flex-direction: column;
-  gap: 1px;
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--muted);
-  min-width: 80px;
+  align-items: stretch;
+  gap: 4px;
 }
-.menu-row__hint {
-  text-transform: none;
-  letter-spacing: 0.2px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-.menu-row__chips {
+.menu-action {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
   gap: 6px;
-  flex: 1;
-}
-.chip {
+  padding: 8px 10px;
   background: var(--surface-2);
   color: var(--text);
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  min-width: 36px;
-  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
   font: inherit;
   font-size: 13px;
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  text-align: center;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.1s ease, border-color 0.1s ease, color 0.1s ease;
 }
-.chip:active { transform: scale(0.95); }
-.chip--on {
-  background: var(--ok-strong);
-  border-color: var(--ok-strong);
+.menu-action[data-action="mark-partial"] {
+  background: rgba(234, 179, 8, 0.14);
+  color: #fde68a;
+}
+.menu-action[data-action="mark-skipped"] {
+  background: rgba(148, 163, 184, 0.14);
+  color: var(--muted);
+}
+.menu-action:active { filter: brightness(1.2); }
+.menu-action__icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.menu-action__icon svg { width: 14px; height: 14px; display: block; }
+.menu-action--on[data-action="mark-partial"] {
+  background: #ca8a04;
+  color: white;
+}
+.menu-action--on[data-action="mark-skipped"] {
+  background: #475569;
   color: white;
 }
 
 .menu-zero {
   margin: 0;
-  padding: 4px 2px 6px;
-  font-size: 12.5px;
+  padding: 6px 10px 2px;
+  font-size: 12px;
   line-height: 1.45;
   color: var(--muted);
-  border-bottom: 1px dashed var(--border-strong);
 }
 
 .menu-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 .menu-row--level {
-  justify-content: space-between;
-  padding-top: 8px;
-  border-top: 1px dashed var(--border-strong);
+  gap: 6px;
 }
 .level-btn {
-  background: transparent;
+  background: var(--surface-2);
   color: var(--text);
-  border: 1px solid var(--border-strong);
+  border: 0;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 8px 0;
   font: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -630,14 +642,17 @@ body {
   -webkit-tap-highlight-color: transparent;
   letter-spacing: 0.3px;
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
+.level-btn svg { width: 14px; height: 14px; display: block; }
 .level-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
 .level-btn--up {
   color: #bfdbfe;
-  border-color: var(--accent-strong);
   background: var(--accent-soft);
 }
 .level-btn--up:not(:disabled):active {
@@ -696,22 +711,29 @@ body {
   margin: 8px 0 0;
 }
 
+/* Daily wrap-up: a sunrise that spans the column rather than a checkmark
+   in a circle (which already lives on each row). Colors are intentionally
+   soft amber, not the saturated green of the per-row check. */
 .all-done {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 28px 0 22px;
-  color: var(--ok);
+  align-items: stretch;
+  gap: 6px;
+  padding: 24px 0 18px;
 }
 .all-done[hidden] { display: none; }
-.all-done__icon { width: 72px; height: 72px; display: block; }
+.all-done__sunrise {
+  width: 100%;
+  height: auto;
+  display: block;
+}
 .all-done__label {
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.7px;
   color: var(--muted);
+  text-align: center;
 }
 
 /* Floating action button — adds an exercise from the catalog. */
@@ -738,6 +760,7 @@ body {
 .fab:active { transform: scale(0.94); }
 .fab:hover { background: var(--accent-strong); }
 .fab svg { width: 26px; height: 26px; display: block; }
+.fab[hidden] { display: none; }
 
 /* Picker modal. */
 .picker {
@@ -777,6 +800,19 @@ body {
 @media (min-width: 540px) {
   .picker { align-items: center; }
   .picker__sheet { border-radius: 16px; max-height: 70vh; }
+}
+/* Compact variant for small focused popovers (per-muscle, etc.).
+   Stays a centered floating card on mobile too rather than a full
+   bottom sheet, since the content is small enough not to need it. */
+#muscle-popover { align-items: center; padding: 0 16px; }
+.picker__sheet--compact {
+  max-width: 360px;
+  max-height: 70vh;
+  border-radius: 16px;
+  padding: 14px 14px;
+}
+@media (min-width: 540px) {
+  .picker__sheet--compact { max-height: 60vh; }
 }
 
 .picker__header {
@@ -836,7 +872,7 @@ body {
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  padding: 0 0 6px;
+  padding: 2px 0 8px;
   margin-bottom: 6px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -844,14 +880,18 @@ body {
 .picker__filters::-webkit-scrollbar { display: none; }
 .picker-chip {
   flex: 0 0 auto;
-  padding: 6px 12px;
+  min-height: 36px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 999px;
   color: var(--muted);
   font: inherit;
-  font-size: 12.5px;
+  font-size: 14px;
   font-weight: 600;
+  line-height: 1;
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
@@ -1083,6 +1123,70 @@ body.modal-open { overflow: hidden; }
 .muscle--lvl2 { fill: rgba(59, 130, 246, 0.55); }
 .muscle--lvl3 { fill: rgba(59, 130, 246, 0.78); }
 .muscle--lvl4 { fill: var(--accent); }
+.muscle { cursor: pointer; }
+.muscle--selected {
+  stroke: var(--accent);
+  stroke-width: 1.6;
+}
+
+/* Per-muscle popover — its own modal sheet so opening it doesn't push
+   the analysis card around. Re-uses .picker__sheet chrome via the
+   --compact variant; body is a single big stat plus a "last worked"
+   line and the contributing exercise list. */
+.muscle-popover__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 6px 2px;
+}
+.muscle-popover__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.muscle-popover__value {
+  font-size: 32px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.muscle-popover__label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.muscle-popover__last {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+.muscle-popover__list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.muscle-popover__list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 4px;
+  font-size: 13px;
+  border-top: 1px dashed var(--border);
+}
+.muscle-popover__list li:first-child { border-top: 0; }
+.muscle-popover__hits {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
 
 /* Exercise details modal — same sheet chrome as the picker, different body. */
 .details__body {
@@ -1091,7 +1195,8 @@ body.modal-open { overflow: hidden; }
   gap: 12px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 4px 2px 2px;
+  padding: 4px 10px 2px 2px;
+  scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -1136,6 +1241,16 @@ body.modal-open { overflow: hidden; }
   letter-spacing: 0.6px;
   color: var(--muted);
 }
+/* Section heading + an inline action (used by Progress so the chart
+   toggle rides on the same row as the heading instead of taking its
+   own). The h3's existing margin still owns the vertical spacing. */
+.details__section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.details__section-head .details__section { margin-bottom: 0; }
 
 .details__chart {
   width: 100%;
@@ -1144,7 +1259,10 @@ body.modal-open { overflow: hidden; }
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 6px;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 }
+.chart-hover[hidden] { display: none; }
 
 .details__about {
   margin: 0;
@@ -1163,14 +1281,14 @@ body.modal-open { overflow: hidden; }
   border: 1px solid var(--border);
   border-radius: 10px;
   font-size: 13px;
-  line-height: 1.55;
+  line-height: 1.4;
   color: var(--text);
 }
 .details__mistakes li {
   margin: 0;
   padding-left: 2px;
 }
-.details__mistakes li + li { margin-top: 4px; }
+.details__mistakes li + li { margin-top: 1px; }
 .details__mistakes li::marker { color: var(--err); }
 
 .details__empty {
@@ -1181,6 +1299,170 @@ body.modal-open { overflow: hidden; }
   font-size: 13px;
   border: 1px dashed var(--border-strong);
   border-radius: 10px;
+}
+
+/* Two-stat summary above the (collapsible) progress chart. Each stat
+   compresses progression to a tier-index delta — recent momentum on
+   the left, cumulative climb on the right — so the user sees direction
+   without having to read the chart. */
+.progress-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.progress-summary__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.progress-summary__value {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.progress-summary__value--up { color: #4ade80; }
+.progress-summary__value--down { color: #fda4af; }
+.progress-summary__value--flat,
+.progress-summary__value--muted { color: var(--muted); }
+.progress-summary__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+.details__chart-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 4px;
+  background: transparent;
+  border: 0;
+  color: var(--accent);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.details__chart-toggle:active { opacity: 0.6; }
+.details__chart-toggle svg {
+  width: 9px;
+  height: 6px;
+  transition: transform 0.18s ease;
+}
+.details__chart-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+.details__chart-wrap[hidden] { display: none; }
+
+.details__edit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+/* Three fixed columns so labels, inputs, and unit suffixes line up
+   vertically across rows. The unit column has a min-width even when
+   empty so rows without units still align with rows that have them. */
+.details__edit-row {
+  display: grid;
+  grid-template-columns: 1fr 64px 36px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+/* Metric chooser spans the input + unit columns so it can sit side-by-
+   side with its label, the same shape as the numeric edit rows. */
+.details__edit-row--metric {
+  grid-template-columns: 1fr auto;
+}
+.details__edit-row--metric .metric-chooser { grid-column: 2; }
+.details__edit-label {
+  color: var(--muted);
+}
+.metric-chooser {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+}
+.metric-chooser__btn {
+  padding: 5px 12px;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.metric-chooser__btn--active {
+  background: var(--accent);
+  color: white;
+}
+.details__edit-input {
+  display: contents;
+}
+.details__edit-input input {
+  width: 100%;
+  padding: 6px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.details__edit-input input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.details__edit-input input::-webkit-outer-spin-button,
+.details__edit-input input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.details__edit-unit {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: left;
+}
+.details__edit-reset {
+  margin-top: 4px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.details__edit-reset:active { opacity: 0.7; }
+@media (hover: hover) {
+  .details__edit-reset:hover {
+    color: var(--text);
+    border-color: var(--text);
+  }
 }
 
 .details__actions {

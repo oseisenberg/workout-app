@@ -56,15 +56,40 @@
         </div>
         <div id="available-grid" class="exercise-grid"></div>
         <div id="all-done-state" class="all-done" hidden role="status">
-          <svg class="all-done__icon" viewBox="0 0 72 72" aria-hidden="true">
-            <circle cx="36" cy="36" r="34" fill="rgba(34, 197, 94, 0.12)" />
-            <circle cx="36" cy="36" r="28" fill="none"
-                    stroke="currentColor" stroke-width="2.4" />
-            <path d="M22 37 L31 46 L51 26" fill="none"
-                  stroke="currentColor" stroke-width="4"
-                  stroke-linecap="round" stroke-linejoin="round" />
+          <svg class="all-done__sunrise" viewBox="0 0 320 90"
+               preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+            <defs>
+              <radialGradient id="ad-sun-glow" cx="50%" cy="80%" r="65%">
+                <stop offset="0%" stop-color="rgba(251, 191, 36, 0.18)" />
+                <stop offset="55%" stop-color="rgba(251, 191, 36, 0.04)" />
+                <stop offset="100%" stop-color="rgba(251, 191, 36, 0)" />
+              </radialGradient>
+              <linearGradient id="ad-sun-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.7" />
+                <stop offset="100%" stop-color="#d97706" stop-opacity="0.7" />
+              </linearGradient>
+              <clipPath id="ad-sun-clip">
+                <rect x="0" y="0" width="320" height="72" />
+              </clipPath>
+            </defs>
+            <rect x="0" y="0" width="320" height="90" fill="url(#ad-sun-glow)" />
+            <g stroke="#f59e0b" stroke-opacity="0.38" stroke-width="2"
+               stroke-linecap="round">
+              <line x1="160" y1="14" x2="160" y2="28" />
+              <line x1="120" y1="22" x2="126" y2="34" />
+              <line x1="200" y1="22" x2="194" y2="34" />
+              <line x1="92"  y1="40" x2="104" y2="46" />
+              <line x1="228" y1="40" x2="216" y2="46" />
+              <line x1="74"  y1="62" x2="88"  y2="62" />
+              <line x1="246" y1="62" x2="232" y2="62" />
+            </g>
+            <circle cx="160" cy="72" r="22" fill="url(#ad-sun-fill)"
+                    clip-path="url(#ad-sun-clip)" />
+            <line x1="8" y1="72" x2="312" y2="72"
+                  stroke="var(--border-strong)" stroke-width="1.4"
+                  stroke-linecap="round" />
           </svg>
-          <span class="all-done__label">All done</span>
+          <span class="all-done__label">All done for today</span>
         </div>
         <p id="empty-state" class="empty-state" hidden>
           No exercises yet. Tap <span aria-hidden="true">+</span>
@@ -162,6 +187,25 @@
         </button>
       </div>
       <div id="details-body" class="details__body"></div>
+    </div>
+  </div>
+
+  <div id="muscle-popover" class="picker" hidden role="dialog"
+       aria-modal="true" aria-labelledby="muscle-popover-title">
+    <div id="muscle-popover-backdrop" class="picker__backdrop"></div>
+    <div class="picker__sheet picker__sheet--compact" role="document">
+      <div class="picker__header">
+        <h2 id="muscle-popover-title" class="picker__title">Muscle</h2>
+        <button id="muscle-popover-close" type="button" class="picker__close"
+                aria-label="Close">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4 4 L12 12 M12 4 L4 12" fill="none"
+                  stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+      <div id="muscle-popover-body" class="muscle-popover__body"></div>
     </div>
   </div>
 

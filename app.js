@@ -192,6 +192,42 @@
         <line x1="32" y1="36" x2="16" y2="58"
               stroke="var(--accent)" />
       </svg>`,
+    "running": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="58" x2="58" y2="58" />
+        <circle cx="40" cy="14" r="4" />
+        <polyline points="40,18 32,28 38,38 30,52" />
+        <line x1="32" y1="28" x2="22" y2="32"
+              stroke="var(--accent)" />
+        <line x1="38" y1="38" x2="50" y2="34"
+              stroke="var(--accent)" />
+        <line x1="30" y1="52" x2="22" y2="58"
+              stroke="var(--accent)" />
+      </svg>`,
+    "cycling": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <circle cx="16" cy="46" r="10" stroke="var(--accent)" />
+        <circle cx="48" cy="46" r="10" stroke="var(--accent)" />
+        <polyline points="16,46 28,28 40,28 48,46" />
+        <line x1="28" y1="28" x2="36" y2="14" />
+        <circle cx="38" cy="12" r="3" />
+      </svg>`,
+    "rowing": `
+      <svg viewBox="0 0 64 64" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="6" y1="56" x2="58" y2="56" />
+        <circle cx="40" cy="20" r="4" />
+        <polyline points="40,24 32,34 18,40" />
+        <line x1="32" y1="34" x2="48" y2="44"
+              stroke="var(--accent)" />
+        <line x1="10" y1="38" x2="50" y2="46"
+              stroke="var(--accent)" />
+      </svg>`,
   };
 
   // Purpose icons sit beside the level pill on a row when an exercise's
@@ -242,41 +278,82 @@
   };
 
   // === Catalog ===========================================================
-  // Sets and reps are constant across an exercise — only the weight changes
-  // between tiers. Each upgrade fills one pip; once all pips for a level are
-  // full, the next upgrade rolls over into the next level. So with
-  // pipsPerLevel = 2, going from Lvl 1 (●●○) to Lvl 2 (○○○) takes 3 upgrades.
-  // A Starter (Lvl 0) entry is prepended for everyone with sets/reps of 0
-  // (sentinel for "no prescription"). Completion at Starter is binary.
-  const buildLevels = (t) => {
+  // Each exercise belongs to a category, which determines the **default**
+  // tracked metric. The user can override the tracked metric per exercise
+  // (via Customize) so long as the new metric is in the category's allowed
+  // list and the template carries the corresponding *Start/*Step fields.
+  // Switching metric on an exercise re-derives its tier ladder; history
+  // entries carry their own `metric` so old entries don't get re-painted
+  // against a different ruler — they simply hide from the chart until you
+  // switch back to that metric.
+  const CATEGORY_INFO = {
+    strength:   { default: "weight",   allowed: ["weight"] },
+    bodyweight: { default: "reps",     allowed: ["reps", "duration"] },
+    cardio:     { default: "distance", allowed: ["distance", "duration", "reps"] },
+  };
+  const METRIC_INFO = {
+    weight:   { unit: "lb",  start: "weightStart",   step: "weightStep" },
+    reps:     { unit: "reps", start: "repsStart",     step: "repsStep" },
+    distance: { unit: "km",   start: "distanceStart", step: "distanceStep" },
+    duration: { unit: "min",  start: "durationStart", step: "durationStep" },
+  };
+  // Category default; falls back to legacy "bodyweight" flag for templates
+  // that haven't been retrofitted with a category field.
+  const templateCategory = (t) =>
+    t.category || (t.bodyweight ? "bodyweight" : "strength");
+  const templateMetric = (t) => {
+    const cat = templateCategory(t);
+    const info = CATEGORY_INFO[cat];
+    const want = t.metric || info.default;
+    if (info.allowed.includes(want) && t[METRIC_INFO[want].start] != null) {
+      return want;
+    }
+    // The category default may not be present on every template (e.g. a
+    // jump rope template has no `distanceStart`); fall back to the first
+    // allowed metric the template actually carries.
+    for (const m of info.allowed) {
+      if (t[METRIC_INFO[m].start] != null) return m;
+    }
+    return info.default;
+  };
+
+  // Builds the full tier ladder for a template under a chosen metric. Each
+  // upgrade fills one pip; once all pips for a level are full, the next
+  // upgrade rolls into the next level. Lvl 0 is a binary "I tried it but
+  // couldn't do the full thing" sentinel — no prescription, completion is
+  // just a checkmark.
+  const buildLevels = (t, metric) => {
+    const cat = templateCategory(t);
     const pipsPerLevel = t.pipsPerLevel || 2;
     const tiersPerLevel = pipsPerLevel + 1;
-    const levelCount = t.levels || 0;
-    const totalPrescriptive = levelCount * tiersPerLevel;
-    const bw = !!t.bodyweight;
-    // Lvl 0 is binary with no weight or rep prescription — represents "I
-    // did the exercise but couldn't do the full sets at any weight". Lvl 1
-    // pip 0 then owns the [0, weightStart] band as the first tier where
-    // full sets are expected; subsequent pips step up by weightStep.
+    const totalPrescriptive = (t.levels || 0) * tiersPerLevel;
+    const info = METRIC_INFO[metric];
+    const startVal = t[info.start];
+    const stepVal = t[info.step];
+    const unit = info.unit;
+    const isBw = cat === "bodyweight";
+    // Reps suggestion only applies when the tracked metric isn't reps and
+    // the template carries one (strength exercises do, cardio doesn't).
+    const suggestReps = metric !== "reps" && t.reps;
+    const suggestSets = metric !== "duration" && t.sets;
     const out = [{
-      sets: 0,
-      reps: 0,
-      weight: null,
-      bodyweight: bw,
-      level: 0,
-      pip: 0,
-      pipsPerLevel: 0,
+      metric, unit,
+      value: null,
+      sets: 0, reps: 0,
+      bodyweight: isBw,
+      category: cat,
+      level: 0, pip: 0, pipsPerLevel: 0,
     }];
     for (let i = 0; i < totalPrescriptive; i++) {
-      const wLo = i === 0 ? 0 : t.weightStart + (i - 1) * t.weightStep;
-      const wHi = i === 0 ? t.weightStart : t.weightStart + i * t.weightStep;
-      const rLo = i === 0 ? 0 : t.repsStart + (i - 1) * t.repsStep;
-      const rHi = i === 0 ? t.repsStart : t.repsStart + i * t.repsStep;
+      const lo = i === 0 ? 0 : startVal + (i - 1) * stepVal;
+      const hi = i === 0 ? startVal : startVal + i * stepVal;
       out.push({
-        sets: t.sets,
-        reps: bw ? [rLo, rHi] : t.reps,
-        weight: bw ? null : [wLo, wHi],
-        bodyweight: bw,
+        metric, unit,
+        value: [lo, hi],
+        sets: suggestSets ? t.sets : null,
+        reps: suggestReps ? t.reps : null,
+        bodyweight: isBw,
+        category: cat,
         level: Math.floor(i / tiersPerLevel) + 1,
         pip: i % tiersPerLevel,
         pipsPerLevel,
@@ -285,22 +362,66 @@
     return out;
   };
 
-  const templateToExercise = (t) => ({
-    id: t.id,
-    name: t.name,
-    muscles: t.muscles,
-    icon: ICONS[t.icon] || ICONS.barbell,
-    levels: buildLevels(t),
-    snoozeDays: t.snoozeDays != null ? t.snoozeDays : 1,
-    common: !!t.common,
-    description: t.description || "",
-    mistakes: Array.isArray(t.mistakes) ? t.mistakes : [],
-    // "muscle" (default, no icon shown) | "tendon" | "mobility"
-    // | "cardio" | "skill" | "balance"
-    purpose: t.purpose || "muscle",
-  });
+  const templateToExercise = (t) => {
+    const cat = templateCategory(t);
+    const metric = templateMetric(t);
+    return {
+      id: t.id,
+      name: t.name,
+      muscles: t.muscles,
+      icon: ICONS[t.icon] || ICONS.barbell,
+      levels: buildLevels(t, metric),
+      category: cat,
+      metric,
+      allowedMetrics: CATEGORY_INFO[cat].allowed.filter(
+        (m) => t[METRIC_INFO[m].start] != null),
+      snoozeDays: t.snoozeDays != null ? t.snoozeDays : 1,
+      common: !!t.common,
+      description: t.description || "",
+      mistakes: Array.isArray(t.mistakes) ? t.mistakes : [],
+      // "muscle" (default, no icon shown) | "tendon" | "mobility"
+      // | "cardio" | "skill" | "balance"
+      purpose: t.purpose || "muscle",
+    };
+  };
 
+  // Raw exercises.json templates and the in-memory catalog derived from
+  // them. Customizations stored on state get merged into the templates
+  // before templateToExercise runs, so every consumer of CATALOG (render,
+  // analysis, etc.) sees the user's tweaked values.
+  let TEMPLATES = [];
   let CATALOG = [];
+
+  // Fields the user is allowed to override per exercise. pipsPerLevel and
+  // levels are deliberately NOT here — letting the user touch them would
+  // re-shape the leveling system, which we want kept stable. `metric`
+  // selects which tracked metric the tier ladder is built from (within
+  // the category's allowed list).
+  const CUSTOMIZABLE_FIELDS = [
+    "weightStart", "weightStep", "repsStart", "repsStep",
+    "distanceStart", "distanceStep", "durationStart", "durationStep",
+    "sets", "reps", "snoozeDays", "metric",
+  ];
+
+  const mergeCustomization = (t) => {
+    const overrides = (state.customizations && state.customizations[t.id]) || {};
+    const out = { ...t };
+    for (const f of CUSTOMIZABLE_FIELDS) {
+      if (overrides[f] != null) out[f] = overrides[f];
+    }
+    return out;
+  };
+
+  const rebuildCatalog = () => {
+    CATALOG = TEMPLATES.map((t) => templateToExercise(mergeCustomization(t)));
+  };
+
+  const rebuildExercise = (exId) => {
+    const t = TEMPLATES.find((x) => x.id === exId);
+    const idx = CATALOG.findIndex((e) => e.id === exId);
+    if (!t || idx < 0) return;
+    CATALOG[idx] = templateToExercise(mergeCustomization(t));
+  };
 
   // === State =============================================================
   const STORAGE_KEY = "workout-app:state:v7";
@@ -316,6 +437,7 @@
     archivedIds: [],
     levels: {},
     completed: {},
+    customizations: {},
   });
 
   let state = blankState();
@@ -370,13 +492,17 @@
   // upgrade as they go.
   const defaultLevel = (ex) => (ex.levels.length > 1 ? 1 : 0);
   const currentLevel = (ex) => ex.levels[state.levels[ex.id]];
-  const isLevelZero = (lvl) => lvl.sets === 0;
+  const isLevelZero = (lvl) => lvl.level === 0;
   const todaysCompletion = (exId) => (state.completed[todayKey()] || {})[exId];
-  const fmtWeight = (w) => (w[0] === w[1] ? `${w[0]}` : `${w[0]}–${w[1]}`);
-  // Bodyweight reps are a range; weighted exercises store a single rep
-  // number that's treated as a minimum target (rendered with a "+" suffix).
+  // Tier ranges (weight, distance, duration) are stored as [lo, hi] arrays.
+  // Suggested-rep targets on weighted exercises are a single number that's
+  // treated as a minimum target (rendered with a "+" suffix).
+  const fmtRange = (r) =>
+    r[0] === r[1] ? `${r[0]}` : `${r[0]}–${r[1]}`;
   const fmtReps = (r) =>
-    Array.isArray(r) ? `${r[0]}–${r[1]}` : `${r}+`;
+    Array.isArray(r) ? fmtRange(r) : `${r}+`;
+  const fmtTierValue = (lvl) =>
+    lvl.value == null ? null : fmtRange(lvl.value);
   const repsLow = (r) => (Array.isArray(r) ? r[0] : r);
 
   const lastCompletionDate = (exId) => {
@@ -414,13 +540,6 @@
       .map(([date, day]) => ({ date, ...day[exId] }))
       .sort((a, b) => (a.date < b.date ? 1 : -1));
 
-  const setChoices = (ex) => {
-    const target = currentLevel(ex).sets;
-    const out = [];
-    for (let i = 1; i <= target + 2; i++) out.push(i);
-    return out;
-  };
-
   // === Mutations =========================================================
   const addExercise = (id) => {
     if (state.addedIds.includes(id)) return;
@@ -443,6 +562,51 @@
     renderPicker();
   };
 
+  // Range-clamp values so the user can't break the level system with junk
+  // input — e.g., a 0 or negative weightStep would collapse the whole
+  // ladder. Returns null if the value should be ignored.
+  const sanitizeCustomization = (field, raw) => {
+    if (field === "metric") {
+      const v = String(raw || "");
+      return Object.prototype.hasOwnProperty.call(METRIC_INFO, v) ? v : null;
+    }
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return null;
+    if (field === "weightStart") return Math.max(0, Math.round(n));
+    if (field === "repsStart") return Math.max(0, Math.round(n));
+    if (field === "distanceStart") return Math.max(0, Math.round(n));
+    if (field === "durationStart") return Math.max(0, Math.round(n));
+    if (field === "weightStep") return Math.max(1, Math.round(n));
+    if (field === "repsStep") return Math.max(1, Math.round(n));
+    if (field === "distanceStep") return Math.max(1, Math.round(n));
+    if (field === "durationStep") return Math.max(1, Math.round(n));
+    if (field === "sets") return Math.max(1, Math.min(10, Math.round(n)));
+    if (field === "reps") return Math.max(1, Math.min(50, Math.round(n)));
+    if (field === "snoozeDays") return Math.max(0, Math.min(14, Math.round(n)));
+    return null;
+  };
+
+  const setCustomization = (exId, field, raw) => {
+    if (!CUSTOMIZABLE_FIELDS.includes(field)) return;
+    const v = sanitizeCustomization(field, raw);
+    if (v == null) return;
+    if (!state.customizations) state.customizations = {};
+    if (!state.customizations[exId]) state.customizations[exId] = {};
+    state.customizations[exId][field] = v;
+    rebuildExercise(exId);
+    saveState();
+    renderExercises();
+  };
+
+  const resetCustomization = (exId) => {
+    if (state.customizations && state.customizations[exId]) {
+      delete state.customizations[exId];
+    }
+    rebuildExercise(exId);
+    saveState();
+    renderExercises();
+  };
+
   const deleteExerciseHistory = (exId) => {
     for (const date of Object.keys(state.completed)) {
       const day = state.completed[date];
@@ -463,25 +627,25 @@
     renderPicker();
   };
 
-  const markComplete = (exId, setsDone) => {
+  // kind is one of "full" (default), "partial", or "skipped". Skipped means
+  // "I'm marking today done so it stops bugging me, but I didn't actually
+  // do it" — the entry still counts for snooze logic but is excluded from
+  // streaks, muscle activity, and the progression chart.
+  const markComplete = (exId, kind) => {
     const ex = exerciseById(exId);
     if (!ex) return;
     const lvl = currentLevel(ex);
     const day = todayKey();
     if (!state.completed[day]) state.completed[day] = {};
-    // At Lvl 0 completion is binary; ignore any setsDone value.
-    if (isLevelZero(lvl)) {
-      state.completed[day][exId] = { level: state.levels[exId], sets: 1 };
-      saveState();
-      renderExercises();
-      return;
-    }
-    const sets = setsDone == null ? lvl.sets : setsDone;
-    if (sets <= 0) {
-      clearComplete(exId);
-      return;
-    }
-    state.completed[day][exId] = { level: state.levels[exId], sets };
+    // At Lvl 0 there's no partial — it's just done or not.
+    const finalKind = isLevelZero(lvl) && kind === "partial"
+      ? "full"
+      : kind || "full";
+    state.completed[day][exId] = {
+      level: state.levels[exId],
+      kind: finalKind,
+      metric: ex.metric,
+    };
     saveState();
     renderExercises();
   };
@@ -525,11 +689,10 @@
   // into Snoozed (which may be collapsed and therefore invisible). After
   // the animation finishes, run the state mutation and pulse the Snoozed
   // header so the user can see where the exercise went.
-  const animateThenComplete = (exId, setsValue) => {
+  const animateThenComplete = (exId, kind) => {
     const wasDone = !!todaysCompletion(exId);
     const apply = () => {
-      if (setsValue != null) markComplete(exId, setsValue);
-      else markComplete(exId);
+      markComplete(exId, kind);
       flashSnoozedHeader();
     };
     if (wasDone) {
@@ -600,47 +763,63 @@
       const done = todaysCompletion(ex.id);
       const canDown = lvlIdx > 0;
       const canUp = lvlIdx < ex.levels.length - 1;
-      const setsDone = done ? done.sets : 0;
-      const isPartial = done && !lvlZero && setsDone < lvl.sets;
+      const doneKind = done ? (done.kind || "full") : null;
+      const isPartial = doneKind === "partial";
+      const isSkipped = doneKind === "skipped";
       const tier = tierName(lvl);
       const pipsHtml = renderPips(lvl);
       const nextTier = canUp ? tierName(ex.levels[lvlIdx + 1]) : null;
-      const isBw = !!lvl.bodyweight;
       const weightStatHtml = lvlZero
         ? `<span class="exercise-row__try" aria-label="No fixed prescription">Try it</span>`
         : `<span class="exercise-row__stat">
-             <span class="exercise-row__stat-value">${
-               isBw ? fmtReps(lvl.reps) : fmtWeight(lvl.weight)
-             }</span>
-             <span class="exercise-row__stat-label">${isBw ? "reps" : "lb"}</span>
+             <span class="exercise-row__stat-value">${fmtTierValue(lvl)}</span>
+             <span class="exercise-row__stat-label">${lvl.unit}</span>
            </span>`;
 
-      const setChipsHtml = `<div class="menu-row menu-row--chips">
-             <span class="menu-row__label">
-               Sets done <span class="menu-row__hint">suggested ${lvl.sets}×${fmtReps(lvl.reps)}</span>
+      // Two completion alternates to the green check: "partial" credits the
+      // day without claiming a full session, "skipped" snoozes the row
+      // without counting it as work. At Lvl 0 only skip applies (Lvl 0 is
+      // binary by design).
+      const partialBtnHtml = lvlZero
+        ? ""
+        : `<button type="button" class="menu-action${
+             isPartial ? " menu-action--on" : ""
+           }" data-action="mark-partial">
+             <span class="menu-action__icon" aria-hidden="true">
+               <svg viewBox="0 0 16 16">
+                 <circle cx="8" cy="8" r="6" fill="none"
+                         stroke="currentColor" stroke-width="1.6" />
+                 <path d="M 8 2 A 6 6 0 0 1 8 14 Z" fill="currentColor" />
+               </svg>
              </span>
-             <div class="menu-row__chips">${setChoices(ex)
-               .map((n) => {
-                 const sel = setsDone === n;
-                 return `<button type="button" class="chip${
-                   sel ? " chip--on" : ""
-                 }" data-action="set-sets" data-value="${n}">${n}</button>`;
-               })
-               .join("")}</div>
-           </div>`;
+             <span class="menu-action__title">Partial</span>
+           </button>`;
+      const skipBtnHtml = `<button type="button" class="menu-action${
+        isSkipped ? " menu-action--on" : ""
+      }" data-action="mark-skipped">
+             <span class="menu-action__icon" aria-hidden="true">
+               <svg viewBox="0 0 16 16">
+                 <path d="M3 8 L13 8 M9 4 L13 8 L9 12" fill="none"
+                       stroke="currentColor" stroke-width="1.8"
+                       stroke-linecap="round" stroke-linejoin="round" />
+               </svg>
+             </span>
+             <span class="menu-action__title">Snooze</span>
+           </button>`;
       const menuBody = lvlZero
         ? `<p class="menu-zero">
-             <strong>Lvl 0</strong> is binary — no target sets or reps.
-             Just tap done when you've done what you can. Upgrade to
-             <strong>${nextTier}</strong> once you're ready to start
-             counting sets.
-           </p>`
-        : setChipsHtml;
+             <strong>Lvl 0</strong> is binary — just tap done when
+             you've done what you can.
+           </p>
+           <div class="menu-row menu-row--actions">${skipBtnHtml}</div>`
+        : `<div class="menu-row menu-row--actions">
+             ${partialBtnHtml}${skipBtnHtml}
+           </div>`;
 
       return `
       <div class="exercise-row${done ? " is-done" : ""}${
         isPartial ? " is-partial" : ""
-      }${lvlZero ? " is-zero" : ""}" data-id="${ex.id}">
+      }${isSkipped ? " is-skipped" : ""}${lvlZero ? " is-zero" : ""}" data-id="${ex.id}">
         <button type="button" class="exercise-row__main"
                 data-action="open-details">
           <span class="exercise-row__icon">${ex.icon}</span>
@@ -708,13 +887,23 @@
           <div class="menu-row menu-row--level">
             <button type="button" class="level-btn"
                     data-action="downgrade"
+                    aria-label="Downgrade ${ex.name}"
                     ${canDown ? "" : "disabled"}>
-              <span aria-hidden="true">▼</span> Downgrade
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M4 6 L8 11 L12 6" fill="none"
+                      stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
             </button>
             <button type="button" class="level-btn level-btn--up"
                     data-action="upgrade"
+                    aria-label="Upgrade ${ex.name}"
                     ${canUp ? "" : "disabled"}>
-              Upgrade <span aria-hidden="true">▲</span>
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M4 10 L8 5 L12 10" fill="none"
+                      stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
             </button>
           </div>
         </div>
@@ -763,32 +952,38 @@
   };
 
   // === Analysis tab =====================================================
+  const isCounted = (entry) =>
+    entry && (entry.kind || "full") !== "skipped";
+
   const computeActivity = () => {
-    const dates = Object.keys(state.completed).filter(
-      (d) =>
-        state.completed[d] && Object.keys(state.completed[d]).length > 0
-    );
-    let totalSets = 0;
+    // Skipped-only days don't count — they represent "I marked this
+    // snoozed so it stops bugging me", not real work.
+    const dates = Object.keys(state.completed).filter((d) => {
+      const day = state.completed[d];
+      if (!day) return false;
+      return Object.values(day).some(isCounted);
+    });
+    let totalDone = 0;
     for (const d of dates) {
       for (const exId in state.completed[d]) {
-        totalSets += state.completed[d][exId].sets || 0;
+        if (isCounted(state.completed[d][exId])) totalDone++;
       }
     }
-    // Streak: walk back from today (or yesterday if today empty) until a gap.
-    const dateSet = new Set(dates);
-    const cur = new Date();
-    cur.setHours(0, 0, 0, 0);
-    const fmt = (d) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${
-        String(d.getDate()).padStart(2, "0")
-      }`;
-    let streak = 0;
-    if (!dateSet.has(fmt(cur))) cur.setDate(cur.getDate() - 1);
-    while (dateSet.has(fmt(cur))) {
-      streak++;
-      cur.setDate(cur.getDate() - 1);
+    // Cumulative tier progression: for each added exercise, the
+    // difference between the current tier and the earliest tier ever
+    // recorded in history. Each pip fill and level-up counts equally,
+    // so the number reflects how far the user has actually climbed
+    // across the whole catalog. No daily-pressure streak — climbs
+    // don't decay if you skip a day.
+    let tiersClimbed = 0;
+    for (const id of state.addedIds) {
+      const hist = exerciseHistory(id);
+      if (hist.length === 0) continue;
+      const oldest = hist[hist.length - 1];
+      const cur = state.levels[id];
+      if (cur > oldest.level) tiersClimbed += cur - oldest.level;
     }
-    return { workouts: dates.length, totalSets, streak };
+    return { workouts: dates.length, totalDone, tiersClimbed };
   };
 
   // Map a muscle string from the catalog to one or more body-region keys.
@@ -828,6 +1023,7 @@
       const day = state.completed[date];
       if (!day) continue;
       for (const exId in day) {
+        if (!isCounted(day[exId])) continue;
         const ex = exerciseById(exId);
         if (!ex || !ex.muscles) continue;
         for (const m of ex.muscles.split("·").map((s) => s.trim())) {
@@ -852,9 +1048,14 @@
   // Two stylized body diagrams (front + back) with muscle regions painted
   // as anatomically-shaped paths over a simple silhouette. Each path's
   // fill changes with `counts`; the border stays grey across all states
-  // (see .muscle CSS).
-  const renderBodyDiagram = (counts) => {
-    const c = (k) => muscleClass(counts[k] || 0);
+  // (see .muscle CSS). Each region carries a data-region attribute so
+  // the parent click handler can surface a detail panel for it.
+  const renderBodyDiagram = (counts, selected) => {
+    const cls = (k) => {
+      const base = muscleClass(counts[k] || 0);
+      return selected === k ? `${base} muscle--selected` : base;
+    };
+    const c = (k) => `class="${cls(k)}" data-region="${k}"`;
     const silhouette = `
       <g class="body-outline">
         <circle cx="60" cy="22" r="14" />
@@ -873,28 +1074,24 @@
         <svg class="body" viewBox="0 0 120 232" aria-label="Front body"
              role="img">
           ${silhouette}
-          <path class="${c("shoulders")}"
+          <path ${c("shoulders")}
                 d="M 22 48 Q 28 42 36 46 L 38 60 Q 30 62 22 58 Z" />
-          <path class="${c("shoulders")}"
+          <path ${c("shoulders")}
                 d="M 98 48 Q 92 42 84 46 L 82 60 Q 90 62 98 58 Z" />
-          <path class="${c("chest")}"
+          <path ${c("chest")}
                 d="M 41 48 Q 56 46 58 50 L 58 68 Q 50 72 42 68 Q 38 60 41 48 Z" />
-          <path class="${c("chest")}"
+          <path ${c("chest")}
                 d="M 79 48 Q 64 46 62 50 L 62 68 Q 70 72 78 68 Q 82 60 79 48 Z" />
-          <rect class="${c("biceps")}" x="22" y="62" width="11" height="22"
-                rx="5" />
-          <rect class="${c("biceps")}" x="87" y="62" width="11" height="22"
-                rx="5" />
-          <path class="${c("core")}"
+          <rect ${c("biceps")} x="22" y="62" width="11" height="22" rx="5" />
+          <rect ${c("biceps")} x="87" y="62" width="11" height="22" rx="5" />
+          <path ${c("core")}
                 d="M 50 78 Q 60 76 70 78 L 70 116 Q 60 120 50 116 Z" />
-          <path class="${c("quads")}"
+          <path ${c("quads")}
                 d="M 42 128 L 58 128 L 56 178 Q 49 184 42 178 Z" />
-          <path class="${c("quads")}"
+          <path ${c("quads")}
                 d="M 78 128 L 62 128 L 64 178 Q 71 184 78 178 Z" />
-          <rect class="${c("calves")}" x="44" y="190" width="10" height="22"
-                rx="4" />
-          <rect class="${c("calves")}" x="66" y="190" width="10" height="22"
-                rx="4" />
+          <rect ${c("calves")} x="44" y="190" width="10" height="22" rx="4" />
+          <rect ${c("calves")} x="66" y="190" width="10" height="22" rx="4" />
         </svg>
       </div>`;
 
@@ -904,32 +1101,28 @@
         <svg class="body" viewBox="0 0 120 232" aria-label="Back body"
              role="img">
           ${silhouette}
-          <path class="${c("shoulders")}"
+          <path ${c("shoulders")}
                 d="M 22 48 Q 28 42 36 46 L 38 60 Q 30 62 22 58 Z" />
-          <path class="${c("shoulders")}"
+          <path ${c("shoulders")}
                 d="M 98 48 Q 92 42 84 46 L 82 60 Q 90 62 98 58 Z" />
-          <path class="${c("back")}"
+          <path ${c("back")}
                 d="M 50 46 Q 60 44 70 46 L 76 80 Q 60 84 44 80 Z" />
-          <path class="${c("lats")}"
+          <path ${c("lats")}
                 d="M 38 64 L 56 90 L 50 104 L 38 88 Z" />
-          <path class="${c("lats")}"
+          <path ${c("lats")}
                 d="M 82 64 L 64 90 L 70 104 L 82 88 Z" />
-          <rect class="${c("triceps")}" x="22" y="62" width="11" height="22"
-                rx="5" />
-          <rect class="${c("triceps")}" x="87" y="62" width="11" height="22"
-                rx="5" />
-          <path class="${c("glutes")}"
+          <rect ${c("triceps")} x="22" y="62" width="11" height="22" rx="5" />
+          <rect ${c("triceps")} x="87" y="62" width="11" height="22" rx="5" />
+          <path ${c("glutes")}
                 d="M 42 126 Q 50 124 58 128 L 58 142 Q 50 148 42 142 Z" />
-          <path class="${c("glutes")}"
+          <path ${c("glutes")}
                 d="M 78 126 Q 70 124 62 128 L 62 142 Q 70 148 78 142 Z" />
-          <path class="${c("hamstrings")}"
+          <path ${c("hamstrings")}
                 d="M 42 152 L 58 152 L 56 196 Q 49 200 42 196 Z" />
-          <path class="${c("hamstrings")}"
+          <path ${c("hamstrings")}
                 d="M 78 152 L 62 152 L 64 196 Q 71 200 78 196 Z" />
-          <rect class="${c("calves")}" x="44" y="200" width="10" height="22"
-                rx="4" />
-          <rect class="${c("calves")}" x="66" y="200" width="10" height="22"
-                rx="4" />
+          <rect ${c("calves")} x="44" y="200" width="10" height="22" rx="4" />
+          <rect ${c("calves")} x="66" y="200" width="10" height="22" rx="4" />
         </svg>
       </div>`;
 
@@ -942,6 +1135,7 @@
       const day = state.completed[date];
       if (!day) continue;
       for (const exId in day) {
+        if (!isCounted(day[exId])) continue;
         const ex = exerciseById(exId);
         if (!ex || !ex.muscles) continue;
         for (const m of ex.muscles.split("·").map((s) => s.trim())) {
@@ -953,16 +1147,89 @@
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
   };
 
+  // Friendly title-case names for the region keys used in the body diagram.
+  const REGION_LABELS = {
+    quads: "Quads", glutes: "Glutes", hamstrings: "Hamstrings",
+    lats: "Lats", biceps: "Biceps", triceps: "Triceps",
+    chest: "Chest", shoulders: "Shoulders", back: "Back",
+    core: "Core", calves: "Calves",
+  };
+
+  // Per-exercise tally for everything that maps to a single region within
+  // a date window. Used by the muscle-detail panel below.
+  const exercisesForRegionSince = (region, sinceDate) => {
+    const counts = {};
+    for (const date in state.completed) {
+      if (sinceDate && date < sinceDate) continue;
+      const day = state.completed[date];
+      if (!day) continue;
+      for (const exId in day) {
+        if (!isCounted(day[exId])) continue;
+        const ex = exerciseById(exId);
+        if (!ex || !ex.muscles) continue;
+        const regions = new Set();
+        for (const m of ex.muscles.split("·").map((s) => s.trim())) {
+          for (const r of muscleRegions(m)) regions.add(r);
+        }
+        if (regions.has(region)) counts[exId] = (counts[exId] || 0) + 1;
+      }
+    }
+    return Object.entries(counts)
+      .map(([id, count]) => {
+        const ex = exerciseById(id);
+        return { id, name: ex ? ex.name : id, count };
+      })
+      .sort((a, b) => b.count - a.count);
+  };
+
+  // All-time tally for a region: most-recent date the region was worked
+  // and total counted sessions ever. Powers the contextual stats above
+  // the per-range exercise list in the muscle-detail panel.
+  const regionLifetimeStats = (region) => {
+    let lastDate = null;
+    let allTime = 0;
+    for (const date in state.completed) {
+      const day = state.completed[date];
+      if (!day) continue;
+      for (const exId in day) {
+        if (!isCounted(day[exId])) continue;
+        const ex = exerciseById(exId);
+        if (!ex || !ex.muscles) continue;
+        const regions = new Set();
+        for (const m of ex.muscles.split("·").map((s) => s.trim())) {
+          for (const r of muscleRegions(m)) regions.add(r);
+        }
+        if (regions.has(region)) {
+          allTime++;
+          if (!lastDate || date > lastDate) lastDate = date;
+        }
+      }
+    }
+    return { lastDate, allTime };
+  };
+
+  const RANGE_OPTIONS = [
+    { key: "today", label: "Today",        days: 0  },
+    { key: "month", label: "Last 30 days", days: 30 },
+    { key: "quarter", label: "Last 3 months", days: 90 },
+  ];
+  const rangeSinceDate = (key) =>
+    key === "today" ? todayKey() : dateNDaysAgo(
+      RANGE_OPTIONS.find((o) => o.key === key).days);
+  const rangeShortLabel = (key) =>
+    key === "today" ? "today" :
+    key === "month" ? "the last 30 days" :
+    "the last 3 months";
+
   let muscleRange = "today";
+  let muscleSelected = null;
   const renderAnalysis = () => {
     const view = $("analysis-view");
     if (!view) return;
     const activity = computeActivity();
     const exercises = state.addedIds.map(exerciseById).filter(Boolean);
-    const todayCounts = regionCountsSince(todayKey());
-    const monthCounts = regionCountsSince(dateNDaysAgo(30));
-    const hasToday = Object.values(todayCounts).some((v) => v > 0);
-    const hasMonth = Object.values(monthCounts).some((v) => v > 0);
+    const counts = regionCountsSince(rangeSinceDate(muscleRange));
+    const hasData = Object.values(counts).some((v) => v > 0);
 
     const activityCard = `
       <section class="card">
@@ -973,40 +1240,32 @@
             <span class="stat__label">Workout days</span>
           </div>
           <div class="stat">
-            <span class="stat__value">${activity.streak}</span>
-            <span class="stat__label">Day streak</span>
+            <span class="stat__value">${activity.totalDone}</span>
+            <span class="stat__label">Exercises done</span>
           </div>
           <div class="stat">
-            <span class="stat__value">${activity.totalSets}</span>
-            <span class="stat__label">Total sets</span>
+            <span class="stat__value">${activity.tiersClimbed}</span>
+            <span class="stat__label">Tiers climbed</span>
           </div>
         </div>
       </section>`;
 
-    const counts = muscleRange === "today" ? todayCounts : monthCounts;
-    const hasData = muscleRange === "today" ? hasToday : hasMonth;
+    const toggleHtml = RANGE_OPTIONS.map((o) => `
+      <button type="button" role="tab"
+              class="muscle-toggle__btn${
+                muscleRange === o.key ? " muscle-toggle__btn--active" : ""
+              }"
+              data-range="${o.key}">${o.label}</button>`).join("");
+    const emptyMsg = muscleRange === "today"
+      ? "No exercises completed today yet."
+      : `Nothing in ${rangeShortLabel(muscleRange)} yet.`;
     const musclesCard = `
       <section class="card">
         <h2>Muscles worked</h2>
-        <div class="muscle-toggle" role="tablist">
-          <button type="button" role="tab"
-                  class="muscle-toggle__btn${
-                    muscleRange === "today" ? " muscle-toggle__btn--active" : ""
-                  }"
-                  data-range="today">Today</button>
-          <button type="button" role="tab"
-                  class="muscle-toggle__btn${
-                    muscleRange === "month" ? " muscle-toggle__btn--active" : ""
-                  }"
-                  data-range="month">Last 30 days</button>
-        </div>
+        <div class="muscle-toggle" role="tablist">${toggleHtml}</div>
         ${hasData
-          ? renderBodyDiagram(counts)
-          : `<p class="empty-state">${
-            muscleRange === "today"
-              ? "No exercises completed today yet."
-              : "Nothing in the past month yet."
-          }</p>`}
+          ? renderBodyDiagram(counts, muscleSelected)
+          : `<p class="empty-state">${emptyMsg}</p>`}
       </section>`;
 
     const empty = activity.workouts === 0 && exercises.length === 0
@@ -1017,6 +1276,59 @@
       : "";
 
     view.innerHTML = activityCard + musclesCard + empty;
+  };
+
+  // Floating per-muscle popover. Lives in its own modal so opening it
+  // doesn't push the analysis card around. Content updates whenever
+  // the range toggle changes while the popover is open.
+  const renderMusclePopover = () => {
+    if (!muscleSelected) return;
+    const label = REGION_LABELS[muscleSelected] || muscleSelected;
+    const rangeLbl = rangeShortLabel(muscleRange);
+    const exs = exercisesForRegionSince(
+      muscleSelected, rangeSinceDate(muscleRange));
+    const lifetime = regionLifetimeStats(muscleSelected);
+    const rangeSessions = exs.reduce((s, e) => s + e.count, 0);
+    const lastDays = lifetime.lastDate
+      ? daysBetweenTodayAnd(lifetime.lastDate)
+      : null;
+    const lastLine = lastDays == null
+      ? "Never worked yet."
+      : lastDays === 0
+        ? "Last worked today."
+        : lastDays === 1
+          ? "Last worked yesterday."
+          : `Last worked ${lastDays} days ago.`;
+    $("muscle-popover-title").textContent = label;
+    $("muscle-popover-body").innerHTML = `
+      <div class="muscle-popover__stat">
+        <span class="muscle-popover__value">${rangeSessions}</span>
+        <span class="muscle-popover__label">session${
+          rangeSessions === 1 ? "" : "s"} in ${rangeLbl}</span>
+      </div>
+      <p class="muscle-popover__last">${lastLine}</p>
+      ${exs.length === 0 ? "" : `
+        <ul class="muscle-popover__list">
+          ${exs.map((e) => `
+            <li>
+              <span class="muscle-popover__name">${e.name}</span>
+              <span class="muscle-popover__hits">${e.count}×</span>
+            </li>`).join("")}
+        </ul>`}`;
+  };
+  const openMusclePopover = () => {
+    renderMusclePopover();
+    $("muscle-popover").hidden = false;
+    document.body.classList.add("modal-open");
+    adjustModalsForViewport();
+  };
+  const closeMusclePopover = () => {
+    muscleSelected = null;
+    $("muscle-popover").hidden = true;
+    if ($("picker").hidden && $("details").hidden && $("settings").hidden) {
+      document.body.classList.remove("modal-open");
+    }
+    renderAnalysis();
   };
 
   // === Tab switching =====================================================
@@ -1045,10 +1357,12 @@
     { key: "shoulders", label: "Shoulders", keys: ["shoulders", "traps"] },
     { key: "arms",      label: "Arms",      keys: ["biceps", "triceps"] },
     { key: "core",      label: "Core",      keys: ["core"] },
+    { key: "cardio",    label: "Cardio",    category: "cardio" },
   ];
   const exerciseMatchesGroup = (ex, groupKey) => {
     const group = MUSCLE_GROUPS.find((g) => g.key === groupKey);
     if (!group) return true;
+    if (group.category) return ex.category === group.category;
     const muscles = (ex.muscles || "").toLowerCase();
     return group.keys.some((k) => muscles.includes(k));
   };
@@ -1268,15 +1582,17 @@
         if (Math.random() > 0.65) continue;
         if (Math.random() < 0.12 && curTier < totalTiers - 1) curTier++;
         const lvl = ex.levels[curTier];
-        const targetSets = lvl.sets || 1;
-        const sets = isLevelZero(lvl)
-          ? 1
-          : Math.random() < 0.12
-            ? Math.max(1, targetSets - 1)
-            : targetSets;
+        const r = Math.random();
+        const kind = isLevelZero(lvl)
+          ? "full"
+          : r < 0.08
+            ? "skipped"
+            : r < 0.2
+              ? "partial"
+              : "full";
         const dateKey = fmt(d);
         if (!completed[dateKey]) completed[dateKey] = {};
-        completed[dateKey][exId] = { level: curTier, sets };
+        completed[dateKey][exId] = { level: curTier, kind, metric: ex.metric };
         lastTs = d;
       }
     }
@@ -1406,20 +1722,42 @@
     return years === 1 ? "1 year" : `${years} years`;
   };
 
+  // Snapshot of the currently rendered chart's geometry so the press-and-
+  // hold scrubber (wired in setupListeners) can hit-test pointer events
+  // against it without re-deriving the layout. Reset to null when no
+  // chart is on screen.
+  let chartCtx = null;
+
   const renderProgressChart = (ex, history) => {
     const points = history
-      .filter((h) => h.level > 0)
+      .filter((h) => h.level > 0 && (h.kind || "full") !== "skipped"
+        && (h.metric || ex.metric) === ex.metric)
       .map((h) => ({ ts: parseDateStr(h.date), tier: h.level }))
       .sort((a, b) => a.ts - b.ts);
-    if (points.length < 2) return "";
+    if (points.length === 0) { chartCtx = null; return ""; }
     const W = 320, H = 140, padX = 12, padY = 22;
     const xs = points.map((p) => p.ts);
     const ys = points.map((p) => p.tier);
+    // With a single completion the axis runs from that day to today so the
+    // dot sits at the left and the right label still reads "today". The
+    // y-range is padded by a level on each side so the level mark and dot
+    // both have room to breathe.
+    const single = points.length === 1;
+    const today = Date.now();
     const xMin = Math.min(...xs);
-    const xMax = Math.max(...xs);
-    const yMin = Math.min(...ys);
-    const yMax = Math.max(...ys);
-    const xRange = xMax - xMin || 1;
+    const xMax = single ? Math.max(xMin, today) : Math.max(...xs);
+    const rawYMin = Math.min(...ys);
+    const rawYMax = Math.max(...ys);
+    // Always include the user's current tier in the y-range so the
+    // "now" marker is on-chart even if they upgraded past every
+    // logged completion.
+    const curTier = state.levels[ex.id];
+    const showCur = curTier > 0;
+    const yMinBase = showCur ? Math.min(rawYMin, curTier) : rawYMin;
+    const yMaxBase = showCur ? Math.max(rawYMax, curTier) : rawYMax;
+    const yMin = single ? Math.max(0, yMinBase - 1) : yMinBase;
+    const yMax = single ? yMaxBase + 1 : yMaxBase;
+    const xRange = xMax - xMin || 86400000;
     const yRange = yMax - yMin || 1;
     const x = (t) => padX + ((t - xMin) / xRange) * (W - 2 * padX);
     const y = (v) => H - padY - ((v - yMin) / yRange) * (H - 2 * padY);
@@ -1427,9 +1765,16 @@
       .map((p, i) =>
         `${i === 0 ? "M" : "L"} ${x(p.ts).toFixed(1)} ${y(p.tier).toFixed(1)}`)
       .join(" ");
-    const areaPath = linePath +
-      ` L ${x(xMax).toFixed(1)} ${(H - padY).toFixed(1)}` +
-      ` L ${x(xMin).toFixed(1)} ${(H - padY).toFixed(1)} Z`;
+    const areaPath = single
+      ? ""
+      : linePath +
+        ` L ${x(xMax).toFixed(1)} ${(H - padY).toFixed(1)}` +
+        ` L ${x(xMin).toFixed(1)} ${(H - padY).toFixed(1)} Z`;
+    const dotsHtml = single
+      ? `<circle cx="${x(points[0].ts).toFixed(1)}"
+                 cy="${y(points[0].tier).toFixed(1)}"
+                 r="3.5" fill="var(--accent)" />`
+      : "";
     // The y-axis only marks full level boundaries (pips are reflected in
     // the line plot, not labeled on the axis). At each visible level, draw
     // a short tick crossing the left edge plus a tiny "Lvl N" label inside
@@ -1449,6 +1794,10 @@
                 dominant-baseline="middle">Lvl ${lvl.level}</text>`;
       })
       .join("");
+    chartCtx = {
+      points: points.slice(),
+      ex, padX, padY, W, H, xMin, xMax, yMin, yMax, xRange, yRange,
+    };
     return `
       <svg class="details__chart" viewBox="0 0 ${W} ${H}" role="img"
            aria-label="Level progress over time">
@@ -1460,16 +1809,71 @@
         </defs>
         <line x1="${padX}" y1="${H - padY}" x2="${W - padX}" y2="${H - padY}"
               stroke="var(--border)" stroke-width="1" />
-        <path d="${areaPath}" fill="url(#chart-fill)" stroke="none" />
-        <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round" />
+        ${showCur ? `
+          <line x1="${padX}" y1="${y(curTier).toFixed(1)}"
+                x2="${W - padX}" y2="${y(curTier).toFixed(1)}"
+                stroke="var(--accent)" stroke-opacity="0.35"
+                stroke-width="1" stroke-dasharray="3 3" />
+          <text x="${W - padX - 2}" y="${(y(curTier) - 4).toFixed(1)}"
+                font-size="9" fill="var(--accent)" fill-opacity="0.75"
+                text-anchor="end">Now</text>` : ""}
+        ${single ? "" : `
+          <path d="${areaPath}" fill="url(#chart-fill)" stroke="none" />
+          <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" />`}
+        ${dotsHtml}
         ${levelMarks}
         <text x="${padX}" y="${H - 6}" font-size="10" fill="var(--muted)">${
           roundedDuration(Math.round((Date.now() - xMin) / 86400000))
         }</text>
         <text x="${W - padX}" y="${H - 6}" font-size="10" fill="var(--muted)" text-anchor="end">${dateBadge(xMax)}</text>
+        <g class="chart-hover" hidden>
+          <line class="chart-hover__line" x1="0" x2="0"
+                y1="${padY}" y2="${H - padY}"
+                stroke="var(--accent)" stroke-opacity="0.55"
+                stroke-width="1" stroke-dasharray="2 2" />
+          <circle class="chart-hover__dot" r="3" fill="var(--accent)" />
+          <g class="chart-hover__tip">
+            <rect class="chart-hover__bg" x="-50" y="2" width="100" height="20"
+                  rx="4" fill="var(--surface)"
+                  stroke="var(--border-strong)" stroke-width="0.8" />
+            <text class="chart-hover__text" x="0" y="13"
+                  font-size="9" fill="var(--text)" text-anchor="middle"></text>
+          </g>
+        </g>
       </svg>`;
   };
+
+  // Compresses progression to two numbers that aren't "current weight" or
+  // "streak": tier change in the last 30 days (recent momentum) and tier
+  // change since the very first completion (cumulative climb). Each tier-
+  // index step counts as one — pip fills and level-ups weigh equally so
+  // the number stays meaningful as the user moves up.
+  const computeProgressSummary = (ex, history) => {
+    const cur = state.levels[ex.id];
+    const filtered = (history || []).filter(
+      (h) => (h.metric || ex.metric) === ex.metric);
+    if (filtered.length === 0) return null;
+    // history is sorted newest-first.
+    const oldest = filtered[filtered.length - 1];
+    const cutoff = dateNDaysAgo(30);
+    let baseline30 = null;
+    for (const h of filtered) {
+      if (h.date <= cutoff) { baseline30 = h; break; }
+    }
+    const daysSinceStart = Math.max(1, Math.round(
+      (Date.now() - parseDateStr(oldest.date)) / 86400000));
+    return {
+      delta30: baseline30 ? cur - baseline30.level : null,
+      deltaLife: cur - oldest.level,
+      daysSinceStart,
+      isFirstMonth: !baseline30,
+    };
+  };
+
+  // Persists across re-renders for the same open exercise so the chart
+  // doesn't snap closed when the user touches a tier control.
+  let chartExpanded = false;
 
   let openDetailsId = null;
   const renderDetails = () => {
@@ -1483,31 +1887,77 @@
     $("details-title").textContent = ex.name;
 
     const history = exerciseHistory(ex.id);
+    const summary = computeProgressSummary(ex, history);
     const chartHtml = renderProgressChart(ex, history);
+    const fmtDelta = (d) =>
+      d > 0 ? `↑ +${d}` : d < 0 ? `↓ ${d}` : "—";
+    const progressSummaryHtml = summary
+      ? `<div class="progress-summary">
+           <div class="progress-summary__stat">
+             <span class="progress-summary__value progress-summary__value--${
+               summary.delta30 == null ? "muted"
+                 : summary.delta30 > 0 ? "up"
+                 : summary.delta30 < 0 ? "down" : "flat"
+             }">${
+               summary.isFirstMonth ? "—" : fmtDelta(summary.delta30)
+             }</span>
+             <span class="progress-summary__label">${
+               summary.isFirstMonth ? "First month" : "Last 30 days"
+             }</span>
+           </div>
+           <div class="progress-summary__stat">
+             <span class="progress-summary__value progress-summary__value--${
+               summary.deltaLife > 0 ? "up"
+                 : summary.deltaLife < 0 ? "down" : "flat"
+             }">${fmtDelta(summary.deltaLife)}</span>
+             <span class="progress-summary__label">Since start · ${
+               roundedDuration(summary.daysSinceStart)
+             }</span>
+           </div>
+         </div>`
+      : "";
+    const progressHeadHtml = `
+      <div class="details__section-head">
+        <h3 class="details__section">Progress</h3>
+        ${chartHtml ? `
+          <button type="button" class="details__chart-toggle"
+                  data-action="toggle-chart"
+                  aria-expanded="${chartExpanded ? "true" : "false"}">
+            ${chartExpanded ? "Hide chart" : "Show chart"}
+            <svg viewBox="0 0 12 8" aria-hidden="true">
+              <path d="M1 1.5 L6 6.5 L11 1.5" fill="none"
+                    stroke="currentColor" stroke-width="1.8"
+                    stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>` : ""}
+      </div>`;
     const progressHtml = chartHtml
-      ? chartHtml
-      : `<p class="details__empty">
-           Complete this exercise on a few different days to start seeing
-           your progress here.
-         </p>`;
+      ? `${progressSummaryHtml}
+         <div class="details__chart-wrap"${chartExpanded ? "" : " hidden"}>
+           ${chartHtml}
+         </div>`
+      : `<p class="details__empty">No completions yet — your progression chart will start filling in as you log this exercise.</p>`;
 
     // Each exercise has one tracked metric (the one progression is built
-    // from): weight for weighted exercises, reps for bodyweight. Sets are
-    // always just a suggestion. Surface that distinction explicitly.
+    // from). Surface the tracked value plus any suggested-only auxiliary
+    // values (sets/reps for weighted, sets for bodyweight, nothing for
+    // cardio — its tier is already the prescription).
     const trackedMetric = lvlZero
       ? null
-      : lvl.bodyweight
-        ? `${fmtReps(lvl.reps)} reps`
-        : `${fmtWeight(lvl.weight)} lb`;
-    const suggested = lvlZero
-      ? null
-      : lvl.bodyweight
-        ? `${lvl.sets} sets`
-        : `${lvl.sets} sets · ${fmtReps(lvl.reps)} reps`;
+      : `${fmtTierValue(lvl)} ${lvl.unit}`;
+    const suggestedParts = lvlZero
+      ? []
+      : [
+          lvl.sets ? `${lvl.sets} sets` : null,
+          lvl.reps ? `${fmtReps(lvl.reps)} reps` : null,
+        ].filter(Boolean);
+    const suggested = suggestedParts.length ? suggestedParts.join(" · ") : null;
     const summaryHtml = lvlZero
       ? `<span class="details__hero-summary">${tier} · just trying it out</span>`
       : `<span class="details__hero-summary">${tier} · ${trackedMetric}</span>
-         <span class="details__hero-suggested">Suggested: ${suggested}</span>`;
+         ${suggested
+           ? `<span class="details__hero-suggested">Suggested: ${suggested}</span>`
+           : ""}`;
 
     const archived = isArchived(ex.id);
     const archiveBtnHtml = `
@@ -1546,6 +1996,89 @@
          </ul>`
       : "";
 
+    // Customization fields exposed in the details modal. The leveling
+    // structure (pipsPerLevel, levels) is intentionally NOT here — only
+    // values that re-shape ranges or recovery cadence within a fixed level
+    // ladder.
+    const t = TEMPLATES.find((x) => x.id === ex.id) || {};
+    const overrides = (state.customizations && state.customizations[ex.id]) || {};
+    const isCustomized = Object.keys(overrides).length > 0;
+    const customField = (label, field, unit, attrs = "") => {
+      const value = overrides[field] != null ? overrides[field] : t[field];
+      if (value == null) return "";
+      return `
+        <label class="details__edit-row">
+          <span class="details__edit-label">${label}</span>
+          <span class="details__edit-input">
+            <input type="number" inputmode="numeric" data-edit="${field}"
+                   value="${value}" ${attrs} />
+            ${unit ? `<span class="details__edit-unit">${unit}</span>` : ""}
+          </span>
+        </label>`;
+    };
+    // Per-metric ladder editor — only the fields for the active metric are
+    // shown, since switching metric is itself an option above. Each metric
+    // has its own start/step pair stored on the template, so flipping the
+    // metric chooser swaps which two inputs are visible.
+    const ladderFields = (m) => {
+      if (m === "weight") return (
+        customField("Weight per tier", "weightStep", "lb",
+          `min="1" max="100" step="1"`) +
+        customField("Starting weight", "weightStart", "lb",
+          `min="0" max="500" step="1"`));
+      if (m === "reps") return (
+        customField("Reps per tier", "repsStep", "reps",
+          `min="1" max="20" step="1"`) +
+        customField("Starting reps", "repsStart", "reps",
+          `min="0" max="50" step="1"`));
+      if (m === "distance") return (
+        customField("Distance per tier", "distanceStep", "km",
+          `min="1" max="20" step="1"`) +
+        customField("Starting distance", "distanceStart", "km",
+          `min="0" max="50" step="1"`));
+      if (m === "duration") return (
+        customField("Minutes per tier", "durationStep", "min",
+          `min="1" max="30" step="1"`) +
+        customField("Starting minutes", "durationStart", "min",
+          `min="0" max="120" step="1"`));
+      return "";
+    };
+    const metricChooserHtml = ex.allowedMetrics.length > 1 ? `
+      <div class="details__edit-row details__edit-row--metric">
+        <span class="details__edit-label">Tracked metric</span>
+        <div class="metric-chooser" role="radiogroup" aria-label="Tracked metric">
+          ${ex.allowedMetrics.map((m) => `
+            <button type="button" role="radio"
+                    class="metric-chooser__btn${
+                      ex.metric === m ? " metric-chooser__btn--active" : ""
+                    }"
+                    aria-checked="${ex.metric === m ? "true" : "false"}"
+                    data-action="set-metric" data-metric="${m}">
+              ${m[0].toUpperCase() + m.slice(1)}
+            </button>`).join("")}
+        </div>
+      </div>` : "";
+    const customizeHtml = `
+      <h3 class="details__section">Customize</h3>
+      <div class="details__edit">
+        ${metricChooserHtml}
+        ${ladderFields(ex.metric)}
+        ${ex.metric !== "duration" && t.sets != null
+          ? customField("Suggested sets", "sets", "",
+              `min="1" max="10" step="1"`) : ""}
+        ${ex.metric === "weight"
+          ? customField("Suggested reps", "reps", "",
+              `min="1" max="50" step="1"`) : ""}
+        ${customField("Snooze for", "snoozeDays", "days",
+          `min="0" max="14" step="1"`)}
+        ${isCustomized
+          ? `<button type="button" class="details__edit-reset"
+                     data-action="reset-customization">
+               Reset to defaults
+             </button>`
+          : ""}
+      </div>`;
+
     $("details-body").innerHTML = `
       <div class="details__hero">
         <span class="details__icon">${ex.icon}</span>
@@ -1556,14 +2089,16 @@
       </div>
       ${descriptionHtml}
       ${mistakesHtml}
-      <h3 class="details__section">Progress</h3>
+      ${progressHeadHtml}
       ${progressHtml}
+      ${customizeHtml}
       ${archiveBtnHtml}
     `;
   };
 
   const openDetails = (exId) => {
     openDetailsId = exId;
+    chartExpanded = false;
     renderDetails();
     $("details").hidden = false;
     document.body.classList.add("modal-open");
@@ -1574,6 +2109,38 @@
     $("details").hidden = true;
     adjustModalsForViewport();
     if ($("picker").hidden) document.body.classList.remove("modal-open");
+  };
+
+  // Treat a quick downward flick anywhere inside a modal as a close
+  // gesture. The threshold is intentionally tight (>=80px in <350ms) so
+  // ordinary scrolling — which moves the finger upward, or downward
+  // slowly with frequent direction changes — won't trip it. Touches that
+  // start in a scroll container already past the top defer to native
+  // scrolling instead.
+  const attachSwipeDownClose = (modalEl, closeFn) => {
+    let startY = null;
+    let startT = 0;
+    const onStart = (e) => {
+      if (!e.touches || e.touches.length !== 1) { startY = null; return; }
+      const scrollable = e.target.closest(
+        ".picker__list, .details__body, .settings__body"
+      );
+      if (scrollable && scrollable.scrollTop > 0) { startY = null; return; }
+      startY = e.touches[0].clientY;
+      startT = Date.now();
+    };
+    const onEnd = (e) => {
+      if (startY == null) return;
+      const t = e.changedTouches && e.changedTouches[0];
+      const dy = t ? t.clientY - startY : 0;
+      const dt = Date.now() - startT;
+      startY = null;
+      if (dy > 80 && dt < 350) closeFn();
+    };
+    modalEl.addEventListener("touchstart", onStart, { passive: true });
+    modalEl.addEventListener("touchend", onEnd, { passive: true });
+    modalEl.addEventListener("touchcancel", () => { startY = null; },
+      { passive: true });
   };
 
   // === Wiring ============================================================
@@ -1597,8 +2164,12 @@
         target.setAttribute("aria-expanded", open ? "true" : "false");
         return;
       }
-      if (action === "set-sets") {
-        animateThenComplete(exId, Number(target.dataset.value));
+      if (action === "mark-partial" || action === "mark-skipped") {
+        const kind = action === "mark-partial" ? "partial" : "skipped";
+        const cur = todaysCompletion(exId);
+        // Tapping the active alternate again clears it back to "not done".
+        if (cur && (cur.kind || "full") === kind) clearComplete(exId);
+        else animateThenComplete(exId, kind);
         return;
       }
       if (action === "upgrade") return changeLevel(exId, +1);
@@ -1640,7 +2211,103 @@
         )) {
           deleteExerciseHistory(openDetailsId);
         }
+      } else if (action === "reset-customization") {
+        resetCustomization(openDetailsId);
+      } else if (action === "toggle-chart") {
+        chartExpanded = !chartExpanded;
+        renderDetails();
+      } else if (action === "set-metric") {
+        setCustomization(openDetailsId, "metric", target.dataset.metric);
+        renderDetails();
       }
+    });
+
+    $("details-body").addEventListener("change", (event) => {
+      const input = event.target.closest("input[data-edit]");
+      if (!input || openDetailsId == null) return;
+      setCustomization(openDetailsId, input.dataset.edit, input.value);
+    });
+
+    // Press-and-hold scrubber on the progress chart. Touching the chart
+    // pins a vertical line + tooltip to the nearest data point; dragging
+    // moves the marker; release hides everything. The chart sets
+    // touch-action: none so vertical drags don't fight the body scroll.
+    const updateChartHover = (svg, clientX) => {
+      if (!chartCtx) return;
+      const ctx = chartCtx;
+      const rect = svg.getBoundingClientRect();
+      if (rect.width === 0) return;
+      const vbX = ((clientX - rect.left) / rect.width) * ctx.W;
+      const xOf = (t) => ctx.padX +
+        ((t - ctx.xMin) / ctx.xRange) * (ctx.W - 2 * ctx.padX);
+      const yOf = (v) => ctx.H - ctx.padY -
+        ((v - ctx.yMin) / ctx.yRange) * (ctx.H - 2 * ctx.padY);
+      let nearest = ctx.points[0];
+      let minD = Infinity;
+      for (const p of ctx.points) {
+        const d = Math.abs(xOf(p.ts) - vbX);
+        if (d < minD) { minD = d; nearest = p; }
+      }
+      const px = xOf(nearest.ts);
+      const py = yOf(nearest.tier);
+      const lvl = ctx.ex.levels[nearest.tier];
+      const value = lvl && lvl.value != null
+        ? `${fmtTierValue(lvl)} ${lvl.unit}`
+        : "";
+      const label = `${dateBadge(nearest.ts)} · Lvl ${lvl ? lvl.level : "?"}${
+        value ? ` · ${value}` : ""}`;
+      const hover = svg.querySelector(".chart-hover");
+      if (!hover) return;
+      hover.removeAttribute("hidden");
+      const line = hover.querySelector(".chart-hover__line");
+      line.setAttribute("x1", px);
+      line.setAttribute("x2", px);
+      const dot = hover.querySelector(".chart-hover__dot");
+      dot.setAttribute("cx", px);
+      dot.setAttribute("cy", py);
+      const text = hover.querySelector(".chart-hover__text");
+      text.textContent = label;
+      const bg = hover.querySelector(".chart-hover__bg");
+      const tip = hover.querySelector(".chart-hover__tip");
+      // Size the tooltip background to text width with 6px padding;
+      // clamp horizontally so the box stays inside the chart area.
+      const textW = text.getComputedTextLength
+        ? text.getComputedTextLength()
+        : label.length * 5;
+      const tipW = Math.max(60, Math.ceil(textW) + 12);
+      bg.setAttribute("x", -tipW / 2);
+      bg.setAttribute("width", tipW);
+      const half = tipW / 2;
+      const tipX = Math.max(ctx.padX + half + 2,
+        Math.min(ctx.W - ctx.padX - half - 2, px));
+      tip.setAttribute("transform", `translate(${tipX},0)`);
+    };
+    const hideChartHover = () => {
+      const hover = document.querySelector(".details__chart .chart-hover");
+      if (hover) hover.setAttribute("hidden", "");
+    };
+    let chartHoverActive = false;
+    const onChartMove = (e) => {
+      if (!chartHoverActive) return;
+      const svg = document.querySelector(".details__chart");
+      if (svg) updateChartHover(svg, e.clientX);
+    };
+    const onChartEnd = () => {
+      if (!chartHoverActive) return;
+      chartHoverActive = false;
+      hideChartHover();
+      document.removeEventListener("pointermove", onChartMove);
+      document.removeEventListener("pointerup", onChartEnd);
+      document.removeEventListener("pointercancel", onChartEnd);
+    };
+    $("details-body").addEventListener("pointerdown", (event) => {
+      const svg = event.target.closest(".details__chart");
+      if (!svg) return;
+      chartHoverActive = true;
+      updateChartHover(svg, event.clientX);
+      document.addEventListener("pointermove", onChartMove);
+      document.addEventListener("pointerup", onChartEnd);
+      document.addEventListener("pointercancel", onChartEnd);
     });
 
     document.addEventListener("click", (event) => {
@@ -1679,6 +2346,9 @@
     $("settings-btn").addEventListener("click", openSettings);
     $("settings-close").addEventListener("click", closeSettings);
     $("settings-backdrop").addEventListener("click", closeSettings);
+    attachSwipeDownClose($("picker"), closePicker);
+    attachSwipeDownClose($("details"), closeDetails);
+    attachSwipeDownClose($("settings"), closeSettings);
     $("settings").addEventListener("click", (event) => {
       const target = event.target.closest("[data-action]");
       if (!target) return;
@@ -1713,10 +2383,21 @@
     });
     $("analysis-view").addEventListener("click", (event) => {
       const btn = event.target.closest(".muscle-toggle__btn");
-      if (!btn || !btn.dataset.range) return;
-      muscleRange = btn.dataset.range;
-      renderAnalysis();
+      if (btn && btn.dataset.range) {
+        muscleRange = btn.dataset.range;
+        renderAnalysis();
+        if (muscleSelected) renderMusclePopover();
+        return;
+      }
+      const region = event.target.closest("[data-region]");
+      if (region) {
+        muscleSelected = region.dataset.region;
+        openMusclePopover();
+      }
     });
+    $("muscle-popover-close").addEventListener("click", closeMusclePopover);
+    $("muscle-popover-backdrop").addEventListener("click", closeMusclePopover);
+    attachSwipeDownClose($("muscle-popover"), closeMusclePopover);
     $("snoozed-toggle").addEventListener("click", () => {
       const card = $("snoozed-card");
       const collapsed = card.classList.toggle("card--collapsed");
@@ -1737,9 +2418,13 @@
     const res = await fetch("./exercises.json");
     if (!res.ok) throw new Error("failed to load exercises.json");
     const data = await res.json();
-    CATALOG = data.templates.map(templateToExercise);
+    TEMPLATES = data.templates;
+    // Initial catalog uses defaults; rebuilt below once state is loaded so
+    // customizations get applied.
+    CATALOG = TEMPLATES.map(templateToExercise);
 
     loadState();
+    rebuildCatalog();
     // Drop any addedIds whose template was removed from the catalog.
     state.addedIds = state.addedIds.filter((id) => exerciseById(id));
     // Backfill levels for added exercises that don't have one yet.
@@ -1757,6 +2442,47 @@
         if (ex) state.levels[id] = defaultLevel(ex);
       }
       state.levelsResetV8 = true;
+      saveState();
+    }
+    // One-time migration: completion entries used to carry a `sets` count;
+    // they now carry a `kind` of "full" / "partial" / "skipped". Translate
+    // legacy entries by treating sets-below-target as partial, everything
+    // else as full. Skipped is a new state with no legacy equivalent.
+    if (!state.completionKindV9) {
+      for (const date in state.completed) {
+        const day = state.completed[date];
+        if (!day) continue;
+        for (const exId in day) {
+          const entry = day[exId];
+          if (!entry || entry.kind) continue;
+          const ex = exerciseById(exId);
+          const lvl = ex && ex.levels[entry.level];
+          const target = lvl ? (lvl.sets || 0) : 0;
+          entry.kind = !lvl || isLevelZero(lvl) || (entry.sets || 0) >= target
+            ? "full"
+            : "partial";
+          delete entry.sets;
+        }
+      }
+      state.completionKindV9 = true;
+      saveState();
+    }
+    // One-time migration: completion entries gain a `metric` field so
+    // metric switches don't repaint old data against the new ruler.
+    // Existing entries are tagged with the exercise's currently-active
+    // metric, since that's what they were originally recorded against.
+    if (!state.completionMetricV10) {
+      for (const date in state.completed) {
+        const day = state.completed[date];
+        if (!day) continue;
+        for (const exId in day) {
+          const entry = day[exId];
+          if (!entry || entry.metric) continue;
+          const ex = exerciseById(exId);
+          entry.metric = ex ? ex.metric : "weight";
+        }
+      }
+      state.completionMetricV10 = true;
       saveState();
     }
 
