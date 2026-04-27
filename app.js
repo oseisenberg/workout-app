@@ -1275,7 +1275,56 @@
          </p>`
       : "";
 
-    view.innerHTML = activityCard + musclesCard + empty;
+    // Per-exercise tier gains since the user first logged each one. Only
+    // includes exercises whose current tier is strictly above where they
+    // started, so the section reads as "what you've moved up on" rather
+    // than a complete inventory.
+    const climbed = [];
+    for (const id of state.addedIds) {
+      const ex = exerciseById(id);
+      if (!ex) continue;
+      const hist = exerciseHistory(id);
+      if (hist.length === 0) continue;
+      const startTier = hist[hist.length - 1].level;
+      const cur = state.levels[id];
+      if (cur > startTier) {
+        climbed.push({
+          ex,
+          startLvl: ex.levels[startTier],
+          endLvl: ex.levels[cur],
+          delta: cur - startTier,
+        });
+      }
+    }
+    climbed.sort((a, b) => b.delta - a.delta);
+    const arrowSvg = `<svg class="climbed__arrow" viewBox="0 0 12 12"
+        aria-hidden="true">
+        <path d="M2 6 H10 M7 3 L10 6 L7 9" fill="none"
+              stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round" />
+      </svg>`;
+    const climbedCard = climbed.length === 0 ? "" : `
+      <section class="card">
+        <h2>Climbed</h2>
+        <ul class="climbed">
+          ${climbed.map((c) => `
+            <li class="climbed__row">
+              <span class="climbed__icon">${c.ex.icon}</span>
+              <span class="climbed__name">${c.ex.name}</span>
+              <span class="climbed__delta">
+                <span class="lvl-pill${
+                  isLevelZero(c.startLvl) ? " lvl-pill--zero" : ""
+                }">${tierName(c.startLvl)}${renderPips(c.startLvl)}</span>
+                ${arrowSvg}
+                <span class="lvl-pill${
+                  isLevelZero(c.endLvl) ? " lvl-pill--zero" : ""
+                }">${tierName(c.endLvl)}${renderPips(c.endLvl)}</span>
+              </span>
+            </li>`).join("")}
+        </ul>
+      </section>`;
+
+    view.innerHTML = activityCard + musclesCard + climbedCard + empty;
   };
 
   // Floating per-muscle popover. Lives in its own modal so opening it
