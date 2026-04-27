@@ -950,8 +950,8 @@
     entry && (entry.kind || "full") !== "skipped";
 
   const computeActivity = () => {
-    // Skipped-only days don't count toward streak/totals — they represent
-    // "I marked this snoozed so it stops bugging me", not real work.
+    // Skipped-only days don't count — they represent "I marked this
+    // snoozed so it stops bugging me", not real work.
     const dates = Object.keys(state.completed).filter((d) => {
       const day = state.completed[d];
       if (!day) return false;
@@ -963,21 +963,21 @@
         if (isCounted(state.completed[d][exId])) totalDone++;
       }
     }
-    // Streak: walk back from today (or yesterday if today empty) until a gap.
-    const dateSet = new Set(dates);
-    const cur = new Date();
-    cur.setHours(0, 0, 0, 0);
-    const fmt = (d) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${
-        String(d.getDate()).padStart(2, "0")
-      }`;
-    let streak = 0;
-    if (!dateSet.has(fmt(cur))) cur.setDate(cur.getDate() - 1);
-    while (dateSet.has(fmt(cur))) {
-      streak++;
-      cur.setDate(cur.getDate() - 1);
+    // Cumulative tier progression: for each added exercise, the
+    // difference between the current tier and the earliest tier ever
+    // recorded in history. Each pip fill and level-up counts equally,
+    // so the number reflects how far the user has actually climbed
+    // across the whole catalog. No daily-pressure streak — climbs
+    // don't decay if you skip a day.
+    let tiersClimbed = 0;
+    for (const id of state.addedIds) {
+      const hist = exerciseHistory(id);
+      if (hist.length === 0) continue;
+      const oldest = hist[hist.length - 1];
+      const cur = state.levels[id];
+      if (cur > oldest.level) tiersClimbed += cur - oldest.level;
     }
-    return { workouts: dates.length, totalDone, streak };
+    return { workouts: dates.length, totalDone, tiersClimbed };
   };
 
   // Map a muscle string from the catalog to one or more body-region keys.
@@ -1234,12 +1234,12 @@
             <span class="stat__label">Workout days</span>
           </div>
           <div class="stat">
-            <span class="stat__value">${activity.streak}</span>
-            <span class="stat__label">Day streak</span>
-          </div>
-          <div class="stat">
             <span class="stat__value">${activity.totalDone}</span>
             <span class="stat__label">Exercises done</span>
+          </div>
+          <div class="stat">
+            <span class="stat__value">${activity.tiersClimbed}</span>
+            <span class="stat__label">Tiers climbed</span>
           </div>
         </div>
       </section>`;
